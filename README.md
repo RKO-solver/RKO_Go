@@ -2,6 +2,10 @@
 
 RKO-Go is a Go library for solving optimization problems using Random Key Optimization (RKO) and several metaheuristics. The library is designed to be problem-agnostic: you only need to implement the [`definition.Environment`](definition/definition.go) interface for your specific problem, and you can leverage a variety of metaheuristics already implemented in this package.
 
+> **Reference:**  
+> This library is based on the concepts and methods described in the article:  
+> [Random Key Optimization: A Unified Framework for Metaheuristics](https://doi.org/10.48550/arXiv.2411.04293)
+
 ## Features
 
 - **Metaheuristics implemented:**

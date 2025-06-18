@@ -10,14 +10,22 @@ import (
 	"sync"
 )
 
+// Solver coordinates the execution of multiple metaheuristic solvers in parallel,
+// sharing a solution pool and environment. It manages logging, random number generation,
+// and provides a unified interface for running and retrieving the best solution.
 type Solver struct {
-	l            *logger.Log
-	rg           *random.Generator
-	env          definition.Environment
-	solutionPool *solution.Pool
-	solvers      []definition.Solver
+	l            *logger.Log                // Logger for reporting progress and results
+	rg           *random.Generator          // Random number generator
+	env          definition.Environment     // Problem environment (user implementation)
+	solutionPool *solution.Pool             // Shared pool of solutions among solvers
+	solvers      []definition.Solver        // List of metaheuristic solvers to run
 }
 
+// Solve runs all configured metaheuristic solvers in parallel, waits for their completion,
+// and returns the best solution decoded into the problem's representation.
+//
+// Returns:
+//   - The best solution found, decoded using the Environment's Decode method.
 func (s *Solver) Solve() any {
 	var wg sync.WaitGroup
 

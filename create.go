@@ -2,6 +2,7 @@ package rko
 
 import (
 	"fmt"
+
 	"github.com/lucasmends/rko-go/definition"
 	"github.com/lucasmends/rko-go/logger"
 	"github.com/lucasmends/rko-go/metaheuristc/ga"
@@ -54,6 +55,19 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logLeve
 	}
 }
 
+// CreateDefaultSolverTimeLimitSecond creates a Solver as in CreateDefaultSolver, but also sets
+// a time limit (in seconds) for all metaheuristics.
+//
+// Parameters:
+//   - mh: slice of MetaHeuristic types to run
+//   - timeLimitSecond: time limit in seconds for each metaheuristic
+//   - env: user-implemented problem environment
+//   - logLevel: logging level for all solvers
+//   - saveReport: whether to save progress reports
+//   - handler: logger implementation
+//
+// Returns:
+//   - Pointer to a configured Solver with time limits set for all metaheuristics.
 func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond float64, env definition.Environment, logLevel logger.Level, saveReport bool, handler logger.Interface) *Solver {
 	solver := CreateDefaultSolver(mh, env, logLevel, saveReport, handler)
 	for _, sol := range solver.solvers {
