@@ -41,7 +41,7 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 
 	for generation := 0; generation < configuration.MaxGenerations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; generation++ {
 		eliteSize := int(configuration.EliteRatio * float64(populationSize))
-		mutantSize := int(configuration.MutantRation * float64(populationSize))
+		mutantSize := int(configuration.MutantRatio * float64(populationSize))
 
 		for i := range eliteSize {
 			copy(populationIntermediary[i].RK, population[i].RK)

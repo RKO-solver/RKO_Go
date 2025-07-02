@@ -11,14 +11,14 @@ import (
 const nameBRKGA = "BRKGA"
 
 type ConfigurationBRKGA struct {
-	TimeLimitSeconds           float64
-	PopulationSize             int
-	EliteRatio                 float64
-	MutantRation               float64
-	CrossoverAlpha             float64
-	MutationAlpha              float64
-	MaxGenerations             int
-	MaxGenerationNoImprovement int
+	TimeLimitSeconds           float64 `yaml:"TimeLimitSeconds"`
+	PopulationSize             int     `yaml:"PopulationSize"`
+	EliteRatio                 float64 `yaml:"EliteRatio"`
+	MutantRatio                float64 `yaml:"MutantRatio"`
+	CrossoverAlpha             float64 `yaml:"CrossoverAlpha"`
+	MutationAlpha              float64 `yaml:"MutationAlpha"`
+	MaxGenerations             int     `yaml:"MaxGenerations"`
+	MaxGenerationNoImprovement int     `yaml:"MaxGenerationNoImprovement"`
 }
 
 type BRKGA struct {

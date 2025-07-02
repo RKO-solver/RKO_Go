@@ -14,7 +14,7 @@ func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, soluti
 		TimeLimitSeconds:           constants.DefaultTimeLimitSeconds,
 		PopulationSize:             constants.DefaultPopulationSize,
 		EliteRatio:                 constants.DefaultEliteRatio,
-		MutantRation:               constants.DefaultMutantRation,
+		MutantRatio:                constants.DefaultMutantRation,
 		CrossoverAlpha:             constants.DefaultCrossoverAlpha,
 		MutationAlpha:              constants.DefaultMutationAlpha,
 		MaxGenerations:             constants.DefaultMaxGenerations,
