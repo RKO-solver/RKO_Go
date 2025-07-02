@@ -11,13 +11,13 @@ import (
 const nameGA = "GA"
 
 type ConfigurationGA struct {
-	TimeLimitSeconds           float64
-	PopulationSize             int
-	ChildrenRatio              float64
-	CrossoverAlpha             float64
-	MutationAlpha              float64
-	MaxGenerations             int
-	MaxGenerationNoImprovement int
+	TimeLimitSeconds           float64 `yaml:"TimeLimitSeconds"`
+	PopulationSize             int     `yaml:"PopulationSize"`
+	ChildrenRatio              float64 `yaml:"ChildrenRatio"`
+	CrossoverAlpha             float64 `yaml:"CrossoverAlpha"`
+	MutationAlpha              float64 `yaml:"MutationAlpha"`
+	MaxGenerations             int     `yaml:"MaxGenerations"`
+	MaxGenerationNoImprovement int     `yaml:"MaxGenerationNoImprovement"`
 }
 
 type GA struct {
