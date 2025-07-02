@@ -11,17 +11,17 @@ import (
 const name = "SA"
 
 type Configuration struct {
-	MaxIterations      int
-	TimeLimitSeconds   float64
-	Alpha              float64
-	ChangeImpact       float64
-	TemperatureInitial float64
-	TemperatureGoal    float64
-	TemperatureReheat  float64
-	ShakeMin           float64
-	ShakeMax           float64
-	QtdReheat          uint8
-	Iterations         int
+	MaxIterations      int     `yaml:"MaxIterations"`
+	TimeLimitSeconds   float64 `yaml:"TimeLimitSeconds"`
+	Alpha              float64 `yaml:"Alpha"`
+	ChangeImpact       float64 `yaml:"ChangeImpact"`
+	TemperatureInitial float64 `yaml:"TemperatureInitial"`
+	TemperatureGoal    float64 `yaml:"TemperatureGoal"`
+	TemperatureReheat  float64 `yaml:"TemperatureReheat"`
+	ShakeMin           float64 `yaml:"ShakeMin"`
+	ShakeMax           float64 `yaml:"ShakeMax"`
+	QtdReheat          uint8   `yaml:"QtdReheat"`
+	Iterations         int     `yaml:"Iterations"`
 }
 
 type SimulatedAnnealing struct {
