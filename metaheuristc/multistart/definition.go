@@ -11,8 +11,8 @@ import (
 const name = "MultiStart"
 
 type Configuration struct {
-	MaxIterations    int     `yaml:"MaxIterations"`
-	TimeLimitSeconds float64 `yaml:"TimeLimitSeconds"`
+	MaxIterations    int `yaml:"MaxIterations"`
+	TimeLimitSeconds float64
 }
 
 type MultiStart struct {
