@@ -1,13 +1,15 @@
 package configuration
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/lucasmends/rko-go/metaheuristc/ga"
 	"github.com/lucasmends/rko-go/metaheuristc/ils"
 	"github.com/lucasmends/rko-go/metaheuristc/multistart"
 	"github.com/lucasmends/rko-go/metaheuristc/sa"
 	"github.com/lucasmends/rko-go/metaheuristc/vns"
 	"go.yaml.in/yaml/v3"
-	"os"
 )
 
 type YamlConfiguration struct {
@@ -45,15 +47,23 @@ func CreateYamlConfiguration(filePath string) (*YamlConfiguration, error) {
 
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
-	information := ymlStructure{}
+	configuration := YamlConfiguration{}
 
-	err = yaml.Unmarshal(data, &information)
+	if err = yaml.Unmarshal(data, &configuration); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
 
-	if err != nil {
-		return nil, err
 	}
 
-	return &YamlConfiguration{&information}, nil
+	var opts = []Option{
+		withMultiStart(configuration.MultiStart, configuration.TimeLimitSeconds),
+		withGA(configuration.GA, configuration.TimeLimitSeconds),
+		withBRKGA(configuration.BRKGA, configuration.TimeLimitSeconds),
+		withSA(configuration.SA, configuration.TimeLimitSeconds),
+		withVNS(configuration.VNS, configuration.TimeLimitSeconds),
+		withILS(configuration.ILS, configuration.TimeLimitSeconds)}
+
+	return newYamlConfiguration(opts...), nil
 }
