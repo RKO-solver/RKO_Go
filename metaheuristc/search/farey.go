@@ -65,3 +65,8 @@ func (s fareyLocalSearch) SetRG(rg *random.Generator) {
 func CreateFareyLocalSearch(environment definition.Environment, rg *random.Generator) Local {
 	return fareyLocalSearch{environment, rg}
 }
+
+// --- The Compile-Time Check ---
+// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
+// If it doesn't, the code will not compile.
+var _ Local = (*fareyLocalSearch)(nil)

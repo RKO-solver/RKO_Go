@@ -38,3 +38,8 @@ func (s swapLocalSearch) SetRG(rg *random.Generator) {}
 func CreateSwapLocalSearch(environment definition.Environment) Local {
 	return swapLocalSearch{environment}
 }
+
+// --- The Compile-Time Check ---
+// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
+// If it doesn't, the code will not compile.
+var _ Local = (*swapLocalSearch)(nil)

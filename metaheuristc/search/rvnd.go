@@ -67,3 +67,8 @@ func CreateRVND(environment definition.Environment, rg *random.Generator, neighb
 
 	return rvndseach{environment, rg, neighbourhood}
 }
+
+// --- The Compile-Time Check ---
+// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
+// If it doesn't, the code will not compile.
+var _ Local = (*rvndseach)(nil)
