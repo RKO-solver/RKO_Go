@@ -10,17 +10,35 @@ import (
 	"os"
 )
 
-type ymlStructure struct {
-	MultiStart *multistart.Configuration `yaml:"MultiStart"`
-	BRKGA      *ga.ConfigurationBRKGA    `yaml:"BRKGA"`
-	GA         *ga.ConfigurationGA       `yaml:"GA"`
-	ILS        *ils.Configuration        `yaml:"ILS"`
-	SA         *sa.Configuration         `yaml:"SA"`
-	VNS        *vns.Configuration        `yaml:"VNS"`
+type YamlConfiguration struct {
+	TimeLimitSeconds float64                   `yaml:"TimeLimitSeconds"`
+	MultiStart       *multistart.Configuration `yaml:"MultiStart"`
+	BRKGA            *ga.ConfigurationBRKGA    `yaml:"BRKGA"`
+	GA               *ga.ConfigurationGA       `yaml:"GA"`
+	ILS              *ils.Configuration        `yaml:"ILS"`
+	SA               *sa.Configuration         `yaml:"SA"`
+	VNS              *vns.Configuration        `yaml:"VNS"`
 }
 
-type YamlConfiguration struct {
-	information *ymlStructure
+type Option func(*YamlConfiguration)
+
+func newYamlConfiguration(opts ...Option) *YamlConfiguration {
+	// Start with a configuration struct populated with all default values.
+	config := &YamlConfiguration{
+		MultiStart: DefaultMultiStart(),
+		BRKGA:      DefaultBRKGA(),
+		GA:         DefaultGA(),
+		ILS:        DefaultILS(),
+		SA:         DefaultSA(),
+		VNS:        DefaultVNS(),
+	}
+
+	// Apply all provided options, which will overwrite the defaults if specified.
+	for _, opt := range opts {
+		opt(config)
+	}
+
+	return config
 }
 
 func CreateYamlConfiguration(filePath string) (*YamlConfiguration, error) {
