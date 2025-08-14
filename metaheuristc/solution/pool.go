@@ -80,6 +80,20 @@ func (p *Pool) BestSolution() *metaheuristc.RandomKeyValue {
 	return p.solutions[0].Clone()
 }
 
+func (p *Pool) GetSolution(index int) *metaheuristc.RandomKeyValue {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return p.solutions[index].Clone()
+}
+
+func (p *Pool) SolutionsCount() int {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return len(p.solutions)
+}
+
 func (p *Pool) BestSolutionCost() int {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
