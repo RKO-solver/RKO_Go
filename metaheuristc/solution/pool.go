@@ -60,9 +60,8 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
 		return
 	}
 
-	p.solutions = append(p.solutions, solution)
 	p.logger.Info(fmt.Sprintf("Adding solution cost %d to the pool", solution.Cost))
-	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
+	p.append(solution)
 
 	if len(p.solutions) >= p.maxSize {
 		p.solutions = p.solutions[:len(p.solutions)-1]
@@ -90,4 +89,9 @@ func (p *Pool) BestSolutionCost() int {
 	}
 
 	return p.solutions[0].Cost
+}
+
+func (p *Pool) append(solution *metaheuristc.RandomKeyValue) {
+	p.solutions = append(p.solutions, solution)
+	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
 }
