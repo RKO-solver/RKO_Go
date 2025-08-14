@@ -69,17 +69,7 @@ func (g *Generator) RangeInts(maxInt, numElem int) []int {
 }
 
 func (g *Generator) Permutation(n int) []int {
-	// Create slice with values 0 to n-1
-	perm := make([]int, n)
-	for i := range perm {
-		perm[i] = i
-	}
-
-	g.rand.Shuffle(n, func(i, j int) {
-		perm[i], perm[j] = perm[j], perm[i]
-	})
-
-	return perm
+	return g.rand.Perm(n)
 }
 
 func (g *Generator) RangeFloat64(min, max float64) float64 {
