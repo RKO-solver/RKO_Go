@@ -16,8 +16,8 @@ import (
 
 func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logLevel logger.Level, saveReport bool, handler logger.Interface) *Solver {
 	lo := logger.CreateLogger(logLevel, saveReport, handler)
-	solutionPool := solution.NewDefaultPool(lo)
 	rg := random.GetGlobalInstance()
+	solutionPool := solution.NewDefaultPool(env, rg, lo)
 
 	solvers := make([]definition.Solver, 0, len(mh))
 
