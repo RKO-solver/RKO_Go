@@ -6,12 +6,12 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/RKO-solver/rko-go/definition"
-	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/logger/basic"
-	"github.com/RKO-solver/rko-go/metaheuristc"
-	"github.com/RKO-solver/rko-go/metaheuristc/rk"
-	"github.com/RKO-solver/rko-go/random"
+	"github.com/lucasmends/rko-go/definition"
+	"github.com/lucasmends/rko-go/logger"
+	"github.com/lucasmends/rko-go/logger/basic"
+	"github.com/lucasmends/rko-go/metaheuristc"
+	"github.com/lucasmends/rko-go/metaheuristc/rk"
+	"github.com/lucasmends/rko-go/random"
 )
 
 const defaultMazSize = 200
