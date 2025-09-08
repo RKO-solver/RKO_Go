@@ -2,12 +2,16 @@ package solution
 
 import (
 	"fmt"
-	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/logger/basic"
-	"github.com/RKO-solver/rko-go/metaheuristc"
 	"math"
 	"sort"
 	"sync"
+
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger/basic"
+	"github.com/RKO-solver/rko-go/metaheuristc"
+	"github.com/RKO-solver/rko-go/metaheuristc/rk"
+	"github.com/RKO-solver/rko-go/random"
 )
 
 const defaultMazSize = 200
@@ -24,25 +28,41 @@ var (
 	once     sync.Once
 )
 
-func GetGlobalInstance() *Pool {
+func GetGlobalInstance(env definition.Environment, rg *random.Generator) *Pool {
 	once.Do(func() {
 		lo := logger.CreateLogger(logger.INFO, false, basic.CreateLogger())
-		instance = NewDefaultPool(lo)
+		instance = NewDefaultPool(env, rg, lo)
 	})
 
 	return instance
 }
 
-func NewPool(maxSize int, logger *logger.Log) *Pool {
-	return &Pool{
+func NewPool(maxSize int, initialSize int, env definition.Environment, rg *random.Generator, logger *logger.Log) *Pool {
+	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
 		solutions: make([]*metaheuristc.RandomKeyValue, 0),
 	}
+
+	if initialSize > maxSize {
+		initialSize = maxSize
+	}
+
+	for range initialSize {
+		key := rk.Generate(env, rg)
+		cost := env.Cost(key)
+		solution := &metaheuristc.RandomKeyValue{
+			RK:   key,
+			Cost: cost,
+		}
+		pool.append(solution)
+	}
+
+	return pool
 }
 
-func NewDefaultPool(logger *logger.Log) *Pool {
-	return NewPool(defaultMazSize, logger)
+func NewDefaultPool(env definition.Environment, rg *random.Generator, logger *logger.Log) *Pool {
+	return NewPool(defaultMazSize, defaultMazSize, env, rg, logger)
 }
 
 func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
