@@ -27,12 +27,12 @@ type Option func(*YamlConfiguration)
 func newYamlConfiguration(opts ...Option) *YamlConfiguration {
 	// Start with a configuration struct populated with all default values.
 	config := &YamlConfiguration{
-		MultiStart: DefaultMultiStart(),
-		BRKGA:      DefaultBRKGA(),
-		GA:         DefaultGA(),
-		ILS:        DefaultILS(),
-		SA:         DefaultSA(),
-		VNS:        DefaultVNS(),
+		MultiStart: multistart.DefaulConfigurationtMultiStart(),
+		BRKGA:      ga.DefaultConfigurationBRKGA(),
+		GA:         ga.DefaultConfigurationGA(),
+		ILS:        ils.DefaultConfigurationILS(),
+		SA:         sa.DefaultConfigurationSA(),
+		VNS:        vns.DefaultConfigurationVNS(),
 	}
 
 	// Apply all provided options, which will overwrite the defaults if specified.
