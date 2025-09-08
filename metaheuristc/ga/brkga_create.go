@@ -1,16 +1,16 @@
 package ga
 
 import (
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/logger"
-	"github.com/lucasmends/rko-go/metaheuristc/constants"
-	"github.com/lucasmends/rko-go/metaheuristc/search"
-	"github.com/lucasmends/rko-go/metaheuristc/solution"
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristc/constants"
+	"github.com/RKO-solver/rko-go/metaheuristc/search"
+	"github.com/RKO-solver/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/random"
 )
 
-func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *BRKGA {
-	configuration := &ConfigurationBRKGA{
+func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
+	return &ConfigurationBRKGA{
 		TimeLimitSeconds:           constants.DefaultTimeLimitSeconds,
 		PopulationSize:             constants.DefaultPopulationSize,
 		EliteRatio:                 constants.DefaultEliteRatio,
@@ -20,12 +20,14 @@ func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, soluti
 		MaxGenerations:             constants.DefaultMaxGenerations,
 		MaxGenerationNoImprovement: constants.DefaultMaxGenerationNoImprovement,
 	}
+}
 
+func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *BRKGA {
 	local := search.CreateMirrorLocalSearch(env)
 
 	return &BRKGA{
 		env:           env,
-		configuration: configuration,
+		configuration: DefaultConfigurationBRKGA(),
 		logger:        logger.GetLogger(nameBRKGA),
 		search:        local,
 		solutionPool:  solutionPool,

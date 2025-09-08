@@ -2,10 +2,10 @@ package sa
 
 import (
 	"fmt"
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/metaheuristc"
-	"github.com/lucasmends/rko-go/metaheuristc/rk"
-	"github.com/lucasmends/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/metaheuristc"
+	"github.com/RKO-solver/rko-go/metaheuristc/rk"
+	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 	"math"
 	"time"
 )

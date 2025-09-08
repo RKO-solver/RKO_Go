@@ -50,7 +50,7 @@ You can implement your own logger by satisfying the [`logger.Interface`](logger/
 ### 1. Install
 
 ```sh
-go get github.com/lucasmends/rko-go
+go get github.com/RKO-solver/rko-go
 ```
 
 ### 2. Implement the Environment Interface
@@ -75,8 +75,8 @@ Use [`CreateDefaultSolver`](create.go) to create a solver that can run multiple 
 
 ```go
 import (
-    "github.com/lucasmends/rko-go"
-    "github.com/lucasmends/rko-go/logger/basic"
+    "github.com/RKO-solver/rko-go"
+    "github.com/RKO-solver/rko-go/logger/basic"
 )
 
 env := MyEnvironment{} // Your implementation

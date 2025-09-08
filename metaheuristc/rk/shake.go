@@ -1,9 +1,9 @@
 package rk
 
 import (
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/metaheuristc"
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/metaheuristc"
+	"github.com/RKO-solver/rko-go/random"
 )
 
 type shakeType = int

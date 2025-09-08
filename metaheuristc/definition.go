@@ -1,7 +1,7 @@
 package metaheuristc
 
 import (
-	"github.com/lucasmends/rko-go/definition"
+	"github.com/RKO-solver/rko-go/definition"
 	"sort"
 )
 

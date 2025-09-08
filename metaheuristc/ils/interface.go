@@ -1,8 +1,8 @@
 package ils
 
 import (
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/random"
 )
 
 func (ils *ILS) SetRG(rg *random.Generator) {

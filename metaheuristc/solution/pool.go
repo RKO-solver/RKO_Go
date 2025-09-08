@@ -2,9 +2,9 @@ package solution
 
 import (
 	"fmt"
-	"github.com/lucasmends/rko-go/logger"
-	"github.com/lucasmends/rko-go/logger/basic"
-	"github.com/lucasmends/rko-go/metaheuristc"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger/basic"
+	"github.com/RKO-solver/rko-go/metaheuristc"
 	"math"
 	"sort"
 	"sync"

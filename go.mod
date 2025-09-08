@@ -1,4 +1,4 @@
-module github.com/lucasmends/rko-go
+module github.com/RKO-solver/rko-go
 
 go 1.24
 

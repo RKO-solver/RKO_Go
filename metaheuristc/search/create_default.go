@@ -1,8 +1,8 @@
 package search
 
 import (
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/random"
 )
 
 func Create(typeSearch Type, environment definition.Environment, rg *random.Generator) Local {

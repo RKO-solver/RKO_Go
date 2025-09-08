@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lucasmends/rko-go/metaheuristc/ga"
-	"github.com/lucasmends/rko-go/metaheuristc/ils"
-	"github.com/lucasmends/rko-go/metaheuristc/multistart"
-	"github.com/lucasmends/rko-go/metaheuristc/sa"
-	"github.com/lucasmends/rko-go/metaheuristc/vns"
+	"github.com/RKO-solver/rko-go/metaheuristc/ga"
+	"github.com/RKO-solver/rko-go/metaheuristc/ils"
+	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
+	"github.com/RKO-solver/rko-go/metaheuristc/sa"
+	"github.com/RKO-solver/rko-go/metaheuristc/vns"
 	"go.yaml.in/yaml/v3"
 )
 

@@ -41,7 +41,7 @@ You can implement your own logger by satisfying the `Interface`.
 
 ```go
 import (
-    "github.com/lucasmends/rko-go/logger/basic"
+    "github.com/RKO-solver/rko-go/logger/basic"
 )
 
 logger := basic.CreateLogger()
@@ -65,4 +65,4 @@ solver := rko.CreateDefaultSolver(
 - [definition package](../definition/README.md)
 
 ---
-This package is part of the [RKO-Go](https://github.com/lucasmends/rko-go) library.
+This package is part of the [RKO-Go](https://github.com/RKO-solver/rko-go) library.

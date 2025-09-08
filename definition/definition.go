@@ -6,7 +6,7 @@ package definition
 import (
 	"sort"
 
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/random"
 )
 
 // RandomKey represents a solution as a slice of float64 values (random keys).

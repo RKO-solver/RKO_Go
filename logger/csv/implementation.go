@@ -3,7 +3,7 @@ package csv
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/lucasmends/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger"
 	"log"
 	"os"
 )

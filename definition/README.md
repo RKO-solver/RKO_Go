@@ -38,7 +38,7 @@ To use RKO-Go with your problem:
 ```go
 package myproblem
 
-import "github.com/lucasmends/rko-go/definition"
+import "github.com/RKO-solver/rko-go/definition"
 
 type MyEnv struct{}
 
@@ -63,4 +63,4 @@ func (e MyEnv) Decode(r definition.RandomKey) any {
 - [logger package](../logger/README.md)
 
 ---
-This package is part of the [RKO-Go](https://github.com/lucasmends/rko-go) library.
+This package is part of the [RKO-Go](https://github.com/RKO-solver/rko-go) library.

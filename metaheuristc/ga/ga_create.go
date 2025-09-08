@@ -1,16 +1,16 @@
 package ga
 
 import (
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/logger"
-	"github.com/lucasmends/rko-go/metaheuristc/constants"
-	"github.com/lucasmends/rko-go/metaheuristc/search"
-	"github.com/lucasmends/rko-go/metaheuristc/solution"
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristc/constants"
+	"github.com/RKO-solver/rko-go/metaheuristc/search"
+	"github.com/RKO-solver/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/random"
 )
 
-func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *GA {
-	configuration := &ConfigurationGA{
+func DefaultConfigurationGA() *ConfigurationGA {
+	return &ConfigurationGA{
 		TimeLimitSeconds:           constants.DefaultTimeLimitSeconds,
 		PopulationSize:             constants.DefaultPopulationSize,
 		CrossoverAlpha:             constants.DefaultCrossoverAlpha,
@@ -18,12 +18,14 @@ func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionP
 		MaxGenerations:             constants.DefaultMaxGenerations,
 		MaxGenerationNoImprovement: constants.DefaultMaxGenerationNoImprovement,
 	}
+}
 
+func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *GA {
 	local := search.CreateMirrorLocalSearch(env)
 
 	return &GA{
 		env:           env,
-		configuration: configuration,
+		configuration: DefaultConfigurationGA(),
 		logger:        logger.GetLogger(nameGA),
 		search:        local,
 		solutionPool:  solutionPool,

@@ -3,15 +3,15 @@ package rko
 import (
 	"fmt"
 
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/logger"
-	"github.com/lucasmends/rko-go/metaheuristc/ga"
-	"github.com/lucasmends/rko-go/metaheuristc/ils"
-	"github.com/lucasmends/rko-go/metaheuristc/multistart"
-	"github.com/lucasmends/rko-go/metaheuristc/sa"
-	"github.com/lucasmends/rko-go/metaheuristc/solution"
-	"github.com/lucasmends/rko-go/metaheuristc/vns"
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristc/ga"
+	"github.com/RKO-solver/rko-go/metaheuristc/ils"
+	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
+	"github.com/RKO-solver/rko-go/metaheuristc/sa"
+	"github.com/RKO-solver/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/metaheuristc/vns"
+	"github.com/RKO-solver/rko-go/random"
 )
 
 func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logLevel logger.Level, saveReport bool, handler logger.Interface) *Solver {

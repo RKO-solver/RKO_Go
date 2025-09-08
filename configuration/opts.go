@@ -3,11 +3,11 @@ package configuration
 import (
 	"math"
 
-	"github.com/lucasmends/rko-go/metaheuristc/ga"
-	"github.com/lucasmends/rko-go/metaheuristc/ils"
-	"github.com/lucasmends/rko-go/metaheuristc/multistart"
-	"github.com/lucasmends/rko-go/metaheuristc/sa"
-	"github.com/lucasmends/rko-go/metaheuristc/vns"
+	"github.com/RKO-solver/rko-go/metaheuristc/ga"
+	"github.com/RKO-solver/rko-go/metaheuristc/ils"
+	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
+	"github.com/RKO-solver/rko-go/metaheuristc/sa"
+	"github.com/RKO-solver/rko-go/metaheuristc/vns"
 )
 
 func withMultiStart(cfg *multistart.Configuration, timeLimitSeconds float64) Option {

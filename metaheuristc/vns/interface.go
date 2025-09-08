@@ -1,8 +1,8 @@
 package vns
 
 import (
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/random"
 )
 
 func (vns *VNS) SetRG(rg *random.Generator) {

@@ -1,25 +1,27 @@
 package multistart
 
 import (
-	"github.com/lucasmends/rko-go/definition"
-	"github.com/lucasmends/rko-go/logger"
-	"github.com/lucasmends/rko-go/metaheuristc/constants"
-	"github.com/lucasmends/rko-go/metaheuristc/search"
-	"github.com/lucasmends/rko-go/metaheuristc/solution"
-	"github.com/lucasmends/rko-go/random"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristc/constants"
+	"github.com/RKO-solver/rko-go/metaheuristc/search"
+	"github.com/RKO-solver/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/random"
 )
 
-func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *MultiStart {
-	configuration := &Configuration{
+func DefaulConfigurationtMultiStart() *Configuration {
+	return &Configuration{
 		MaxIterations:    constants.DefaultMaxIterations,
 		TimeLimitSeconds: constants.DefaultTimeLimitSeconds,
 	}
+}
 
+func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *MultiStart {
 	local := search.CreateDefault(env, rg)
 
 	return &MultiStart{
 		env:           env,
-		configuration: configuration,
+		configuration: DefaulConfigurationtMultiStart(),
 		logger:        logger.GetLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,

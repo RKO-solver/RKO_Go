@@ -2,7 +2,7 @@ package basic
 
 import (
 	"fmt"
-	"github.com/lucasmends/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger"
 )
 
 type Logger struct {
