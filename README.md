@@ -102,6 +102,10 @@ fmt.Printf("Best solution: %+v\n", result)
 - [`logger/basic`](logger/basic/implementation.go) - Basic logger (prints to screen).
 - [`logger/csv`](logger/csv/implementation.go) - CSV logger (saves to file).
 
+## Maintainers
+
+Lucas Mendes - [GitHub](https://github.com/lucasmends)
+
 ## License
 
 This project is licensed under the Academic Free License v3.0. See [LICENSE](LICENSE)
