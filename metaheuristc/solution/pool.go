@@ -2,12 +2,16 @@ package solution
 
 import (
 	"fmt"
-	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/logger/basic"
-	"github.com/RKO-solver/rko-go/metaheuristc"
 	"math"
 	"sort"
 	"sync"
+
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger/basic"
+	"github.com/RKO-solver/rko-go/metaheuristc"
+	"github.com/RKO-solver/rko-go/metaheuristc/rk"
+	"github.com/RKO-solver/rko-go/random"
 )
 
 const defaultMazSize = 200
@@ -24,25 +28,42 @@ var (
 	once     sync.Once
 )
 
-func GetGlobalInstance() *Pool {
+func GetGlobalInstance(env definition.Environment, rg *random.Generator) *Pool {
 	once.Do(func() {
 		lo := logger.CreateLogger(logger.INFO, false, basic.CreateLogger())
-		instance = NewDefaultPool(lo)
+		instance = NewDefaultPool(env, rg, lo)
 	})
 
 	return instance
 }
 
-func NewPool(maxSize int, logger *logger.Log) *Pool {
-	return &Pool{
+func NewPool(maxSize int, initialSize int, env definition.Environment, rg *random.Generator, logger *logger.Log) *Pool {
+	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
-		solutions: make([]*metaheuristc.RandomKeyValue, 0),
+		solutions: make([]*metaheuristc.RandomKeyValue, 0, maxSize),
 	}
+
+	if initialSize > maxSize {
+		initialSize = maxSize
+	}
+
+	for range initialSize {
+		key := rk.Generate(env, rg)
+		cost := env.Cost(key)
+		solution := &metaheuristc.RandomKeyValue{
+			RK:   key,
+			Cost: cost,
+		}
+		pool.solutions = append(pool.solutions, solution)
+	}
+
+	sort.Slice(pool.solutions, func(i, j int) bool { return pool.solutions[i].Cost < pool.solutions[j].Cost })
+	return pool
 }
 
-func NewDefaultPool(logger *logger.Log) *Pool {
-	return NewPool(defaultMazSize, logger)
+func NewDefaultPool(env definition.Environment, rg *random.Generator, logger *logger.Log) *Pool {
+	return NewPool(defaultMazSize, defaultMazSize, env, rg, logger)
 }
 
 func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
@@ -60,10 +81,9 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
 		return
 	}
 
-	p.solutions = append(p.solutions, solution)
 	p.logger.Info(fmt.Sprintf("Adding solution cost %d to the pool", solution.Cost))
+	p.solutions = append(p.solutions, solution)
 	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
-
 	if len(p.solutions) >= p.maxSize {
 		p.solutions = p.solutions[:len(p.solutions)-1]
 	}
@@ -79,6 +99,20 @@ func (p *Pool) BestSolution() *metaheuristc.RandomKeyValue {
 	}
 
 	return p.solutions[0].Clone()
+}
+
+func (p *Pool) GetSolution(index int) *metaheuristc.RandomKeyValue {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return p.solutions[index].Clone()
+}
+
+func (p *Pool) SolutionsCount() int {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return len(p.solutions)
 }
 
 func (p *Pool) BestSolutionCost() int {
