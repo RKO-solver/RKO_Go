@@ -41,7 +41,7 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
-		solutions: make([]*metaheuristc.RandomKeyValue, 0),
+		solutions: make([]*metaheuristc.RandomKeyValue, 0, maxSize),
 	}
 
 	if initialSize > maxSize {
@@ -55,9 +55,10 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 			RK:   key,
 			Cost: cost,
 		}
-		pool.append(solution)
+		pool.solutions = append(pool.solutions, solution)
 	}
 
+	sort.Slice(pool.solutions, func(i, j int) bool { return pool.solutions[i].Cost < pool.solutions[j].Cost })
 	return pool
 }
 
@@ -81,8 +82,8 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
 	}
 
 	p.logger.Info(fmt.Sprintf("Adding solution cost %d to the pool", solution.Cost))
-	p.append(solution)
-
+	p.solutions = append(p.solutions, solution)
+	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
 	if len(p.solutions) >= p.maxSize {
 		p.solutions = p.solutions[:len(p.solutions)-1]
 	}
@@ -123,9 +124,4 @@ func (p *Pool) BestSolutionCost() int {
 	}
 
 	return p.solutions[0].Cost
-}
-
-func (p *Pool) append(solution *metaheuristc.RandomKeyValue) {
-	p.solutions = append(p.solutions, solution)
-	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
 }
