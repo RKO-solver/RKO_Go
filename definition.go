@@ -39,9 +39,9 @@ func (s *Solver) Solve() any {
 
 	var wg sync.WaitGroup
 	for i, sv := range s.solvers {
-		fmt.Printf("Running solver %s (%d)\n", sv.Name(), i+1)
+		fmt.Printf("Running solver %s (%d)\n", sv.Name(), i)
 		wg.Add(1)
-		go metaheuristc.Worker(sv, &metaheuristc.Configuration{Id: i + 1}, &wg)
+		go metaheuristc.Worker(sv, &metaheuristc.Configuration{Id: i}, s.l, &wg)
 	}
 
 	if l, ok := s.l.(*channel.Log); ok {

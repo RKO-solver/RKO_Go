@@ -22,6 +22,7 @@ type information struct {
 	solutionCost      []int
 	solvers           [][]solverInfo
 	extraMessages     [][]extraInfo
+	workerMessages    []string
 	previousLineCount int
 }
 

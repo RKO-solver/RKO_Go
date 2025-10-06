@@ -2,6 +2,7 @@ package logger
 
 type Logger interface {
 	AddSolutionPool(cost int)
+	WorkerDone(message string)
 	GetLogger(name string) SolverLogger
 	GetLogLevel() Level
 }

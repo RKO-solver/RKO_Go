@@ -28,10 +28,12 @@ func NewLogger(logLevel logger.Level, bufferSize int) *Log {
 
 	// The final data store
 	store := &information{
-		init:          false,
-		solutionCost:  make([]int, 0, 100),
-		solvers:       make([][]solverInfo, 0),
-		extraMessages: make([][]extraInfo, 0),
+		init:              false,
+		previousLineCount: 0,
+		solutionCost:      make([]int, 0, 100),
+		solvers:           make([][]solverInfo, 0),
+		extraMessages:     make([][]extraInfo, 0),
+		workerMessages:    make([]string, 0),
 	}
 
 	return &Log{
@@ -47,6 +49,13 @@ func (l *Log) AddSolutionPool(cost int) {
 	defer l.data.mu.Unlock()
 
 	l.data.solutionCost = append(l.data.solutionCost, cost)
+}
+
+func (l *Log) WorkerDone(message string) {
+	l.data.mu.Lock()
+	defer l.data.mu.Unlock()
+
+	l.data.workerMessages = append(l.data.workerMessages, message)
 }
 
 func (l *Log) Start(aggregatorWg *sync.WaitGroup) {
@@ -96,8 +105,8 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 	defer l.data.mu.Unlock()
 
 	id := len(l.data.solvers)
-	l.data.solvers = append(l.data.solvers, make([]solverInfo, 0, 50))
-	l.data.extraMessages = append(l.data.extraMessages, []extraInfo{})
+	l.data.solvers = append(l.data.solvers, make([]solverInfo, 0))
+	l.data.extraMessages = append(l.data.extraMessages, make([]extraInfo, 0))
 
 	return &SolverLoggerChannel{
 		id:         id,
