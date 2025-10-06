@@ -18,6 +18,10 @@ func DefaultLogger() *Log {
 	return NewLogger(logger.DefaultLogLevel, defaultBufferSize)
 }
 
+func NewLoggerLevel(level logger.Level) *Log {
+	return NewLogger(level, defaultBufferSize)
+}
+
 func NewLogger(logLevel logger.Level, bufferSize int) *Log {
 	// The channel for communication
 	progressChan := make(chan channelMessage, bufferSize)
@@ -27,18 +31,15 @@ func NewLogger(logLevel logger.Level, bufferSize int) *Log {
 		init:          false,
 		solutionCost:  make([]int, 0, 100),
 		solvers:       make([][]solverInfo, 0),
-		extraMessages: make([][]string, 0),
+		extraMessages: make([][]extraInfo, 0),
 	}
 
-	// The logger object that workers will use
-	logger := &Log{
+	return &Log{
 		updateChan: progressChan,
 		data:       store,
 		LogLevel:   logLevel,
 		ticker:     defaultTickerMilliseconds * time.Millisecond,
 	}
-
-	return logger
 }
 
 func (l *Log) AddSolutionPool(cost int) {
@@ -63,7 +64,7 @@ func (l *Log) Start(aggregatorWg *sync.WaitGroup) {
 			case infoMessage:
 				store.registerInfo(id, message.info)
 			case verboseMessage:
-				store.registerVerbose(id, message.message)
+				store.registerVerbose(id, message.extra)
 			}
 
 		}
@@ -96,7 +97,7 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 
 	id := len(l.data.solvers)
 	l.data.solvers = append(l.data.solvers, make([]solverInfo, 0, 50))
-	l.data.extraMessages = append(l.data.extraMessages, []string{})
+	l.data.extraMessages = append(l.data.extraMessages, []extraInfo{})
 
 	return &SolverLoggerChannel{
 		id:         id,

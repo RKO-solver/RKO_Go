@@ -8,8 +8,8 @@ const (
 )
 
 type channelMessage struct {
-	t       messageTpe
-	id      int
-	info    solverInfo
-	message string
+	t     messageTpe
+	id    int
+	info  solverInfo
+	extra extraInfo
 }

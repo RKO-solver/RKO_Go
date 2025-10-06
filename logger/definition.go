@@ -8,5 +8,5 @@ type Logger interface {
 
 type SolverLogger interface {
 	Register(local int, localBest int, timeStamp float64, extra string)
-	Verbose(message string)
+	Verbose(message string, timeStamp float64)
 }

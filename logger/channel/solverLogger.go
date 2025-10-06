@@ -21,17 +21,20 @@ func (sl *SolverLoggerChannel) Register(local int, localBest int, timeStamp floa
 			timeStamp: timeStamp,
 			extra:     extra,
 		},
-		message: "",
+		extra: extraInfo{},
 	}
 }
 
-func (sl *SolverLoggerChannel) Verbose(message string) {
+func (sl *SolverLoggerChannel) Verbose(message string, timeStamp float64) {
 	// ignore if log level is not verbose
 	if sl.logLevel >= logger.VERBOSE {
 		sl.updateChan <- channelMessage{
-			t:       verboseMessage,
-			info:    solverInfo{},
-			message: message,
+			t:    verboseMessage,
+			info: solverInfo{},
+			extra: extraInfo{
+				message:   message,
+				timeStamp: timeStamp,
+			},
 		}
 	}
 }
