@@ -63,7 +63,7 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 			vns.logger.Verbose(message, elapsedTime)
 		}
 
-		vns.logger.Register(bestSolution.Cost, localSolution.Cost, time.Since(start).Seconds(), "")
+		vns.logger.Register(localSolution.Cost, bestSolution.Cost, time.Since(start).Seconds(), "")
 		if solutionPool.BestSolutionCost() < bestSolution.Cost {
 			bestSolution = solutionPool.BestSolution()
 		}

@@ -35,7 +35,7 @@ func (m *MultiStart) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKey
 
 		elapsedTime := time.Since(start).Seconds()
 
-		m.logger.Register(bestSolutionCost, localSolution.Cost, elapsedTime, fmt.Sprintf("Iteration: %d", iteration))
+		m.logger.Register(localSolution.Cost, bestSolutionCost, elapsedTime, fmt.Sprintf("Iteration: %d", iteration))
 
 	}
 

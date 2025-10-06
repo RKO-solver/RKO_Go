@@ -77,7 +77,7 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 			temperatureLocal = temperatureLocal * alpha
 		}
 
-		sa.logger.Register(bestSolutionCost, localSolution.Cost, elapsedTime, fmt.Sprintf("Temperature %.4f", temperatureLocal))
+		sa.logger.Register(localSolution.Cost, bestSolutionCost, elapsedTime, fmt.Sprintf("Temperature %.4f", temperatureLocal))
 
 	}
 

@@ -90,8 +90,8 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 
 		elapsed := time.Since(start).Seconds()
 
-		ga.logger.Verbose(fmt.Sprintf("\tGenerations without improvement: %d", generationNoImprovement), elapsed)
-		ga.logger.Register(bestPerson.Cost, children[k].Cost, elapsed, fmt.Sprintf("Generation %d", generation))
+		ga.logger.Verbose(fmt.Sprintf("Generations without improvement: %d", generationNoImprovement), elapsed)
+		ga.logger.Register(children[k].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d", generation))
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
 			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population", time.Since(start).Seconds())

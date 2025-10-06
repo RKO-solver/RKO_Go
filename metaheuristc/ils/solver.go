@@ -79,7 +79,7 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 
 		elapsedTime := time.Since(start).Seconds()
 
-		ils.logger.Register(bestSolutionCost, localSolution.Cost, elapsedTime, fmt.Sprintf("Iteration: %d", iteration))
+		ils.logger.Register(localSolution.Cost, bestSolutionCost, elapsedTime, fmt.Sprintf("Iteration: %d", iteration))
 	}
 
 	return localSolution, time.Since(start).Seconds()
