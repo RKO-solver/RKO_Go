@@ -2,19 +2,21 @@ package rko
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 	"github.com/RKO-solver/rko-go/random"
-	"sync"
 )
 
 // Solver coordinates the execution of multiple metaheuristic solvers in parallel,
 // sharing a solution pool and environment. It manages logging, random number generation,
 // and provides a unified interface for running and retrieving the best solution.
 type Solver struct {
-	l            *logger.Log            // Logger for reporting progress and results
+	l            *logger.Logger
 	rg           *random.Generator      // Random number generator
 	env          definition.Environment // Problem environment (user implementation)
 	solutionPool *solution.Pool         // Shared pool of solutions among solvers
@@ -27,15 +29,41 @@ type Solver struct {
 // Returns:
 //   - The best solution found, decoded using the Environment's Decode method.
 func (s *Solver) Solve() any {
-	var wg sync.WaitGroup
+	var loggerWg sync.WaitGroup
+	s.l.Start(&loggerWg)
 
+	var wg sync.WaitGroup
 	for i, sv := range s.solvers {
 		fmt.Printf("Running solver %s (%d)\n", sv.Name(), i+1)
 		wg.Add(1)
 		go metaheuristc.Worker(sv, &metaheuristc.Configuration{Id: i + 1}, &wg)
 	}
 
-	wg.Wait()
+	if s.l.LogLevel > logger.SILENT {
+		ticker := time.NewTicker(s.l.GetTicker())
+		defer ticker.Stop()
+
+		workersDone := make(chan bool)
+		go func() {
+			wg.Wait()
+			close(workersDone)
+		}()
+
+		displaying := true
+		for displaying {
+			select {
+			case <-ticker.C:
+				s.l.Print()
+			case <-workersDone:
+				displaying = false
+			}
+		}
+	} else {
+		wg.Wait()
+	}
+
+	s.l.Shutdown()
+	loggerWg.Wait()
 
 	rk := s.solutionPool.BestSolution()
 	return s.env.Decode(rk.RK)
