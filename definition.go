@@ -70,6 +70,7 @@ func (s *Solver) Solve() any {
 
 		l.Shutdown()
 		loggerWg.Wait()
+		l.WorkersPrint()
 	} else {
 		wg.Wait()
 	}

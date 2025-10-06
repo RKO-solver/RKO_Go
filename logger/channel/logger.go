@@ -1,6 +1,7 @@
 package channel
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -87,6 +88,12 @@ func (l *Log) Shutdown() {
 
 func (l *Log) Print() {
 	l.data.printShell()
+}
+
+func (l *Log) WorkersPrint() {
+	for _, message := range l.data.workerMessages {
+		fmt.Println(message)
+	}
 }
 
 func (l *Log) GetTicker() time.Duration {
