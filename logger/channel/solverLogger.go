@@ -15,6 +15,7 @@ func (sl *SolverLoggerChannel) Register(local int, localBest int, timeStamp floa
 		t:  infoMessage,
 		id: sl.id,
 		info: solverInfo{
+			id:        sl.id,
 			name:      sl.name,
 			localBest: localBest,
 			local:     local,
@@ -30,6 +31,7 @@ func (sl *SolverLoggerChannel) Verbose(message string, timeStamp float64) {
 	if sl.logLevel >= logger.VERBOSE {
 		sl.updateChan <- channelMessage{
 			t:    verboseMessage,
+			id:   sl.id,
 			info: solverInfo{},
 			extra: extraInfo{
 				message:   message,

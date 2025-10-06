@@ -6,6 +6,7 @@ import (
 
 type solverInfo struct {
 	name      string
+	id        int
 	localBest int
 	local     int
 	timeStamp float64
