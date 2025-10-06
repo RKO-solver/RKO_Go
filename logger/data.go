@@ -19,3 +19,17 @@ type information struct {
 	extraMessages     [][]string
 	previousLineCount int
 }
+
+func (d *information) registerInfo(id int, info solverInfo) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.solvers[id] = append(d.solvers[id], info)
+}
+
+func (d *information) registerVerbose(id int, message string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.extraMessages[id] = append(d.extraMessages[id], message)
+}
