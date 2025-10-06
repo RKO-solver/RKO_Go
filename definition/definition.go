@@ -18,8 +18,6 @@ type Solver interface {
 	Solve() Result
 	// Name returns the name of the solver.
 	Name() string
-	// SetIdWorker sets the worker ID for parallel execution.
-	SetIdWorker(id int)
 	// SetRG sets the random number generator for the solver.
 	SetRG(rg *random.Generator)
 	// SetTimeLimitSecond sets the time limit for the solver in seconds.
