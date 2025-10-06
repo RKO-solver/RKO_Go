@@ -1,4 +1,4 @@
-package logger
+package channel
 
 type messageTpe = uint8
 

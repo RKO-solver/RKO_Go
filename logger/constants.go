@@ -1,12 +1,6 @@
 package logger
 
-const minimumTickerMilliseconds = 300
-
-const defaultTickerMilliseconds = 500
-
-const defaultBufferSize = 15
-
-const defaultLogLevel = INFO
+const DefaultLogLevel = INFO
 
 type Level uint8
 

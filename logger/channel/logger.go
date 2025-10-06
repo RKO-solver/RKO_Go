@@ -1,22 +1,24 @@
-package logger
+package channel
 
 import (
 	"sync"
 	"time"
+
+	"github.com/RKO-solver/rko-go/logger"
 )
 
-type Logger struct {
+type Log struct {
 	updateChan chan channelMessage
 	data       *information
-	LogLevel   Level
+	LogLevel   logger.Level
 	ticker     time.Duration
 }
 
-func DefaultLogger() *Logger {
-	return NewLogger(defaultLogLevel, defaultBufferSize)
+func DefaultLogger() *Log {
+	return NewLogger(logger.DefaultLogLevel, defaultBufferSize)
 }
 
-func NewLogger(logLevel Level, bufferSize int) *Logger {
+func NewLogger(logLevel logger.Level, bufferSize int) *Log {
 	// The channel for communication
 	progressChan := make(chan channelMessage, bufferSize)
 
@@ -29,7 +31,7 @@ func NewLogger(logLevel Level, bufferSize int) *Logger {
 	}
 
 	// The logger object that workers will use
-	logger := &Logger{
+	logger := &Log{
 		updateChan: progressChan,
 		data:       store,
 		LogLevel:   logLevel,
@@ -39,14 +41,14 @@ func NewLogger(logLevel Level, bufferSize int) *Logger {
 	return logger
 }
 
-func (l *Logger) AddSolutionPool(cost int) {
+func (l *Log) AddSolutionPool(cost int) {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()
 
 	l.data.solutionCost = append(l.data.solutionCost, cost)
 }
 
-func (l *Logger) Start(aggregatorWg *sync.WaitGroup) {
+func (l *Log) Start(aggregatorWg *sync.WaitGroup) {
 	progressChan := l.updateChan
 	store := l.data
 
@@ -69,21 +71,46 @@ func (l *Logger) Start(aggregatorWg *sync.WaitGroup) {
 }
 
 // Shutdown closes the main channel to stop the aggregator
-func (l *Logger) Shutdown() {
+func (l *Log) Shutdown() {
 	close(l.updateChan)
 }
 
-func (l *Logger) Print() {
+func (l *Log) Print() {
 	l.data.printShell()
 }
 
-func (l *Logger) GetTicker() time.Duration {
+func (l *Log) GetTicker() time.Duration {
 	return l.ticker
 }
 
-func (l *Logger) SetTicker(timeMilliseconds int) {
+func (l *Log) SetTicker(timeMilliseconds int) {
 	if timeMilliseconds < minimumTickerMilliseconds {
 		return
 	}
 	l.ticker = time.Duration(timeMilliseconds) * time.Millisecond
 }
+
+func (l *Log) GetLogger(name string) logger.SolverLogger {
+	l.data.mu.Lock()
+	defer l.data.mu.Unlock()
+
+	id := len(l.data.solvers)
+	l.data.solvers = append(l.data.solvers, make([]solverInfo, 0, 50))
+	l.data.extraMessages = append(l.data.extraMessages, []string{})
+
+	return &SolverLoggerChannel{
+		id:         id,
+		name:       name,
+		logLevel:   l.LogLevel,
+		updateChan: l.updateChan,
+	}
+}
+
+func (l *Log) GetLogLevel() logger.Level {
+	return l.LogLevel
+}
+
+// --- The Compile-Time Check ---
+// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
+// If it doesn't, the code will not compile.
+var _ logger.Logger = (*Log)(nil)
