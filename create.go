@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/RKO-solver/rko-go/definition"
-	"github.com/RKO-solver/rko-go/logger/channel"
+	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
 	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
@@ -14,7 +14,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger *channel.Log) *Solver {
+func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger logger.Logger) *Solver {
 	rg := random.GetGlobalInstance()
 	solutionPool := solution.NewDefaultPool(env, rg, logger)
 
@@ -67,7 +67,7 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger 
 //
 // Returns:
 //   - Pointer to a configured Solver with time limits set for all metaheuristics.
-func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond float64, env definition.Environment, logger *channel.Log) *Solver {
+func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond float64, env definition.Environment, logger logger.Logger) *Solver {
 	solver := CreateDefaultSolver(mh, env, logger)
 	for _, sol := range solver.solvers {
 		sol.SetTimeLimitSecond(timeLimitSecond)

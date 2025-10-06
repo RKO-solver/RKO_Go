@@ -14,12 +14,6 @@ func (ga *BRKGA) Name() string {
 	return nameBRKGA
 }
 
-func (ga *BRKGA) SetIdWorker(id int) {
-	if ga.logger != nil {
-		ga.logger.SetIdWorker(id)
-	}
-}
-
 func (ga *BRKGA) Solve() definition.Result {
 	rko, elapsed := ga.solve(ga.solutionPool)
 

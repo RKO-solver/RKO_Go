@@ -21,7 +21,7 @@ type Configuration struct {
 type ILS struct {
 	env           definition.Environment
 	configuration *Configuration
-	logger        *logger.Log
+	logger        logger.SolverLogger
 	search        search.Local
 	RG            *random.Generator
 	solutionPool  *solution.Pool

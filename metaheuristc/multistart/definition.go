@@ -18,7 +18,7 @@ type Configuration struct {
 type MultiStart struct {
 	env           definition.Environment
 	configuration *Configuration
-	logger        *logger.Log
+	logger        logger.SolverLogger
 	search        search.Local
 	RG            *random.Generator
 	solutionPool  *solution.Pool

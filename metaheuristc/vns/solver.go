@@ -58,10 +58,10 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 
 			elapsedTime := time.Since(start).Seconds()
 			message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d, time %.2f", iteration, poolSolutionCost, bestSolution.Cost, elapsedTime)
-			vns.logger.Debug(message)
+			vns.logger.Verbose(message)
 		}
 
-		vns.logger.Report(bestSolution.Cost, localSolution.Cost, time.Since(start).Seconds())
+		vns.logger.Register(bestSolution.Cost, localSolution.Cost, time.Since(start).Seconds(), "")
 		if solutionPool.BestSolutionCost() < bestSolution.Cost {
 			bestSolution = solutionPool.BestSolution()
 		}

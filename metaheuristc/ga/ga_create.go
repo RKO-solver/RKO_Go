@@ -20,7 +20,7 @@ func DefaultConfigurationGA() *ConfigurationGA {
 	}
 }
 
-func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *GA {
+func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
 	local := search.CreateMirrorLocalSearch(env)
 
 	return &GA{
@@ -33,7 +33,7 @@ func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionP
 	}
 }
 
-func CreateGA(env definition.Environment, configuration *ConfigurationGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *GA {
+func CreateGA(env definition.Environment, configuration *ConfigurationGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
 	local := search.Create(searchType, env, rg)
 	return &GA{
 		env:           env,

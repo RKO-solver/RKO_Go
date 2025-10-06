@@ -23,7 +23,7 @@ type ConfigurationGA struct {
 type GA struct {
 	env           definition.Environment
 	configuration *ConfigurationGA
-	logger        *logger.Log
+	logger        logger.SolverLogger
 	search        search.Local
 	RG            *random.Generator
 	solutionPool  *solution.Pool

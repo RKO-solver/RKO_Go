@@ -24,7 +24,7 @@ type ConfigurationBRKGA struct {
 type BRKGA struct {
 	env           definition.Environment
 	configuration *ConfigurationBRKGA
-	logger        *logger.Log
+	logger        logger.SolverLogger
 	search        search.Local
 	RG            *random.Generator
 	solutionPool  *solution.Pool

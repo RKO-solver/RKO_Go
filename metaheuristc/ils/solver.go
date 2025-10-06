@@ -78,9 +78,8 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		}
 
 		elapsedTime := time.Since(start).Seconds()
-		message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d, time %.2f", iteration, bestSolutionCost, localSolution.Cost, elapsedTime)
-		ils.logger.Debug(message)
-		ils.logger.Report(bestSolutionCost, localSolution.Cost, elapsedTime)
+
+		ils.logger.Register(bestSolutionCost, localSolution.Cost, elapsedTime, fmt.Sprintf("Iteration: %d", iteration))
 	}
 
 	return localSolution, time.Since(start).Seconds()

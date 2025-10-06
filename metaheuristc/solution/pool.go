@@ -18,7 +18,7 @@ type Pool struct {
 	mu        sync.RWMutex
 	solutions []*metaheuristc.RandomKeyValue
 	maxSize   int
-	logger    *logger.Logger
+	logger    logger.Logger
 }
 
 var (
@@ -26,7 +26,7 @@ var (
 	once     sync.Once
 )
 
-func GetGlobalInstance(env definition.Environment, logger *logger.Logger, rg *random.Generator) *Pool {
+func GetGlobalInstance(env definition.Environment, logger logger.Logger, rg *random.Generator) *Pool {
 	once.Do(func() {
 		instance = NewDefaultPool(env, rg, logger)
 	})
@@ -34,7 +34,7 @@ func GetGlobalInstance(env definition.Environment, logger *logger.Logger, rg *ra
 	return instance
 }
 
-func NewPool(maxSize int, initialSize int, env definition.Environment, rg *random.Generator, logger *logger.Logger) *Pool {
+func NewPool(maxSize int, initialSize int, env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
 	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
@@ -59,7 +59,7 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 	return pool
 }
 
-func NewDefaultPool(env definition.Environment, rg *random.Generator, logger *logger.Logger) *Pool {
+func NewDefaultPool(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
 	return NewPool(defaultMazSize, defaultMazSize, env, rg, logger)
 }
 
