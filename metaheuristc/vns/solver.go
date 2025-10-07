@@ -2,11 +2,12 @@ package vns
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/metaheuristc/rk"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
-	"time"
 )
 
 func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
