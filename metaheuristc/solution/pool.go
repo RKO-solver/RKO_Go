@@ -1,14 +1,12 @@
 package solution
 
 import (
-	"fmt"
 	"math"
 	"sort"
 	"sync"
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/logger/basic"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/metaheuristc/rk"
 	"github.com/RKO-solver/rko-go/random"
@@ -20,7 +18,7 @@ type Pool struct {
 	mu        sync.RWMutex
 	solutions []*metaheuristc.RandomKeyValue
 	maxSize   int
-	logger    *logger.Log
+	logger    logger.Logger
 }
 
 var (
@@ -28,16 +26,15 @@ var (
 	once     sync.Once
 )
 
-func GetGlobalInstance(env definition.Environment, rg *random.Generator) *Pool {
+func GetGlobalInstance(env definition.Environment, logger logger.Logger, rg *random.Generator) *Pool {
 	once.Do(func() {
-		lo := logger.CreateLogger(logger.INFO, false, basic.CreateLogger())
-		instance = NewDefaultPool(env, rg, lo)
+		instance = NewDefaultPool(env, rg, logger)
 	})
 
 	return instance
 }
 
-func NewPool(maxSize int, initialSize int, env definition.Environment, rg *random.Generator, logger *logger.Log) *Pool {
+func NewPool(maxSize int, initialSize int, env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
 	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
@@ -62,7 +59,7 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 	return pool
 }
 
-func NewDefaultPool(env definition.Environment, rg *random.Generator, logger *logger.Log) *Pool {
+func NewDefaultPool(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
 	return NewPool(defaultMazSize, defaultMazSize, env, rg, logger)
 }
 
@@ -72,7 +69,7 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
 
 	if len(p.solutions) == 0 {
 		p.solutions = append(p.solutions, solution)
-		p.logger.Info(fmt.Sprintf("Adding solution cost %d to the pool", solution.Cost))
+		p.logger.AddSolutionPool(solution.Cost)
 		return
 	}
 
@@ -81,7 +78,7 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
 		return
 	}
 
-	p.logger.Info(fmt.Sprintf("Adding solution cost %d to the pool", solution.Cost))
+	p.logger.AddSolutionPool(solution.Cost)
 	p.solutions = append(p.solutions, solution)
 	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
 	if len(p.solutions) >= p.maxSize {

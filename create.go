@@ -14,10 +14,9 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logLevel logger.Level, saveReport bool, handler logger.Interface) *Solver {
-	lo := logger.CreateLogger(logLevel, saveReport, handler)
+func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger logger.Logger) *Solver {
 	rg := random.GetGlobalInstance()
-	solutionPool := solution.NewDefaultPool(env, rg, lo)
+	solutionPool := solution.NewDefaultPool(env, rg, logger)
 
 	solvers := make([]definition.Solver, 0, len(mh))
 
@@ -25,17 +24,17 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logLeve
 		var solver definition.Solver
 		switch m {
 		case ILS:
-			solver = ils.CreateDefaultILS(env, rg, solutionPool, lo)
+			solver = ils.CreateDefaultILS(env, rg, solutionPool, logger)
 		case VNS:
-			solver = vns.CreateDefaultVNS(env, rg, solutionPool, lo)
+			solver = vns.CreateDefaultVNS(env, rg, solutionPool, logger)
 		case MULTISTART:
-			solver = multistart.CreateDefaultMultiStart(env, rg, solutionPool, lo)
+			solver = multistart.CreateDefaultMultiStart(env, rg, solutionPool, logger)
 		case SA:
-			solver = sa.CreateDefaultSA(env, rg, solutionPool, lo)
+			solver = sa.CreateDefaultSA(env, rg, solutionPool, logger)
 		case GA:
-			solver = ga.CreateDefaultGA(env, rg, solutionPool, lo)
+			solver = ga.CreateDefaultGA(env, rg, solutionPool, logger)
 		case BRKGA:
-			solver = ga.CreateDefaultBRKGA(env, rg, solutionPool, lo)
+			solver = ga.CreateDefaultBRKGA(env, rg, solutionPool, logger)
 		default:
 			fmt.Printf("%s not implemented yet\n", GetMetaHeuristicString(m))
 			continue
@@ -47,7 +46,7 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logLeve
 	}
 
 	return &Solver{
-		l:            lo,
+		l:            logger,
 		rg:           rg,
 		env:          env,
 		solutionPool: solutionPool,
@@ -68,8 +67,8 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logLeve
 //
 // Returns:
 //   - Pointer to a configured Solver with time limits set for all metaheuristics.
-func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond float64, env definition.Environment, logLevel logger.Level, saveReport bool, handler logger.Interface) *Solver {
-	solver := CreateDefaultSolver(mh, env, logLevel, saveReport, handler)
+func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond float64, env definition.Environment, logger logger.Logger) *Solver {
+	solver := CreateDefaultSolver(mh, env, logger)
 	for _, sol := range solver.solvers {
 		sol.SetTimeLimitSecond(timeLimitSecond)
 	}

@@ -16,7 +16,7 @@ func DefaultConfigurationVNS() *Configuration {
 	}
 }
 
-func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *VNS {
+func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
 
 	return &VNS{
 		env:           env,
@@ -27,7 +27,7 @@ func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solution
 	}
 }
 
-func CreateVNS(env definition.Environment, configuration *Configuration, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *VNS {
+func CreateVNS(env definition.Environment, configuration *Configuration, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
 	return &VNS{
 		env:           env,
 		configuration: configuration,

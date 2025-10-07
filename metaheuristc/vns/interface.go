@@ -13,12 +13,6 @@ func (vns *VNS) Name() string {
 	return name
 }
 
-func (vns *VNS) SetIdWorker(id int) {
-	if vns.logger != nil {
-		vns.logger.SetIdWorker(id)
-	}
-}
-
 func (vns *VNS) Solve() definition.Result {
 	rko, elapsed := vns.solve(vns.solutionPool)
 

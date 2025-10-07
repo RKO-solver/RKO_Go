@@ -14,12 +14,6 @@ func (m *MultiStart) Name() string {
 	return name
 }
 
-func (m *MultiStart) SetIdWorker(id int) {
-	if m.logger != nil {
-		m.logger.SetIdWorker(id)
-	}
-}
-
 func (m *MultiStart) Solve() definition.Result {
 	rko, elapsed := m.solve(m.solutionPool)
 

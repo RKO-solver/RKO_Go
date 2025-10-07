@@ -14,12 +14,6 @@ func (ils *ILS) Name() string {
 	return name
 }
 
-func (ils *ILS) SetIdWorker(id int) {
-	if ils.logger != nil {
-		ils.logger.SetIdWorker(id)
-	}
-}
-
 func (ils *ILS) Solve() definition.Result {
 	rko, elapsed := ils.solve(ils.solutionPool)
 

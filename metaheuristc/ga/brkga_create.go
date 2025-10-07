@@ -22,7 +22,7 @@ func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
 	}
 }
 
-func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *BRKGA {
+func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA {
 	local := search.CreateMirrorLocalSearch(env)
 
 	return &BRKGA{
@@ -35,7 +35,7 @@ func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, soluti
 	}
 }
 
-func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger *logger.Log) *BRKGA {
+func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA {
 	local := search.Create(searchType, env, rg)
 	return &BRKGA{
 		env:           env,

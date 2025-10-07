@@ -2,19 +2,22 @@ package rko
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger/channel"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 	"github.com/RKO-solver/rko-go/random"
-	"sync"
 )
 
 // Solver coordinates the execution of multiple metaheuristic solvers in parallel,
 // sharing a solution pool and environment. It manages logging, random number generation,
 // and provides a unified interface for running and retrieving the best solution.
 type Solver struct {
-	l            *logger.Log            // Logger for reporting progress and results
+	l            logger.Logger
 	rg           *random.Generator      // Random number generator
 	env          definition.Environment // Problem environment (user implementation)
 	solutionPool *solution.Pool         // Shared pool of solutions among solvers
@@ -27,15 +30,50 @@ type Solver struct {
 // Returns:
 //   - The best solution found, decoded using the Environment's Decode method.
 func (s *Solver) Solve() any {
-	var wg sync.WaitGroup
+	logLevel := s.l.GetLogLevel()
+	var loggerWg sync.WaitGroup
 
-	for i, sv := range s.solvers {
-		fmt.Printf("Running solver %s (%d)\n", sv.Name(), i+1)
-		wg.Add(1)
-		go metaheuristc.Worker(sv, &metaheuristc.Configuration{Id: i + 1}, &wg)
+	if l, ok := s.l.(*channel.Log); ok {
+		l.Start(&loggerWg)
 	}
 
-	wg.Wait()
+	var wg sync.WaitGroup
+	for i, sv := range s.solvers {
+		fmt.Printf("Running solver %s (%d)\n", sv.Name(), i)
+		wg.Add(1)
+		go metaheuristc.Worker(sv, &metaheuristc.Configuration{Id: i}, s.l, &wg)
+	}
+
+	if l, ok := s.l.(*channel.Log); ok {
+		if logLevel > logger.SILENT {
+			ticker := time.NewTicker(l.GetTicker())
+			defer ticker.Stop()
+
+			workersDone := make(chan bool)
+			go func() {
+				wg.Wait()
+				close(workersDone)
+			}()
+
+			displaying := true
+			for displaying {
+				select {
+				case <-ticker.C:
+					l.Print()
+				case <-workersDone:
+					displaying = false
+				}
+			}
+		} else {
+			wg.Wait()
+		}
+
+		l.Shutdown()
+		loggerWg.Wait()
+		l.WorkersPrint()
+	} else {
+		wg.Wait()
+	}
 
 	rk := s.solutionPool.BestSolution()
 	return s.env.Decode(rk.RK)

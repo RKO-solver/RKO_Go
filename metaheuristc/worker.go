@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/logger"
 )
 
 type Configuration struct {
@@ -18,11 +19,10 @@ type Configuration struct {
 //   - solver: the metaheuristic solver implementing definition.Solver
 //   - configuration: pointer to Configuration containing the worker Id
 //   - wg: pointer to sync.WaitGroup for goroutine synchronization
-func Worker(solver definition.Solver, configuration *Configuration, wg *sync.WaitGroup) {
+func Worker(solver definition.Solver, configuration *Configuration, log logger.Logger, wg *sync.WaitGroup) {
 	defer wg.Done()
 	id := configuration.Id
-	solver.SetIdWorker(id)
 
 	result := solver.Solve()
-	fmt.Printf("(%d) %s Local Solution:\n\tCost: %d\n\t Time spent: %.2fs\n", id, solver.Name(), result.Cost, result.TimeSpentSecond)
+	log.WorkerDone(fmt.Sprintf("(%d) %s\n\tLocal Solution Cost: %d\n\tTime spent: %.2fs\n", id, solver.Name(), result.Cost, result.TimeSpentSecond))
 }

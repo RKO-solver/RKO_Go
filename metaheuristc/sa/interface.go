@@ -14,12 +14,6 @@ func (sa *SimulatedAnnealing) Name() string {
 	return name
 }
 
-func (sa *SimulatedAnnealing) SetIdWorker(id int) {
-	if sa.logger != nil {
-		sa.logger.SetIdWorker(id)
-	}
-}
-
 func (sa *SimulatedAnnealing) Solve() definition.Result {
 	rko, elapsed := sa.solve(sa.solutionPool)
 

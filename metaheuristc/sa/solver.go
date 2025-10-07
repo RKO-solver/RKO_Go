@@ -67,19 +67,17 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 		}
 
 		elapsedTime := time.Since(start).Seconds()
-		message := fmt.Sprintf("Temperatura %.4f, best solution: %d, local solution %d, time %.2f", temperatureLocal, bestSolutionCost, localSolution.Cost, elapsedTime)
-		sa.logger.Debug(message)
 
 		if heatedLeft > 0 && temperatureLocal < configuration.TemperatureReheat {
 			heatedLeft--
-			sa.logger.Verbose(fmt.Sprintf("Re-heat %d\n", timesReHeat))
+			sa.logger.Verbose(fmt.Sprintf("Re-heat %d\n", timesReHeat), time.Since(start).Seconds())
 			temperatureLocal = configuration.TemperatureInitial / math.Pow(2.0, float64(timesReHeat))
 			timesReHeat++
 		} else {
 			temperatureLocal = temperatureLocal * alpha
 		}
 
-		sa.logger.Report(bestSolutionCost, localSolution.Cost, elapsedTime)
+		sa.logger.Register(localSolution.Cost, bestSolutionCost, elapsedTime, fmt.Sprintf("Temperature %.4f", temperatureLocal))
 
 	}
 

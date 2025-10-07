@@ -12,12 +12,8 @@ func GetLevel(level string) (Level, error) {
 		return SILENT, nil
 	case "INFO":
 		return INFO, nil
-	case "DEBUG":
-		return DEBUG, nil
 	case "VERBOSE":
 		return VERBOSE, nil
-	case "ALL":
-		return ALL, nil
 	}
 	return SILENT, errors.New("invalid Level")
 }
@@ -28,12 +24,8 @@ func GetLevelString(level Level) string {
 		return "Silent"
 	case INFO:
 		return "Info"
-	case DEBUG:
-		return "Debug"
 	case VERBOSE:
 		return "Verbose"
-	case ALL:
-		return "All"
 	default:
 		return ""
 	}

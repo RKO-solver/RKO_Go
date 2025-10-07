@@ -85,12 +85,12 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 		hasImproved = false
 
 		elapsed := time.Since(start).Seconds()
-		ga.logger.Debug(fmt.Sprintf("Generation %d\n\tBest Solution %d\n\tTime %.3fs", generation, bestPerson.Cost, elapsed))
-		ga.logger.Verbose(fmt.Sprintf("\tGenerations without improvement: %d", generationNoImprovement))
-		ga.logger.Report(bestPerson.Cost, population[0].Cost, elapsed)
+
+		ga.logger.Verbose(fmt.Sprintf("Generations without improvement: %d", generationNoImprovement), elapsed)
+		ga.logger.Register(population[0].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d", generation))
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
-			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population")
+			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population", time.Since(start).Seconds())
 			bestPerson = initialPopulation(population, env, true, rg)
 
 			if bestPerson.Cost < bestSolutionCost {

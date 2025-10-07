@@ -18,7 +18,7 @@ type Configuration struct {
 type VNS struct {
 	env           definition.Environment
 	configuration *Configuration
-	logger        *logger.Log
+	logger        logger.SolverLogger
 	RG            *random.Generator
 	solutionPool  *solution.Pool
 }
