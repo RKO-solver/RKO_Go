@@ -12,6 +12,7 @@ const (
 	Mirror
 	Farey
 	RVND
+	Nelder
 )
 
 type Local interface {
