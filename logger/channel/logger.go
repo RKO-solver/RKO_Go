@@ -9,21 +9,22 @@ import (
 )
 
 type Log struct {
-	updateChan chan channelMessage
-	data       *information
-	LogLevel   logger.Level
-	ticker     time.Duration
+	updateChan  chan channelMessage
+	data        *information
+	LogLevel    logger.Level
+	ticker      time.Duration
+	problemName string
 }
 
-func DefaultLogger() *Log {
-	return NewLogger(logger.DefaultLogLevel, defaultBufferSize)
+func DefaultLogger(problemName string) *Log {
+	return NewLogger(logger.DefaultLogLevel, problemName, defaultBufferSize)
 }
 
-func NewLoggerLevel(level logger.Level) *Log {
-	return NewLogger(level, defaultBufferSize)
+func NewLoggerLevel(problemName string, level logger.Level) *Log {
+	return NewLogger(level, problemName, defaultBufferSize)
 }
 
-func NewLogger(logLevel logger.Level, bufferSize int) *Log {
+func NewLogger(logLevel logger.Level, problemName string, bufferSize int) *Log {
 	// The channel for communication
 	progressChan := make(chan channelMessage, bufferSize)
 
@@ -38,10 +39,11 @@ func NewLogger(logLevel logger.Level, bufferSize int) *Log {
 	}
 
 	return &Log{
-		updateChan: progressChan,
-		data:       store,
-		LogLevel:   logLevel,
-		ticker:     defaultTickerMilliseconds * time.Millisecond,
+		updateChan:  progressChan,
+		data:        store,
+		LogLevel:    logLevel,
+		ticker:      defaultTickerMilliseconds * time.Millisecond,
+		problemName: problemName,
 	}
 }
 
@@ -125,6 +127,40 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 
 func (l *Log) GetLogLevel() logger.Level {
 	return l.LogLevel
+}
+
+func (l *Log) GetReportData() []logger.SolverInformation {
+	l.data.mu.Lock()
+	defer l.data.mu.Unlock()
+
+	report := make([]logger.SolverInformation, 0, len(l.data.solvers))
+
+	for _, solver := range l.data.solvers {
+		solverReport := logger.SolverInformation{
+			Name:        "",
+			Id:          -1,
+			Performance: make([]logger.Data, 0),
+		}
+
+		for _, info := range solver {
+			if solverReport.Name == "" {
+				solverReport.Name = info.name
+			}
+			if solverReport.Id < 0 {
+				solverReport.Id = info.id
+			}
+
+			solverReport.Performance = append(solverReport.Performance, logger.Data{
+				LocalCost: info.local,
+				BestCost:  info.localBest,
+				Time:      info.timeStamp,
+			})
+		}
+
+		report = append(report, solverReport)
+	}
+
+	return report
 }
 
 // --- The Compile-Time Check ---
