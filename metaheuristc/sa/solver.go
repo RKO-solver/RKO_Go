@@ -25,6 +25,8 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 
 	localSolution = solutionPool.BestSolution()
 
+	start := time.Now()
+
 	if localSolution == nil {
 		localSolution = &metaheuristc.RandomKeyValue{
 			RK:   make(definition.RandomKey, env.NumKeys()),
@@ -32,7 +34,7 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 		}
 		rk.Reset(localSolution.RK, rg)
 		localSolution.Cost = env.Cost(localSolution.RK)
-		solutionPool.AddSolution(localSolution.Clone())
+		solutionPool.AddSolution(localSolution.Clone(), time.Since(start).Seconds())
 	}
 
 	neighbour = &metaheuristc.RandomKeyValue{
@@ -41,7 +43,7 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 	}
 
 	var bestSolutionCost int
-	start := time.Now()
+
 	for time.Since(start).Seconds() < configuration.TimeLimitSeconds && temperatureLocal > configuration.TemperatureGoal {
 
 		for iteration := 0; iteration < configuration.Iterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
@@ -56,7 +58,7 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 				copy(localSolution.RK, neighbour.RK)
 
 				if neighbour.Cost < bestSolutionCost {
-					solutionPool.AddSolution(neighbour.Clone())
+					solutionPool.AddSolution(neighbour.Clone(), time.Since(start).Seconds())
 				}
 			} else {
 				prob := math.Exp(-(float64(delta) + 0.00001) / temperatureLocal)

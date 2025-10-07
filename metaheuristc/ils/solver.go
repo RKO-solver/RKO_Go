@@ -30,6 +30,8 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 
 	localSolution = solutionPool.BestSolution()
 
+	start := time.Now()
+
 	if localSolution == nil {
 		localSolution = &metaheuristc.RandomKeyValue{
 			RK:   make(definition.RandomKey, env.NumKeys()),
@@ -37,7 +39,7 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		}
 		rk.Reset(localSolution.RK, rg)
 		localSolution.Cost = env.Cost(localSolution.RK)
-		solutionPool.AddSolution(localSolution.Clone())
+		solutionPool.AddSolution(localSolution.Clone(), time.Since(start).Seconds())
 	}
 
 	neighbour = &metaheuristc.RandomKeyValue{
@@ -45,7 +47,6 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		Cost: 0,
 	}
 
-	start := time.Now()
 	for iteration := 0; iteration < configuration.MaxIterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
 		copy(neighbour.RK, localSolution.RK)
 
@@ -61,7 +62,7 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 			historyInformation.timesNoImprovement = 0
 
 			if neighbour.Cost < bestSolutionCost {
-				solutionPool.AddSolution(neighbour.Clone())
+				solutionPool.AddSolution(neighbour.Clone(), time.Since(start).Seconds())
 			}
 		} else {
 			historyInformation.timesNoImprovement++

@@ -19,6 +19,8 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 
 	bestSolution = solutionPool.BestSolution()
 
+	start := time.Now()
+
 	if bestSolution == nil {
 		bestSolution = &metaheuristc.RandomKeyValue{
 			RK:   make(definition.RandomKey, env.NumKeys()),
@@ -26,7 +28,7 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		}
 		rk.Reset(bestSolution.RK, rg)
 		bestSolution.Cost = env.Cost(bestSolution.RK)
-		solutionPool.AddSolution(bestSolution.Clone())
+		solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
 	}
 
 	localSolution = &metaheuristc.RandomKeyValue{
@@ -34,7 +36,6 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		Cost: 0,
 	}
 
-	start := time.Now()
 	for iteration := 0; iteration < configuration.MaxIterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
 		k := 0
 		for k < rk.ShakeMax && time.Since(start).Seconds() < configuration.TimeLimitSeconds {
@@ -49,7 +50,7 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 				bestSolution.Cost = localSolution.Cost
 
 				if bestSolution.Cost < poolSolutionCost {
-					solutionPool.AddSolution(bestSolution.Clone())
+					solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
 				}
 
 				k = 0

@@ -30,7 +30,7 @@ func (m *MultiStart) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKey
 
 		bestSolutionCost := solutionPool.BestSolutionCost()
 		if localSolution.Cost < bestSolutionCost {
-			solutionPool.AddSolution(localSolution.Clone())
+			solutionPool.AddSolution(localSolution.Clone(), time.Since(start).Seconds())
 			bestSolutionCost = localSolution.Cost
 		}
 

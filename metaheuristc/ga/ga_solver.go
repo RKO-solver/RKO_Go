@@ -35,7 +35,7 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 	start := time.Now()
 	bestPerson := initialPopulation(population, env, false, rg)
 	if bestPerson.Cost < solutionPool.BestSolutionCost() {
-		solutionPool.AddSolution(bestPerson.Clone())
+		solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
 	}
 
 	for generation := 0; generation < configuration.MaxGenerations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; generation++ {
@@ -64,7 +64,7 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 
 			bestSolutionCost := solutionPool.BestSolutionCost()
 			if bestPerson.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestPerson.Clone())
+				solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
 			}
 		}
 
@@ -79,7 +79,7 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 
 		bestSolutionCost := solutionPool.BestSolutionCost()
 		if bestPerson.Cost < bestSolutionCost {
-			solutionPool.AddSolution(bestPerson.Clone())
+			solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
 		}
 
 		if hasImproved {
@@ -98,7 +98,7 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population", time.Since(start).Seconds())
 			bestPerson = initialPopulation(population, env, false, rg)
 			if bestPerson.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestPerson.Clone())
+				solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
 			}
 		} else {
 			copy(population, children)

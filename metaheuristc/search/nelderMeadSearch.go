@@ -54,9 +54,6 @@ func (n nelderMeadLocalSearch) SetRG(rg *random.Generator) {
 
 func (n nelderMeadLocalSearch) Search(rko *metaheuristc.RandomKeyValue) {
 	nelderMeadSearch(rko, n.environment, n.solutionPool, n.rg)
-	if rko.Cost < n.solutionPool.BestSolutionCost() {
-		n.solutionPool.AddSolution(rko.Clone())
-	}
 }
 
 func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {

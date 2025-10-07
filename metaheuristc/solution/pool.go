@@ -63,13 +63,13 @@ func NewDefaultPool(env definition.Environment, rg *random.Generator, logger log
 	return NewPool(defaultMazSize, defaultMazSize, env, rg, logger)
 }
 
-func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
+func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, time float64) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
 	if len(p.solutions) == 0 {
 		p.solutions = append(p.solutions, solution)
-		p.logger.AddSolutionPool(solution.Cost)
+		p.logger.AddSolutionPool(solution.Cost, time)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue) {
 		return
 	}
 
-	p.logger.AddSolutionPool(solution.Cost)
+	p.logger.AddSolutionPool(solution.Cost, time)
 	p.solutions = append(p.solutions, solution)
 	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
 	if len(p.solutions) >= p.maxSize {
