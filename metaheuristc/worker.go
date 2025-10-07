@@ -24,5 +24,5 @@ func Worker(solver definition.Solver, configuration *Configuration, log logger.L
 	id := configuration.Id
 
 	result := solver.Solve()
-	log.WorkerDone(fmt.Sprintf("(%d) %s\n\tLocal Solution Cost: %d\n\tTime spent: %.2fs\n", id, solver.Name(), result.Cost, result.TimeSpentSecond))
+	log.WorkerDone(fmt.Sprintf("(%d) %s\n\tBest Local Solution Cost: %d\n\tTime spent: %.2fs\n", id, solver.Name(), result.Cost, result.TimeSpentSecond))
 }
