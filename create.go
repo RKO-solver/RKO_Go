@@ -75,3 +75,13 @@ func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond floa
 
 	return solver
 }
+
+func CreateFullSolver(logger logger.Logger, rg *random.Generator, env definition.Environment, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
+	return &Solver{
+		l:            logger,
+		rg:           rg,
+		env:          env,
+		solutionPool: solutionPool,
+		solvers:      solvers,
+	}
+}

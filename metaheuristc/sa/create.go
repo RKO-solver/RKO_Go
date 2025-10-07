@@ -49,3 +49,14 @@ func CreateSA(env definition.Environment, configuration *Configuration, searchTy
 		RG:            rg,
 	}
 }
+
+func CreateSAComplete(env definition.Environment, config *Configuration, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) definition.Solver {
+	return &SimulatedAnnealing{
+		env:           env,
+		configuration: config,
+		logger:        l.GetLogger(name),
+		search:        se,
+		solutionPool:  pool,
+		RG:            rg,
+	}
+}

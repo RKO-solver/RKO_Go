@@ -46,3 +46,14 @@ func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, 
 		RG:            rg,
 	}
 }
+
+func CreateBRKGAComplete(env definition.Environment, config *ConfigurationBRKGA, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *BRKGA {
+	return &BRKGA{
+		env:           env,
+		configuration: config,
+		logger:        l.GetLogger(nameBRKGA),
+		search:        se,
+		solutionPool:  pool,
+		RG:            rg,
+	}
+}

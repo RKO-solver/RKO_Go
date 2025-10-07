@@ -44,3 +44,14 @@ func CreateGA(env definition.Environment, configuration *ConfigurationGA, search
 		RG:            rg,
 	}
 }
+
+func CreateGAComplete(env definition.Environment, config *ConfigurationGA, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *GA {
+	return &GA{
+		env:           env,
+		configuration: config,
+		logger:        l.GetLogger(nameGA),
+		search:        se,
+		solutionPool:  pool,
+		RG:            rg,
+	}
+}
