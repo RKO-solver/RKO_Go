@@ -72,8 +72,6 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 					copy(localSolution.RK, neighbour.RK)
 				}
 				// Get the best solution for local solution
-			} else if historyInformation.timesNoImprovement > 100 {
-				localSolution = solutionPool.BestSolution()
 			}
 
 		}
