@@ -20,7 +20,7 @@ func DefaultConfigurationILS() *Configuration {
 }
 
 func CreateDefaultILS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *ILS {
-	local := search.CreateDefault(env, rg)
+	local := search.CreateDefault(env, solutionPool, rg)
 
 	return &ILS{
 		env:           env,
@@ -33,7 +33,7 @@ func CreateDefaultILS(env definition.Environment, rg *random.Generator, solution
 }
 
 func CreateILS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *ILS {
-	local := search.Create(searchType, env, rg)
+	local := search.Create(searchType, env, solutionPool, rg)
 	return &ILS{
 		env:           env,
 		configuration: configuration,

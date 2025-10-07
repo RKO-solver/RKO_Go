@@ -34,7 +34,7 @@ func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionP
 }
 
 func CreateGA(env definition.Environment, configuration *ConfigurationGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
-	local := search.Create(searchType, env, rg)
+	local := search.Create(searchType, env, solutionPool, rg)
 	return &GA{
 		env:           env,
 		configuration: configuration,
