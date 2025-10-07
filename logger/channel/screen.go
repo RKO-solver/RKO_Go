@@ -52,14 +52,14 @@ func (d *information) printShell() {
 	}
 
 	// Solution Pool Text
-	idx := len(d.solutionCost) - numLinesSolutionPool
+	idx := len(d.pool) - numLinesSolutionPool
 	if idx < 0 {
 		idx = 0
 	}
 
 	for _ = range numLinesSolutionPool {
-		if idx < len(d.solutionCost) {
-			text := setFixedLength(fmt.Sprintf("Adding to pool %d", d.solutionCost[idx]), maxHorizontalSize, false)
+		if idx < len(d.pool) {
+			text := setFixedLength(fmt.Sprintf("Adding to pool %d at %.3fs", d.pool[idx].cost, d.pool[idx].time), maxHorizontalSize, false)
 			lines = append(lines, text)
 			idx++
 		} else {
@@ -79,7 +79,7 @@ func (d *information) printShell() {
 		if lastIdMessage >= 0 {
 			header = setFixedLength(fmt.Sprintf("(%d) %s: %s", solver[lastIdMessage].id, solver[lastIdMessage].name, solver[lastIdMessage].extra), solverBlockSize, false)
 			info = setFixedLength(fmt.Sprintf("    Local %d Best %d", solver[lastIdMessage].local, solver[lastIdMessage].localBest), solverBlockSize, false)
-			bottom = setFixedLength(fmt.Sprintf("    Time %.3fs", solver[lastIdMessage].timeStamp), solverBlockSize, false)
+			bottom = setFixedLength(fmt.Sprintf("    Time %.3fs", solver[lastIdMessage].time), solverBlockSize, false)
 
 			solversLog[id] = append(solversLog[id], header)
 			solversLog[id] = append(solversLog[id], info)

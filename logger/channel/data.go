@@ -9,8 +9,13 @@ type solverInfo struct {
 	id        int
 	localBest int
 	local     int
-	timeStamp float64
+	time      float64
 	extra     string
+}
+
+type poolInfo struct {
+	cost int
+	time float64
 }
 
 type extraInfo struct {
@@ -20,7 +25,7 @@ type extraInfo struct {
 type information struct {
 	mu                sync.RWMutex
 	init              bool
-	solutionCost      []int
+	pool              []poolInfo
 	solvers           [][]solverInfo
 	extraMessages     [][]extraInfo
 	workerMessages    []string

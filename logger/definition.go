@@ -6,6 +6,10 @@ type SolverInformation struct {
 	Performance []Data
 }
 
+type SolutionData struct {
+	Cost int
+	Time float64
+}
 type Data struct {
 	LocalCost int
 	BestCost  int
@@ -13,14 +17,15 @@ type Data struct {
 }
 
 type Logger interface {
-	AddSolutionPool(cost int)
+	AddSolutionPool(cost int, time float64)
 	WorkerDone(message string)
 	GetLogger(name string) SolverLogger
 	GetLogLevel() Level
 	GetReportData() []SolverInformation
+	GetSolutionData() []SolutionData
 }
 
 type SolverLogger interface {
-	Register(local int, localBest int, timeStamp float64, extra string)
+	Register(local int, localBest int, time float64, extra string)
 	Verbose(message string, timeStamp float64)
 }

@@ -19,7 +19,7 @@ func (sl *SolverLoggerChannel) Register(local int, localBest int, timeStamp floa
 			name:      sl.name,
 			localBest: localBest,
 			local:     local,
-			timeStamp: timeStamp,
+			time:      timeStamp,
 			extra:     extra,
 		},
 		extra: extraInfo{},

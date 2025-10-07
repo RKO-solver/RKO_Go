@@ -32,7 +32,7 @@ func NewLogger(logLevel logger.Level, problemName string, bufferSize int) *Log {
 	store := &information{
 		init:              false,
 		previousLineCount: 0,
-		solutionCost:      make([]int, 0, 100),
+		pool:              make([]poolInfo, 0, 100),
 		solvers:           make([][]solverInfo, 0),
 		extraMessages:     make([][]extraInfo, 0),
 		workerMessages:    make([]string, 0),
@@ -47,11 +47,11 @@ func NewLogger(logLevel logger.Level, problemName string, bufferSize int) *Log {
 	}
 }
 
-func (l *Log) AddSolutionPool(cost int) {
+func (l *Log) AddSolutionPool(cost int, time float64) {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()
 
-	l.data.solutionCost = append(l.data.solutionCost, cost)
+	l.data.pool = append(l.data.pool, poolInfo{cost: cost, time: time})
 }
 
 func (l *Log) WorkerDone(message string) {
@@ -92,6 +92,16 @@ func (l *Log) Print() {
 	l.data.printShell()
 }
 
+func (l *Log) CleanScreen() {
+	l.data.mu.Lock()
+	defer l.data.mu.Unlock()
+	fmt.Print(fmt.Sprintf("\033[%dA", l.data.previousLineCount))
+	for _ = range l.data.previousLineCount {
+		fmt.Print(cleanLineCode)
+	}
+	fmt.Print(fmt.Sprintf("\033[%dA", l.data.previousLineCount))
+}
+
 func (l *Log) WorkersPrint() {
 	for _, message := range l.data.workerMessages {
 		fmt.Println(message)
@@ -127,40 +137,6 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 
 func (l *Log) GetLogLevel() logger.Level {
 	return l.LogLevel
-}
-
-func (l *Log) GetReportData() []logger.SolverInformation {
-	l.data.mu.Lock()
-	defer l.data.mu.Unlock()
-
-	report := make([]logger.SolverInformation, 0, len(l.data.solvers))
-
-	for _, solver := range l.data.solvers {
-		solverReport := logger.SolverInformation{
-			Name:        "",
-			Id:          -1,
-			Performance: make([]logger.Data, 0),
-		}
-
-		for _, info := range solver {
-			if solverReport.Name == "" {
-				solverReport.Name = info.name
-			}
-			if solverReport.Id < 0 {
-				solverReport.Id = info.id
-			}
-
-			solverReport.Performance = append(solverReport.Performance, logger.Data{
-				LocalCost: info.local,
-				BestCost:  info.localBest,
-				Time:      info.timeStamp,
-			})
-		}
-
-		report = append(report, solverReport)
-	}
-
-	return report
 }
 
 // --- The Compile-Time Check ---

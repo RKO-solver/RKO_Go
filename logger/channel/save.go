@@ -28,7 +28,34 @@ func (l *Log) saveIndividualCsv(info logger.SolverInformation, filename ...strin
 		data = append(data, []string{best, local, elapsed})
 	}
 
-	file, err := os.Create(saveFile)
+	saveCsvFile(saveFile, data)
+}
+
+func (l *Log) savePool(filename ...string) {
+	var saveFile string
+	if len(filename) > 0 {
+		saveFile = filename[0]
+	} else {
+		saveFile = fmt.Sprintf("%s-pool.csv", l.problemName)
+	}
+
+	rawData := l.GetSolutionData()
+
+	data := make([][]string, 0, len(rawData)+1)
+
+	data = append(data, []string{"cost", "time"})
+
+	for _, line := range rawData {
+		cost := fmt.Sprintf("%d", line.Cost)
+		elapsed := fmt.Sprintf("%.3f", line.Time)
+		data = append(data, []string{cost, elapsed})
+	}
+
+	saveCsvFile(saveFile, data)
+}
+
+func saveCsvFile(filename string, data [][]string) {
+	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,4 +84,14 @@ func (l *Log) SaveCsv(filename ...string) {
 			l.saveIndividualCsv(report)
 		}
 	}
+
+	var poolFilename string
+
+	if len(filename) > 0 {
+		poolFilename = fmt.Sprintf("%s-%s.csv", filename[0], "pool")
+	} else {
+		poolFilename = fmt.Sprintf("%s-%s.csv", l.problemName, "pool")
+	}
+
+	l.savePool(poolFilename)
 }
