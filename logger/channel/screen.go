@@ -52,7 +52,7 @@ func (d *information) printShell() {
 	}
 
 	// Solution Pool Text
-	idx := len(d.solutionCost) - 1 - numLinesSolutionPool
+	idx := len(d.solutionCost) - numLinesSolutionPool
 	if idx < 0 {
 		idx = 0
 	}

@@ -96,10 +96,6 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 
 			if bestPerson.Cost < bestSolutionCost {
 				solutionPool.AddSolution(bestPerson.Clone())
-			} else {
-				bestPool := solutionPool.BestSolution()
-				population[populationSize-1] = bestPool
-				metaheuristc.Sort(population)
 			}
 		}
 

@@ -122,3 +122,10 @@ func (p *Pool) BestSolutionCost() int {
 
 	return p.solutions[0].Cost
 }
+
+func (p *Pool) Size() int {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
+	return len(p.solutions)
+}

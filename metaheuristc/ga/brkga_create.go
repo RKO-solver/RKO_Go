@@ -36,7 +36,7 @@ func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, soluti
 }
 
 func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA {
-	local := search.Create(searchType, env, rg)
+	local := search.Create(searchType, env, solutionPool, rg)
 	return &BRKGA{
 		env:           env,
 		configuration: configuration,
