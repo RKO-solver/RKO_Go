@@ -73,7 +73,7 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 
 		if heatedLeft > 0 && temperatureLocal < configuration.TemperatureReheat {
 			heatedLeft--
-			sa.logger.Verbose(fmt.Sprintf("Re-heat %d\n", timesReHeat), time.Since(start).Seconds())
+			sa.logger.Verbose(fmt.Sprintf("Re-heat %d", timesReHeat), time.Since(start).Seconds())
 			temperatureLocal = configuration.TemperatureInitial / math.Pow(2.0, float64(timesReHeat))
 			timesReHeat++
 		} else {
