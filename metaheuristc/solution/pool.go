@@ -38,11 +38,11 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
-		solutions: make([]*metaheuristc.RandomKeyValue, 0, maxSize),
+		solutions: make([]*metaheuristc.RandomKeyValue, 0, initialSize),
 	}
 
 	if initialSize > maxSize {
-		initialSize = maxSize
+		maxSize = initialSize
 	}
 
 	for range initialSize {
