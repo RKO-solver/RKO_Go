@@ -52,6 +52,17 @@ func (l *Log) Start(aggregatorWg *sync.WaitGroup) {
 	}()
 }
 
+func (l *Log) SetNumPoolMessages(num int) {
+	l.data.mu.Lock()
+	defer l.data.mu.Unlock()
+	l.data.numLinesPool = num
+}
+func (l *Log) SetNumVerboseMessages(num int) {
+	l.data.mu.Lock()
+	defer l.data.mu.Unlock()
+	l.data.numVerboseMessages = num
+}
+
 // Shutdown closes the main channel to stop the aggregator
 func (l *Log) Shutdown() {
 	close(l.updateChan)

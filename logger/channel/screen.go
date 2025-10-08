@@ -52,12 +52,12 @@ func (d *information) printShell() {
 	}
 
 	// Solution Pool Text
-	idx := len(d.pool) - numLinesSolutionPool
+	idx := len(d.pool) - d.numLinesPool
 	if idx < 0 {
 		idx = 0
 	}
 
-	for _ = range numLinesSolutionPool {
+	for _ = range d.numLinesPool {
 		if idx < len(d.pool) {
 			text := setFixedLength(fmt.Sprintf("Adding to pool %d at %.3fs", d.pool[idx].cost, d.pool[idx].time), maxHorizontalSize, false)
 			lines = append(lines, text)
@@ -89,7 +89,7 @@ func (d *information) printShell() {
 
 			if numVerbose > 0 {
 
-				start := numVerbose - lastNVerboses
+				start := numVerbose - d.numVerboseMessages // lastNVerboses
 				if start < 0 {
 					start = 0
 				}

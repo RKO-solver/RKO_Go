@@ -20,12 +20,14 @@ func NewLogger(problemName string, logLevel logger.Level, bufferSize int) *Log {
 
 	// The final data store
 	store := &information{
-		init:              false,
-		previousLineCount: 0,
-		pool:              make([]poolInfo, 0, 100),
-		solvers:           make([][]solverInfo, 0),
-		extraMessages:     make([][]extraInfo, 0),
-		workerMessages:    make([]string, 0),
+		init:               false,
+		previousLineCount:  0,
+		numLinesPool:       numLinesSolutionPool,
+		numVerboseMessages: lastNVerboses,
+		pool:               make([]poolInfo, 0, 100),
+		solvers:            make([][]solverInfo, 0),
+		extraMessages:      make([][]extraInfo, 0),
+		workerMessages:     make([]string, 0),
 	}
 
 	return &Log{
