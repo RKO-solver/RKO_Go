@@ -11,8 +11,8 @@ const (
 	Swap Type = iota
 	Mirror
 	Farey
-	RVND
 	Nelder
+	RVND
 )
 
 type Local interface {
