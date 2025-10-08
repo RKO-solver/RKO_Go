@@ -13,6 +13,7 @@ import (
 func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	configuration := vns.configuration
 	rg := vns.RG
+	local := vns.search
 	env := vns.env
 
 	var bestSolution, localSolution *metaheuristc.RandomKeyValue
@@ -43,6 +44,7 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 
 			copy(localSolution.RK, bestSolution.RK)
 			rk.Shake(localSolution, beta, beta, rg, env)
+			local.Search(localSolution)
 
 			poolSolutionCost := solutionPool.BestSolutionCost()
 			if localSolution.Cost < bestSolution.Cost {
@@ -65,9 +67,6 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		}
 
 		vns.logger.Register(localSolution.Cost, bestSolution.Cost, time.Since(start).Seconds(), "")
-		if solutionPool.BestSolutionCost() < bestSolution.Cost {
-			bestSolution = solutionPool.BestSolution()
-		}
 	}
 
 	return bestSolution, time.Since(start).Seconds()
