@@ -7,14 +7,14 @@ import (
 )
 
 func DefaultLogger(problemName string) *Log {
-	return NewLogger(logger.DefaultLogLevel, problemName, defaultBufferSize)
+	return NewLogger(problemName, logger.DefaultLogLevel, defaultBufferSize)
 }
 
 func NewLoggerLevel(problemName string, level logger.Level) *Log {
-	return NewLogger(level, problemName, defaultBufferSize)
+	return NewLogger(problemName, level, defaultBufferSize)
 }
 
-func NewLogger(logLevel logger.Level, problemName string, bufferSize int) *Log {
+func NewLogger(problemName string, logLevel logger.Level, bufferSize int) *Log {
 	// The channel for communication
 	progressChan := make(chan channelMessage, bufferSize)
 
