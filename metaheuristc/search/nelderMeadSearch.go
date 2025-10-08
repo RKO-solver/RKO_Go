@@ -67,10 +67,8 @@ func nelderMeadSearch(rko *metaheuristc.RandomKeyValue, env definition.Environme
 	poolSize := solutionPool.Size()
 	firstElement := rg.IntN(poolSize)
 	x1 = solutionPool.GetSolution(firstElement)
+
 	secondElement := rg.IntN(poolSize)
-	for secondElement == firstElement {
-		secondElement = rg.IntN(poolSize)
-	}
 	x2 = solutionPool.GetSolution(secondElement)
 
 	if x2.Cost < x1.Cost {
