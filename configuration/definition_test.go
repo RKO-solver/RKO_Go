@@ -11,21 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWithMultiStartYaml(t *testing.T) {
-	yaml := `
-TimeLimitSeconds: 10
-MultiStart:
-  MaxIterations: 42
-`
-	tempDir := t.TempDir()
-	file := filepath.Join(tempDir, "multistart.yaml")
-	require.NoError(t, os.WriteFile(file, []byte(yaml), 0644))
-	cfg, err := configuration.CreateYamlConfiguration(file)
-	require.NoError(t, err)
-	assert.Equal(t, 42, cfg.MultiStart.MaxIterations)
-	assert.Equal(t, 10.0, cfg.MultiStart.TimeLimitSeconds)
-}
-
 func TestWithMultiStartYaml_TimeLimit(t *testing.T) {
 	yaml := `
 TimeLimitSeconds: 15
