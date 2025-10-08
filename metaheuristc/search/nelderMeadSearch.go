@@ -1,6 +1,8 @@
 package search
 
 import (
+	"math"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
@@ -9,7 +11,6 @@ import (
 
 const defaultRho = 0.5
 const defaultMu = 0.02
-const maxIterations = 5
 
 func blend(keyA definition.RandomKey, keyB definition.RandomKey, factor bool, rho float64, mu float64, rg *random.Generator) definition.RandomKey {
 	blendedKey := make(definition.RandomKey, len(keyA))
@@ -90,6 +91,7 @@ func nelderMeadSearch(rko *metaheuristc.RandomKeyValue, env definition.Environme
 		x3 = xAux
 	}
 
+	maxIterations := int(float64(x1.RK.Len()) * math.Exp(-2))
 	for i := 0; i < maxIterations; i++ {
 		x0 = computeBlend(x1, x2, true, env, rg)
 		xR = computeBlend(x0, x3, false, env, rg)
