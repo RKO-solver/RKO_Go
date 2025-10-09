@@ -44,9 +44,10 @@ func computeBlend(keyA *metaheuristc.RandomKeyValue, keyB *metaheuristc.RandomKe
 }
 
 type nelderMeadLocalSearch struct {
-	environment  definition.Environment
-	solutionPool *solution.Pool
-	rg           *random.Generator
+	environment   definition.Environment
+	solutionPool  *solution.Pool
+	rg            *random.Generator
+	maxIterations int
 }
 
 func (n nelderMeadLocalSearch) SetRG(rg *random.Generator) {
@@ -54,14 +55,15 @@ func (n nelderMeadLocalSearch) SetRG(rg *random.Generator) {
 }
 
 func (n nelderMeadLocalSearch) Search(rko *metaheuristc.RandomKeyValue) {
-	nelderMeadSearch(rko, n.environment, n.solutionPool, n.rg)
+	nelderMeadSearch(rko, n.maxIterations, n.environment, n.solutionPool, n.rg)
 }
 
 func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {
-	return nelderMeadLocalSearch{environment, solutionPool, rg}
+	maxIterations := int(float64(environment.NumKeys()) * math.Exp(-2))
+	return nelderMeadLocalSearch{environment, solutionPool, rg, maxIterations}
 }
 
-func nelderMeadSearch(rko *metaheuristc.RandomKeyValue, env definition.Environment, solutionPool *solution.Pool, rg *random.Generator) {
+func nelderMeadSearch(rko *metaheuristc.RandomKeyValue, maxIterations int, env definition.Environment, solutionPool *solution.Pool, rg *random.Generator) {
 	var x1, x2, x3, x0, xR, xAux *metaheuristc.RandomKeyValue
 
 	poolSize := solutionPool.Size()
@@ -89,7 +91,6 @@ func nelderMeadSearch(rko *metaheuristc.RandomKeyValue, env definition.Environme
 		x3 = xAux
 	}
 
-	maxIterations := int(float64(x1.RK.Len()) * math.Exp(-2))
 	for i := 0; i < maxIterations; i++ {
 		x0 = computeBlend(x1, x2, true, env, rg)
 		xR = computeBlend(x0, x3, false, env, rg)

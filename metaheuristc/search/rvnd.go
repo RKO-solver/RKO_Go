@@ -1,6 +1,7 @@
 package search
 
 import (
+	"math"
 	"slices"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -12,6 +13,7 @@ import (
 func rvnd(rko *metaheuristc.RandomKeyValue, environment definition.Environment, s *solution.Pool, r *random.Generator, neighbourhood []Type) {
 
 	localSolutionCost := rko.Cost
+	maxIterations := int(float64(environment.NumKeys()) * math.Exp(-2))
 
 	for len(neighbourhood) > 0 {
 		neighbourhoodId := r.IntN(len(neighbourhood))
@@ -25,7 +27,7 @@ func rvnd(rko *metaheuristc.RandomKeyValue, environment definition.Environment, 
 		case Farey:
 			fareySearch(rko, environment, r)
 		case Nelder:
-			nelderMeadSearch(rko, environment, s, r)
+			nelderMeadSearch(rko, maxIterations, environment, s, r)
 		}
 		// there was improvement
 		if localSolutionCost < rko.Cost {
