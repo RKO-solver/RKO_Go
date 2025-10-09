@@ -28,7 +28,7 @@ func Create(typeSearch Type, environment definition.Environment, solutionPool *s
 }
 
 func CreateDefault(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {
-	neighbourhood := make([]Type, 3)
+	neighbourhood := make([]Type, 4)
 	neighbourhood[0] = Swap
 	neighbourhood[1] = Mirror
 	neighbourhood[2] = Farey
