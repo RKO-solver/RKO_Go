@@ -26,6 +26,10 @@ type mirrorLocalSearch struct {
 	environment definition.Environment
 }
 
+func (s mirrorLocalSearch) String() string {
+	return GetSearchString(Mirror)
+}
+
 func (s mirrorLocalSearch) Search(rko *metaheuristc.RandomKeyValue) {
 	mirrorSearch(rko, s.environment)
 }

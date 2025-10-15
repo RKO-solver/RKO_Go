@@ -29,6 +29,10 @@ type swapLocalSearch struct {
 	environment definition.Environment
 }
 
+func (s swapLocalSearch) String() string {
+	return GetSearchString(Swap)
+}
+
 func (s swapLocalSearch) Search(rko *metaheuristc.RandomKeyValue) {
 	swapSearch(rko, s.environment)
 }

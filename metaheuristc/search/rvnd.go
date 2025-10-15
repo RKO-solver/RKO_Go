@@ -47,6 +47,17 @@ type rvndseach struct {
 	neighbourhood []Type
 }
 
+func (s rvndseach) String() string {
+	composition := GetSearchString(RVND) + ": "
+	for i, neighbour := range s.neighbourhood {
+		composition += GetSearchString(neighbour)
+		if i != len(s.neighbourhood)-1 {
+			composition += ","
+		}
+	}
+	return composition
+}
+
 func (s rvndseach) Search(rko *metaheuristc.RandomKeyValue) {
 	neighbourhood := make([]Type, len(s.neighbourhood))
 	copy(neighbourhood, s.neighbourhood)

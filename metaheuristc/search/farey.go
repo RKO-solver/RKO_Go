@@ -54,6 +54,10 @@ type fareyLocalSearch struct {
 	rg          *random.Generator
 }
 
+func (s fareyLocalSearch) String() string {
+	return GetSearchString(Farey)
+}
+
 func (s fareyLocalSearch) Search(rko *metaheuristc.RandomKeyValue) {
 	fareySearch(rko, s.environment, s.rg)
 }

@@ -50,6 +50,10 @@ type nelderMeadLocalSearch struct {
 	maxIterations int
 }
 
+func (n nelderMeadLocalSearch) String() string {
+	return GetSearchString(Nelder)
+}
+
 func (n nelderMeadLocalSearch) SetRG(rg *random.Generator) {
 	n.rg = rg
 }
