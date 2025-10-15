@@ -1,5 +1,7 @@
 package logger
 
+import "strings"
+
 type SolverInformation struct {
 	Name        string
 	Id          int
@@ -28,4 +30,23 @@ type Logger interface {
 type SolverLogger interface {
 	Register(local int, localBest int, time float64, extra string)
 	Verbose(message string, timeStamp float64)
+}
+
+type LogType = uint8
+
+const (
+	CHANNEL LogType = iota
+	PRINT
+)
+
+func GetLogType(label string) LogType {
+	label = strings.ToUpper(label)
+	switch label {
+	case "CHANNEL":
+		return CHANNEL
+	case "PRINT":
+		return PRINT
+	default:
+		return PRINT
+	}
 }
