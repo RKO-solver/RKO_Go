@@ -51,12 +51,12 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 			rk.Shake(neighbour, configuration.ShakeMin, configuration.ShakeMax, rg, env)
 			local.Search(neighbour)
 
-			bestSolutionCost = solutionPool.BestSolutionCost()
 			delta := neighbour.Cost - localSolution.Cost
 			if delta < 0 {
 				localSolution.Cost = neighbour.Cost
 				copy(localSolution.RK, neighbour.RK)
 
+				bestSolutionCost = solutionPool.BestSolutionCost()
 				if neighbour.Cost < bestSolutionCost {
 					solutionPool.AddSolution(neighbour.Clone(), time.Since(start).Seconds())
 				}
