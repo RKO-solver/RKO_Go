@@ -12,11 +12,12 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-const defaultMazSize = 200
+const defaultMaxSize = 10
 
 type Pool struct {
 	mu        sync.RWMutex
 	solutions []*metaheuristc.RandomKeyValue
+	limited   bool
 	maxSize   int
 	logger    logger.Logger
 }
@@ -38,11 +39,12 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
+		limited:   maxSize > 1 && maxSize < math.MaxInt,
 		solutions: make([]*metaheuristc.RandomKeyValue, 0, initialSize),
 	}
 
-	if initialSize > maxSize {
-		maxSize = initialSize
+	if pool.limited && initialSize > maxSize {
+		pool.maxSize = initialSize
 	}
 
 	for range initialSize {
@@ -60,7 +62,11 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 }
 
 func NewDefaultPool(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
-	return NewPool(defaultMazSize, defaultMazSize, env, rg, logger)
+	return NewPool(defaultMaxSize, defaultMaxSize, env, rg, logger)
+}
+
+func NewDefaultPoolUnlimited(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
+	return NewPool(-1, defaultMaxSize, env, rg, logger)
 }
 
 func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, time float64) {
@@ -81,7 +87,7 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, time float64) 
 	p.logger.AddSolutionPool(solution.Cost, time)
 	p.solutions = append(p.solutions, solution)
 	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
-	if len(p.solutions) >= p.maxSize {
+	if p.limited && len(p.solutions) >= p.maxSize {
 		p.solutions = p.solutions[:len(p.solutions)-1]
 	}
 
