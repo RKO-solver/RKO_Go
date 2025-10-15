@@ -11,7 +11,7 @@ import (
 )
 
 func withMultiStart(cfg *multistart.Configuration, timeLimitSeconds float64) Option {
-	return func(c *YamlConfiguration) {
+	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
 			return
 		}
@@ -28,7 +28,7 @@ func withMultiStart(cfg *multistart.Configuration, timeLimitSeconds float64) Opt
 }
 
 func withBRKGA(cfg *ga.ConfigurationBRKGA, timeLimitSeconds float64) Option {
-	return func(c *YamlConfiguration) {
+	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
 			return
 		}
@@ -63,7 +63,7 @@ func withBRKGA(cfg *ga.ConfigurationBRKGA, timeLimitSeconds float64) Option {
 }
 
 func withGA(cfg *ga.ConfigurationGA, timeLimitSeconds float64) Option {
-	return func(c *YamlConfiguration) {
+	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
 			return
 		}
@@ -96,7 +96,7 @@ func withGA(cfg *ga.ConfigurationGA, timeLimitSeconds float64) Option {
 }
 
 func withSA(cfg *sa.Configuration, timeLimitSeconds float64) Option {
-	return func(c *YamlConfiguration) {
+	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
 			return
 		}
@@ -140,7 +140,7 @@ func withSA(cfg *sa.Configuration, timeLimitSeconds float64) Option {
 }
 
 func withILS(cfg *ils.Configuration, timeLimitSeconds float64) Option {
-	return func(c *YamlConfiguration) {
+	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
 			return
 		}
@@ -166,7 +166,7 @@ func withILS(cfg *ils.Configuration, timeLimitSeconds float64) Option {
 }
 
 func withVNS(cfg *vns.Configuration, timeLimitSeconds float64) Option {
-	return func(c *YamlConfiguration) {
+	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
 			return
 		}
