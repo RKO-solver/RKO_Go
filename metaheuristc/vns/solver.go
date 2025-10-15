@@ -16,53 +16,52 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 	local := vns.search
 	env := vns.env
 
-	var bestSolution, localSolution *metaheuristc.RandomKeyValue
-
-	bestSolution = solutionPool.BestSolution()
+	var bestSolution, localSolution, neighbour *metaheuristc.RandomKeyValue
 
 	start := time.Now()
 
-	if bestSolution == nil {
-		bestSolution = &metaheuristc.RandomKeyValue{
-			RK:   make(definition.RandomKey, env.NumKeys()),
-			Cost: 0,
-		}
-		rk.Reset(bestSolution.RK, rg)
-		bestSolution.Cost = env.Cost(bestSolution.RK)
-		solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
+	bestSolution = &metaheuristc.RandomKeyValue{
+		RK:   make(definition.RandomKey, env.NumKeys()),
+		Cost: 0,
 	}
+	rk.Reset(bestSolution.RK, rg)
+	bestSolution.Cost = env.Cost(bestSolution.RK)
+	solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
 
-	localSolution = &metaheuristc.RandomKeyValue{
+	localSolution = bestSolution.Clone()
+
+	neighbour = &metaheuristc.RandomKeyValue{
 		RK:   make(definition.RandomKey, env.NumKeys()),
 		Cost: 0,
 	}
 
 	for iteration := 0; iteration < configuration.MaxIterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
-		k := 0
+		k := 1
 		for k < rk.ShakeMax && time.Since(start).Seconds() < configuration.TimeLimitSeconds {
 			beta := rg.RangeFloat64(float64(k)*configuration.Rate, float64(k+1)*configuration.Rate)
 
-			copy(localSolution.RK, bestSolution.RK)
-			rk.Shake(localSolution, beta, beta, rg, env)
-			local.Search(localSolution)
+			copy(neighbour.RK, localSolution.RK)
+			rk.Shake(neighbour, beta, beta, rg, env)
+			local.Search(neighbour)
 
-			poolSolutionCost := solutionPool.BestSolutionCost()
-			if localSolution.Cost < bestSolution.Cost {
+			if neighbour.Cost < bestSolution.Cost {
+				localSolution = neighbour
 				copy(bestSolution.RK, localSolution.RK)
 				bestSolution.Cost = localSolution.Cost
 
-				if bestSolution.Cost < poolSolutionCost {
+				bestSolutionCost := solutionPool.BestSolutionCost()
+				if bestSolution.Cost < bestSolutionCost {
 					solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
 				}
 
-				k = 0
+				k = 1
 			} else {
 				k++
 			}
 
 			elapsedTime := time.Since(start).Seconds()
 
-			message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d", iteration, poolSolutionCost, bestSolution.Cost)
+			message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d", iteration, bestSolution.Cost, localSolution.Cost)
 			vns.logger.Verbose(message, elapsedTime)
 		}
 
