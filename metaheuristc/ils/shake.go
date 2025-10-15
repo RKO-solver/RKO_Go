@@ -20,8 +20,12 @@ func shake(sol *metaheuristc.RandomKeyValue, history *history, rg *random.Genera
 		history.min = history.defaultMin
 		history.max = history.defaultMax
 	} else if history.timesNoImprovement > 10 && history.timesNoImprovement < 1000 {
-		history.min *= 1.1
-		history.max *= 1.1
+		history.min *= 1.05
+		history.max *= 1.05
+		if history.min > 1.0 || history.max > 1.0 {
+			history.min = history.defaultMin * 1.1
+			history.max = history.defaultMax * 1.1
+		}
 	}
 
 	rk.Shake(sol, history.min, history.max, rg, env)
