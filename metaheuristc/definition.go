@@ -1,8 +1,9 @@
 package metaheuristc
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"sort"
+
+	"github.com/RKO-solver/rko-go/definition"
 )
 
 type RandomKeyValue struct {
