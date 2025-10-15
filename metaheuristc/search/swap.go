@@ -8,9 +8,6 @@ import (
 
 func swapSearch(rko *metaheuristc.RandomKeyValue, environment definition.Environment) {
 	for _, n := range environment.SwapSearch() {
-		if len(n) < 2 {
-			continue
-		}
 		start := n[0]
 		end := n[1]
 		for i := start; i < end-1; i++ {
