@@ -1,11 +1,12 @@
 package ga
 
 import (
+	"math"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/metaheuristc/rk"
 	"github.com/RKO-solver/rko-go/random"
-	"math"
 )
 
 func initialPopulation(population []*metaheuristc.RandomKeyValue, env definition.Environment, sorted bool, rg *random.Generator) *metaheuristc.RandomKeyValue {

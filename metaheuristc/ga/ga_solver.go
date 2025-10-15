@@ -100,6 +100,7 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 			if bestPerson.Cost < bestSolutionCost {
 				solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
 			}
+			generationNoImprovement = 0
 		} else {
 			copy(population, children)
 		}

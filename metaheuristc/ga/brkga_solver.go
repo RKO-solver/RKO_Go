@@ -31,7 +31,6 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 		}
 	}
 
-	hasImproved := false
 	generationNoImprovement := 0
 
 	start := time.Now()
@@ -40,9 +39,9 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 		solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
 	}
 
+	eliteSize := int(configuration.EliteRatio * float64(populationSize))
+	mutantSize := int(configuration.MutantRatio * float64(populationSize))
 	for generation := 0; generation < configuration.MaxGenerations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; generation++ {
-		eliteSize := int(configuration.EliteRatio * float64(populationSize))
-		mutantSize := int(configuration.MutantRatio * float64(populationSize))
 
 		for i := range eliteSize {
 			copy(populationIntermediary[i].RK, population[i].RK)
@@ -70,20 +69,15 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 
 		if population[0].Cost < bestPerson.Cost {
 			bestPerson = population[0].Clone()
-			hasImproved = true
+			generationNoImprovement = 0
+		} else {
+			generationNoImprovement++
 		}
 
 		bestSolutionCost := solutionPool.BestSolutionCost()
 		if bestPerson.Cost < bestSolutionCost {
 			solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
 		}
-
-		if hasImproved {
-			generationNoImprovement = 0
-		} else {
-			generationNoImprovement++
-		}
-		hasImproved = false
 
 		elapsed := time.Since(start).Seconds()
 
@@ -97,6 +91,7 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 			if bestPerson.Cost < bestSolutionCost {
 				solutionPool.AddSolution(bestPerson.Clone(), elapsed)
 			}
+			generationNoImprovement = 0
 		}
 
 	}
