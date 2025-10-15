@@ -32,3 +32,7 @@ type SimulatedAnnealing struct {
 	RG            *random.Generator
 	solutionPool  *solution.Pool
 }
+
+func (sa *SimulatedAnnealing) Print() {
+	search.PrintSolver(name, sa.search)
+}

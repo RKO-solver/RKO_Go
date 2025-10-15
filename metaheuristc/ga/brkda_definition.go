@@ -29,3 +29,7 @@ type BRKGA struct {
 	RG            *random.Generator
 	solutionPool  *solution.Pool
 }
+
+func (ga *BRKGA) Print() {
+	search.PrintSolver(nameBRKGA, ga.search)
+}

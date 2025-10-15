@@ -4,6 +4,7 @@
 package definition
 
 import (
+	"math"
 	"sort"
 
 	"github.com/RKO-solver/rko-go/random"
@@ -22,6 +23,8 @@ type Solver interface {
 	SetRG(rg *random.Generator)
 	// SetTimeLimitSecond sets the time limit for the solver in seconds.
 	SetTimeLimitSecond(timeLimitSecond float64)
+	// Print its configuration
+	Print()
 }
 
 // Environment is the interface that must be implemented for a specific optimization problem.
@@ -33,6 +36,8 @@ type Environment interface {
 	Cost(r RandomKey) int
 	// Decode converts a solution from random keys to the problem's representation.
 	Decode(r RandomKey) any
+	// SwapSearch Gets the pair start and end to perform multiple swaps
+	SwapSearch() [][2]int
 }
 
 // Result holds the output of a solver, including the decoded solution, its cost, and the time spent.
@@ -82,4 +87,29 @@ func (keys RandomKey) Equals(other RandomKey) bool {
 		}
 	}
 	return true
+}
+
+// Similarity Use Cosine Similarity
+func (keys RandomKey) Similarity(key RandomKey) float64 {
+	return dotMultiplier(keys, key) / (sizeVector(keys) * sizeVector(key))
+}
+
+func dotMultiplier(key1 RandomKey, key2 RandomKey) float64 {
+	result := 0.0
+
+	for i := 0; i < len(key1); i++ {
+		result += key1[i] * key2[i]
+	}
+
+	return result
+}
+
+func sizeVector(key RandomKey) float64 {
+	result := 0.0
+
+	for _, v := range key {
+		result += v * v
+	}
+
+	return math.Sqrt(result)
 }

@@ -23,3 +23,7 @@ type MultiStart struct {
 	RG            *random.Generator
 	solutionPool  *solution.Pool
 }
+
+func (m *MultiStart) Print() {
+	search.PrintSolver(name, m.search)
+}

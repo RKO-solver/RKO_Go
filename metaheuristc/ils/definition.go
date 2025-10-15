@@ -26,3 +26,7 @@ type ILS struct {
 	RG            *random.Generator
 	solutionPool  *solution.Pool
 }
+
+func (ils *ILS) Print() {
+	search.PrintSolver(name, ils.search)
+}

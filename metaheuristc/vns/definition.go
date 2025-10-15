@@ -24,3 +24,7 @@ type VNS struct {
 	RG            *random.Generator
 	solutionPool  *solution.Pool
 }
+
+func (vns *VNS) Print() {
+	search.PrintSolver(name, vns.search)
+}

@@ -28,3 +28,7 @@ type GA struct {
 	RG            *random.Generator
 	solutionPool  *solution.Pool
 }
+
+func (ga *GA) Print() {
+	search.PrintSolver(nameGA, ga.search)
+}
