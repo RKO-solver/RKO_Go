@@ -7,18 +7,23 @@ import (
 )
 
 func swapSearch(rko *metaheuristc.RandomKeyValue, environment definition.Environment) {
-	n := rko.RK.Len()
-
-	for i := 0; i < n-1; i++ {
-		for j := i + 1; j < n; j++ {
-			rko.RK[i], rko.RK[j] = rko.RK[j], rko.RK[i]
-			cost := environment.Cost(rko.RK)
-			if cost < rko.Cost {
-				// maintain best solution
-				rko.Cost = cost
-			} else {
-				// return to the best solution
+	for _, n := range environment.SwapSearch() {
+		if len(n) < 2 {
+			continue
+		}
+		start := n[0]
+		end := n[1]
+		for i := start; i < end-1; i++ {
+			for j := i + 1; j < end; j++ {
 				rko.RK[i], rko.RK[j] = rko.RK[j], rko.RK[i]
+				cost := environment.Cost(rko.RK)
+				if cost < rko.Cost {
+					// maintain best solution
+					rko.Cost = cost
+				} else {
+					// return to the best solution
+					rko.RK[i], rko.RK[j] = rko.RK[j], rko.RK[i]
+				}
 			}
 		}
 	}
