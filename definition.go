@@ -78,3 +78,14 @@ func (s *Solver) Solve() any {
 	rk := s.solutionPool.BestSolution()
 	return s.env.Decode(rk.RK)
 }
+
+func (s *Solver) GetSolutionPool() *solution.Pool {
+	return s.solutionPool
+}
+
+func (s *Solver) Print() {
+	for i, sv := range s.solvers {
+		fmt.Printf("(%d) ", i)
+		sv.Print()
+	}
+}
