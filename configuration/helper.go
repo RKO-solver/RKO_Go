@@ -41,7 +41,7 @@ func getSearch(sea []search.Type, environment definition.Environment, s *solutio
 		}
 	}
 
-	if len(sea) < 0 || len(neighbourhood) == 0 {
+	if len(neighbourhood) == 0 {
 		return search.CreateDefault(environment, s, rg)
 	}
 
