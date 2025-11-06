@@ -297,3 +297,49 @@ ILS:
 	assert.Equal(t, 51, cfg.ILS.MaxIterations)
 	assert.Equal(t, math.MaxFloat64, cfg.ILS.TimeLimitSeconds)
 }
+
+func TestWithLNSYaml(t *testing.T) {
+	yaml := `
+LNS:
+  MaxIterations: 88
+  BetaMin: 2.0
+  BetaMax: 8.0
+`
+	tempDir := t.TempDir()
+	file := filepath.Join(tempDir, "lns.yaml")
+	require.NoError(t, os.WriteFile(file, []byte(yaml), 0644))
+	cfg, err := configuration.CreateYamlMHConfiguration(file)
+	require.NoError(t, err)
+	assert.Equal(t, 88, cfg.LNS.MaxIterations)
+	assert.Equal(t, 2.0, cfg.LNS.BetaMin)
+	assert.Equal(t, 8.0, cfg.LNS.BetaMax)
+}
+
+func TestWithLNSYaml_TimeLimit(t *testing.T) {
+	yaml := `
+TimeLimitSeconds: 66
+LNS:
+  MaxIterations: 50
+`
+	tempDir := t.TempDir()
+	file := filepath.Join(tempDir, "lns_time.yaml")
+	require.NoError(t, os.WriteFile(file, []byte(yaml), 0644))
+	cfg, err := configuration.CreateYamlMHConfiguration(file)
+	require.NoError(t, err)
+	assert.Equal(t, 50, cfg.LNS.MaxIterations)
+	assert.Equal(t, 66.0, cfg.LNS.TimeLimitSeconds)
+}
+
+func TestWithLNSYaml_NoTimeLimit(t *testing.T) {
+	yaml := `
+LNS:
+  MaxIterations: 51
+`
+	tempDir := t.TempDir()
+	file := filepath.Join(tempDir, "lns_notime.yaml")
+	require.NoError(t, os.WriteFile(file, []byte(yaml), 0644))
+	cfg, err := configuration.CreateYamlMHConfiguration(file)
+	require.NoError(t, err)
+	assert.Equal(t, 51, cfg.LNS.MaxIterations)
+	assert.Equal(t, math.MaxFloat64, cfg.LNS.TimeLimitSeconds)
+}

@@ -12,6 +12,7 @@ const (
 	ILS
 	BRKGA
 	GRASP
+	LNS
 	VLNS
 	ALNS
 )
@@ -33,6 +34,8 @@ func GetMetaHeuristic(label string) MetaHeuristic {
 		return BRKGA
 	case "GRASP":
 		return GRASP
+	case "LNS":
+		return LNS
 	case "VLNS":
 		return VLNS
 	case "ALNS":
@@ -58,6 +61,8 @@ func GetMetaHeuristicString(metaHeuristic MetaHeuristic) string {
 		return "Biased Random Key Genetic Algorithm"
 	case GRASP:
 		return "Greedy Randomized Adaptive Search Procedure"
+	case LNS:
+		return "Large Neighbourhood Search"
 	case VLNS:
 		return "Very Large Neighbourhood Search"
 	case ALNS:
@@ -83,6 +88,8 @@ func GetMetaHeuristicShort(metaHeuristic MetaHeuristic) string {
 		return "BRKGA"
 	case GRASP:
 		return "GRASP"
+	case LNS:
+		return "LNS"
 	case VLNS:
 		return "VLNS"
 	case ALNS:

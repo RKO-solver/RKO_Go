@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
+	"github.com/RKO-solver/rko-go/metaheuristc/lns"
 	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
 	"github.com/RKO-solver/rko-go/metaheuristc/sa"
 	"github.com/RKO-solver/rko-go/metaheuristc/search"
@@ -23,6 +24,7 @@ type MetaheuristicsConfiguration struct {
 	ILS        *ils.Configuration
 	SA         *sa.Configuration
 	VNS        *vns.Configuration
+	LNS        *lns.Configuration
 }
 
 type mhYamlConfiguration struct {
@@ -33,6 +35,7 @@ type mhYamlConfiguration struct {
 	ILS              *ils.Configuration        `yaml:"ILS"`
 	SA               *sa.Configuration         `yaml:"SA"`
 	VNS              *vns.Configuration        `yaml:"VNS"`
+	LNS              *lns.Configuration        `yaml:"LNS"`
 }
 type Option func(*MetaheuristicsConfiguration)
 
@@ -45,6 +48,7 @@ func newYamlConfiguration(opts ...Option) *MetaheuristicsConfiguration {
 		ILS:        ils.DefaultConfigurationILS(),
 		SA:         sa.DefaultConfigurationSA(),
 		VNS:        vns.DefaultConfigurationVNS(),
+		LNS:        lns.DefaultConfigurationVNS(),
 	}
 
 	// Apply all provided options, which will overwrite the defaults if specified.
@@ -75,7 +79,9 @@ func CreateYamlMHConfiguration(filePath string) (*MetaheuristicsConfiguration, e
 		withBRKGA(configuration.BRKGA, configuration.TimeLimitSeconds),
 		withSA(configuration.SA, configuration.TimeLimitSeconds),
 		withVNS(configuration.VNS, configuration.TimeLimitSeconds),
-		withILS(configuration.ILS, configuration.TimeLimitSeconds)}
+		withILS(configuration.ILS, configuration.TimeLimitSeconds),
+		withLNS(configuration.LNS, configuration.TimeLimitSeconds),
+	}
 
 	return newYamlConfiguration(opts...), nil
 }

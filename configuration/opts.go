@@ -5,6 +5,7 @@ import (
 
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
+	"github.com/RKO-solver/rko-go/metaheuristc/lns"
 	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
 	"github.com/RKO-solver/rko-go/metaheuristc/sa"
 	"github.com/RKO-solver/rko-go/metaheuristc/vns"
@@ -181,6 +182,29 @@ func withVNS(cfg *vns.Configuration, timeLimitSeconds float64) Option {
 		}
 		if cfg.Rate > 0 {
 			c.VNS.Rate = cfg.Rate
+		}
+	}
+}
+
+func withLNS(cfg *lns.Configuration, timeLimitSeconds float64) Option {
+	return func(c *MetaheuristicsConfiguration) {
+		if cfg == nil {
+			return
+		}
+		if timeLimitSeconds > 0 {
+			c.LNS.TimeLimitSeconds = timeLimitSeconds
+		} else if timeLimitSeconds == 0 {
+			c.LNS.TimeLimitSeconds = math.MaxFloat64
+		}
+
+		if cfg.MaxIterations > 0 {
+			c.LNS.MaxIterations = cfg.MaxIterations
+		}
+		if cfg.BetaMin > 0 {
+			c.LNS.BetaMin = cfg.BetaMin
+		}
+		if cfg.BetaMax > 0 {
+			c.LNS.BetaMax = cfg.BetaMax
 		}
 	}
 }

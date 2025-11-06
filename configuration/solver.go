@@ -10,6 +10,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger/stdout"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
+	"github.com/RKO-solver/rko-go/metaheuristc/lns"
 	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
 	"github.com/RKO-solver/rko-go/metaheuristc/sa"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
@@ -58,6 +59,10 @@ func CreateSolver(problemName string, env definition.Environment, solverConfig *
 			conf := mhConfig.BRKGA
 
 			solver = ga.CreateBRKGAComplete(env, conf, se, rg, solutionPool, log)
+		case rko.LNS:
+			conf := mhConfig.LNS
+
+			solver = lns.CreateLNSComplete(env, conf, se, rg, solutionPool, log)
 		default:
 			fmt.Printf("%s not implemented yet\n", rko.GetMetaHeuristicString(sol.MetaHeuristic))
 			continue
