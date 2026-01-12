@@ -23,27 +23,30 @@ RKO-Go is a Go library for solving optimization problems using Random Key Optimi
 
 ## Logging
 
-You can track the progress of your optimization by providing a custom logger that implements the [`logger.Interface`](logger/definition.go):
+You can track the progress of your optimization by providing a custom logger that implements the [`logger.Logger`](logger/definition.go) interface:
 
 ```go
-type Interface interface {
-    Report(bestSolutionCost, localSolutionCost int, elapsed float64)
-    Verbose(message string)
-    Debug(message string)
-    Info(message string)
-    SetIdWorker(idWorker int)
-    CreateLogger(method string) Interface
-    Save()
-    SaveFileName(fileName string)
+type Logger interface {
+    AddSolutionPool(cost int, time float64)
+    WorkerDone(message string)
+    GetLogger(name string) SolverLogger
+    GetLogLevel() Level
+    GetReportData() []SolverInformation
+    GetSolutionData() []SolutionData
+}
+
+type SolverLogger interface {
+    Register(local int, localBest int, time float64, extra string)
+    Verbose(message string, timeStamp float64)
 }
 ```
 
 ### Built-in Loggers
 
-- [`logger/basic`](logger/basic/implementation.go): Prints progress and messages to the screen.
-- [`logger/csv`](logger/csv/implementation.go): Saves progress and results to a CSV file.
+- [`logger/channel`](logger/channel/create.go): Provides detailed logging with communication channels for real-time progress tracking.
+- [`logger/stdout`](logger/stdout/create.go): Prints progress and messages directly to the standard output.
 
-You can implement your own logger by satisfying the [`logger.Interface`](logger/definition.go).
+You can implement your own logger by satisfying the [`logger.Logger`](logger/definition.go) interface.
 
 ## Getting Started
 
@@ -62,12 +65,14 @@ type Environment interface {
     NumKeys() int
     Cost(r RandomKey) int
     Decode(r RandomKey) any
+    SwapSearch() [][2]int
 }
 ```
 
 - `NumKeys()` returns the number of keys (variables) in your problem.
 - `Cost(r RandomKey)` evaluates the cost (objective function) for a solution.
 - `Decode(r RandomKey)` converts a solution from random keys to your problem's representation.
+- `SwapSearch()` returns the pairs (start, end) indices for performing multiple swaps during local search.
 
 ### 3. Create and Run a Solver
 
@@ -76,19 +81,14 @@ Use [`CreateDefaultSolver`](create.go) to create a solver that can run multiple 
 ```go
 import (
     "github.com/RKO-solver/rko-go"
-    "github.com/RKO-solver/rko-go/logger/basic"
+    "github.com/RKO-solver/rko-go/logger/channel"
 )
 
 env := MyEnvironment{} // Your implementation
 mh := []rko.MetaHeuristic{rko.GA, rko.SA} // Choose metaheuristics
+logger := channel.DefaultLogger("MyProblem") // Create a logger
 
-solver := rko.CreateDefaultSolver(
-    mh,
-    env,
-    rko.INFO,           // Log level
-    false,              // Save report
-    basic.CreateLogger(), // Logger implementation
-)
+solver := rko.CreateDefaultSolver(mh, env, logger)
 
 result := solver.Solve()
 fmt.Printf("Best solution: %+v\n", result)
@@ -96,11 +96,12 @@ fmt.Printf("Best solution: %+v\n", result)
 
 ## Documentation
 
-- [`definition.Environment`](definition/definition.go) - The interface you must implement.
-- [`logger.Interface`](logger/definition.go) - Implement this to create your own logger.
+- [`definition.Environment`](definition/definition.go) - The interface you must implement for your optimization problem.
+- [`logger.Logger`](logger/definition.go) - Implement this to create your own custom logger.
+- [`configuration` package](configuration/README.md) - Configure metaheuristics and solver behavior via code or YAML files.
 - [`rko.CreateDefaultSolver`](create.go) - Factory for solvers that run multiple metaheuristics in parallel.
-- [`logger/basic`](logger/basic/implementation.go) - Basic logger (prints to screen).
-- [`logger/csv`](logger/csv/implementation.go) - CSV logger (saves to file).
+- [`logger/channel`](logger/channel/create.go) - Channel logger (detailed logging with real-time progress tracking).
+- [`logger/stdout`](logger/stdout/create.go) - Stdout logger (prints directly to standard output).
 
 ## Maintainers
 

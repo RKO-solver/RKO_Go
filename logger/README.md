@@ -4,61 +4,103 @@ This package provides logging interfaces and implementations for tracking the pr
 
 ## Overview
 
-Logging is essential for monitoring the optimization process, debugging, and saving results. The `logger` package defines a flexible interface and includes built-in loggers for different use cases.
+Logging is essential for monitoring the optimization process, debugging, and saving results. The `logger` package defines flexible interfaces and includes built-in loggers for different use cases.
 
 ## Main Components
 
-### Interface
+### Interfaces
 
-The core of this package is the `Interface`, which you can implement to create custom loggers:
+The core of this package consists of two interfaces:
+
+**Logger Interface** - Implement this to create custom loggers:
 
 ```go
-type Interface interface {
-    Report(bestSolutionCost, localSolutionCost int, elapsed float64)
-    Verbose(message string)
-    Debug(message string)
-    Info(message string)
-    SetIdWorker(idWorker int)
-    CreateLogger(method string) Interface
-    Save()
-    SaveFileName(fileName string)
+type Logger interface {
+    AddSolutionPool(cost int, time float64)
+    WorkerDone(message string)
+    GetLogger(name string) SolverLogger
+    GetLogLevel() Level
+    GetReportData() []SolverInformation
+    GetSolutionData() []SolutionData
 }
 ```
-- `Report`: Called to report progress (best/local solution cost, elapsed time).
-- `Verbose`, `Debug`, `Info`: For logging messages at different verbosity levels.
-- `SetIdWorker`: Assigns a worker/thread ID to the logger.
-- `CreateLogger`: Creates a new logger for a specific method or context.
-- `Save`, `SaveFileName`: For saving logs to a file.
+- `AddSolutionPool`: Report a new best solution found across all solvers.
+- `WorkerDone`: Called when a solver finishes execution.
+- `GetLogger`: Returns a `SolverLogger` for a specific solver by name.
+- `GetLogLevel`: Returns the current logging level (`SILENT`, `INFO`, or `VERBOSE`).
+- `GetReportData`: Returns performance data for all solvers.
+- `GetSolutionData`: Returns the best solution data found.
+
+**SolverLogger Interface** - Implement this for solver-specific logging:
+
+```go
+type SolverLogger interface {
+    Register(local int, localBest int, time float64, extra string)
+    Verbose(message string, timeStamp float64)
+}
+```
+- `Register`: Record progress from a solver (local cost, best cost, elapsed time, and optional extra data).
+- `Verbose`: Log detailed messages with timestamps.
+
+### Data Structures
+
+- `SolverInformation`: Contains solver name, ID, and performance data.
+- `Data`: Represents a single performance record (local cost, best cost, elapsed time).
+- `SolutionData`: Stores best solution cost and time found.
 
 ### Built-in Loggers
 
-- **Basic Logger** (`basic/implementation.go`): Prints progress and messages to the screen. Use `basic.CreateLogger()` to instantiate.
-- **CSV Logger** (`csv/implementation.go`): Saves progress and results to a CSV file. Use `csv.CreateLogger()` to instantiate.
+- **Channel Logger** (`channel/`): Provides detailed logging with communication channels for real-time progress tracking. Use `channel.DefaultLogger(problemName)` or `channel.NewLoggerLevel(problemName, level)` to instantiate.
+- **Stdout Logger** (`stdout/`): Prints progress and messages directly to the standard output. Use `stdout.DefaultLogger(problemName)` or `stdout.NewLogger(problemName, level)` to instantiate.
 
-You can implement your own logger by satisfying the `Interface`.
+### Log Levels
+
+The logger supports three logging levels:
+
+```go
+type Level uint8
+
+const (
+    SILENT   Level = iota  // No output
+    INFO                    // Basic progress information (default)
+    VERBOSE                 // Detailed progress information
+)
+```
+
+You can implement your own logger by satisfying the `Logger` interface.
 
 ## Usage Example
 
 ```go
 import (
-    "github.com/RKO-solver/rko-go/logger/basic"
+    "github.com/RKO-solver/rko-go"
+    "github.com/RKO-solver/rko-go/logger/channel"
 )
 
-logger := basic.CreateLogger()
+// Create a logger with default INFO level
+logger := channel.DefaultLogger("MyOptimizationProblem")
+
+// Or create with a specific log level
+logger := channel.NewLoggerLevel("MyOptimizationProblem", logger.VERBOSE)
 ```
 
 Pass your logger to the solver when creating it:
 
 ```go
-solver := rko.CreateDefaultSolver(
-    mh, env, rko.INFO, false, logger,
-)
+solver := rko.CreateDefaultSolver(mh, env, logger)
+result := solver.Solve()
+
+// Retrieve and use the logged data
+reportData := logger.GetReportData()
+solutionData := logger.GetSolutionData()
 ```
 
 ## Files
-- `definition.go`: Contains the `Interface` definition.
-- `basic/implementation.go`: Basic logger implementation (prints to screen).
-- `csv/implementation.go`: CSV logger implementation (saves to file).
+- `definition.go`: Contains the `Logger`, `SolverLogger` interfaces and data structures.
+- `constants.go`: Contains `Level` type and log level constants.
+- `helpers.go`: Helper functions for logging utilities.
+- `channel/`: Channel-based logger implementation for detailed, real-time logging.
+- `stdout/`: Stdout logger implementation for simple console output.
 
 ## See Also
 - [Project README](../README.md)
