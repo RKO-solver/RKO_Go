@@ -22,7 +22,9 @@ func (l *Log) AddSolutionPool(cost int, time float64) {
 }
 
 func (l *Log) WorkerDone(message string) {
-	fmt.Println(message)
+	if l.LogLevel > logger.SILENT {
+		fmt.Println(message)
+	}
 }
 
 func (l *Log) GetLogger(name string) logger.SolverLogger {

@@ -39,7 +39,9 @@ func (s *Solver) Solve() any {
 
 	var wg sync.WaitGroup
 	for i, sv := range s.solvers {
-		fmt.Printf("Running solver %s (%d)\n", sv.Name(), i)
+		if logLevel > logger.SILENT {
+			fmt.Printf("Running solver %s (%d)\n", sv.Name(), i)
+		}
 		wg.Add(1)
 		go metaheuristc.Worker(sv, &metaheuristc.Configuration{Id: i}, s.l, &wg)
 	}
@@ -70,7 +72,9 @@ func (s *Solver) Solve() any {
 
 		l.Shutdown()
 		loggerWg.Wait()
-		l.WorkersPrint()
+		if logLevel > logger.SILENT {
+			l.WorkersPrint()
+		}
 	} else {
 		wg.Wait()
 	}

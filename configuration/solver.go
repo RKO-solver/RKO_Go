@@ -18,7 +18,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func CreateSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration) (*rko.Solver, logger.Logger) {
+func createSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration, rg *random.Generator) (*rko.Solver, logger.Logger) {
 	var log logger.Logger
 	solvers := make([]definition.Solver, 0)
 
@@ -29,7 +29,6 @@ func CreateSolver(problemName string, env definition.Environment, solverConfig *
 		log = stdout.NewLogger(problemName, solverConfig.LoggerLevel)
 	}
 
-	rg := random.GetGlobalInstance()
 	solutionPool := solution.NewDefaultPool(env, rg, log)
 
 	for _, sol := range solverConfig.Solvers {
@@ -76,6 +75,15 @@ func CreateSolver(problemName string, env definition.Environment, solverConfig *
 	return rko.CreateFullSolver(log, rg, env, solutionPool, solvers), log
 }
 
+func CreateSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration) (*rko.Solver, logger.Logger) {
+	return createSolver(problemName, env, solverConfig, mhConfig, random.GetGlobalInstance())
+}
+
+func CreateSolverSeed(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration, seed uint64) (*rko.Solver, logger.Logger) {
+	rg := random.NewGeneratorSeed(seed)
+	return createSolver(problemName, env, solverConfig, mhConfig, rg)
+}
+
 func CreateSolverDefaultConfig(problemName string, env definition.Environment, solverConfig *SolverConfiguration) (*rko.Solver, logger.Logger) {
-	return CreateSolver(problemName, env, solverConfig, DefaultConfiguration())
+	return createSolver(problemName, env, solverConfig, DefaultConfiguration(), random.GetGlobalInstance())
 }

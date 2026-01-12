@@ -15,6 +15,7 @@ const (
 	LNS
 	VLNS
 	ALNS
+	IPR
 )
 
 func GetMetaHeuristic(label string) MetaHeuristic {
@@ -40,6 +41,8 @@ func GetMetaHeuristic(label string) MetaHeuristic {
 		return VLNS
 	case "ALNS":
 		return ALNS
+	case "IPR":
+		return IPR
 	default:
 		return -1
 	}
@@ -67,6 +70,8 @@ func GetMetaHeuristicString(metaHeuristic MetaHeuristic) string {
 		return "Very Large Neighbourhood Search"
 	case ALNS:
 		return "Adaptive Large Neighbourhood Search"
+	case IPR:
+		return "Implicit Path Relinking"
 	default:
 		return ""
 	}
@@ -94,6 +99,8 @@ func GetMetaHeuristicShort(metaHeuristic MetaHeuristic) string {
 		return "VLNS"
 	case ALNS:
 		return "ALNS"
+	case IPR:
+		return "IPR"
 	default:
 		return ""
 	}

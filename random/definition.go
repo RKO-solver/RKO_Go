@@ -24,14 +24,6 @@ func NewGenerator() *Generator {
 	}
 }
 
-func NewGeneratorWithSeed(seed uint64) *Generator {
-	source := rand.NewPCG(seed, seed+1)
-
-	return &Generator{
-		rand: rand.New(source),
-	}
-}
-
 func GetGlobalInstance() *Generator {
 	once.Do(func() {
 		instance = NewGenerator()
