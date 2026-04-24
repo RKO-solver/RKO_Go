@@ -110,9 +110,6 @@ func withSA(cfg *sa.Configuration, timeLimitSeconds float64) Option {
 		if cfg.Alpha > 0 {
 			c.SA.Alpha = cfg.Alpha
 		}
-		if cfg.ChangeImpact > 0 {
-			c.SA.ChangeImpact = cfg.ChangeImpact
-		}
 		if cfg.TemperatureInitial > 0 {
 			c.SA.TemperatureInitial = cfg.TemperatureInitial
 		}
