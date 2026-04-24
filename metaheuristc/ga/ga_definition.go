@@ -13,7 +13,6 @@ const nameGA = "GA"
 type ConfigurationGA struct {
 	TimeLimitSeconds           float64 `yaml:"TimeLimitSeconds"`
 	PopulationSize             int     `yaml:"PopulationSize"`
-	ChildrenRatio              float64 `yaml:"ChildrenRatio"`
 	CrossoverAlpha             float64 `yaml:"CrossoverAlpha"`
 	MutationAlpha              float64 `yaml:"MutationAlpha"`
 	MaxGenerations             int     `yaml:"MaxGenerations"`

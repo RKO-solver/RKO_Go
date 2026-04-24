@@ -77,9 +77,6 @@ func withGA(cfg *ga.ConfigurationGA, timeLimitSeconds float64) Option {
 		if cfg.PopulationSize > 0 {
 			c.GA.PopulationSize = cfg.PopulationSize
 		}
-		if cfg.ChildrenRatio > 0 {
-			c.GA.ChildrenRatio = cfg.ChildrenRatio
-		}
 		if cfg.CrossoverAlpha > 0 {
 			c.GA.CrossoverAlpha = cfg.CrossoverAlpha
 		}
