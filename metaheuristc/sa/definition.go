@@ -14,7 +14,6 @@ type Configuration struct {
 	MaxIterations      int     `yaml:"MaxIterations"`
 	TimeLimitSeconds   float64 `yaml:"TimeLimitSeconds"`
 	Alpha              float64 `yaml:"Alpha"`
-	ChangeImpact       float64 `yaml:"ChangeImpact"`
 	TemperatureInitial float64 `yaml:"TemperatureInitial"`
 	TemperatureGoal    float64 `yaml:"TemperatureGoal"`
 	TemperatureReheat  float64 `yaml:"TemperatureReheat"`

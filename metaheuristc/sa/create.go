@@ -14,7 +14,6 @@ func DefaultConfigurationSA() *Configuration {
 		MaxIterations:      constants.DefaultMaxIterations,
 		TimeLimitSeconds:   constants.DefaultTimeLimitSeconds,
 		Alpha:              constants.DefaultAlphaSimulationAnnealing,
-		ChangeImpact:       constants.DefaultImpact,
 		TemperatureInitial: constants.DefaultTemperatureInitial,
 		TemperatureGoal:    constants.DefaultTemperatureGoal,
 		TemperatureReheat:  constants.DefaultReheat,
