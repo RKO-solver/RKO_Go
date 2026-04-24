@@ -42,7 +42,7 @@ func SavePoolCsv(poolData []SolutionData, problemName string, filename ...string
 
 	for _, line := range poolData {
 		cost := fmt.Sprintf("%d", line.Cost)
-		elapsed := fmt.Sprintf("%.3f", line.Time)
+		elapsed := fmt.Sprintf("%.8f", line.Time)
 		data = append(data, []string{cost, elapsed})
 	}
 
@@ -64,7 +64,7 @@ func SaveSolverCSV(solverInfo SolverInformation, problemName string, filename ..
 	for _, line := range solverInfo.Performance {
 		best := fmt.Sprintf("%d", line.BestCost)
 		local := fmt.Sprintf("%d", line.LocalCost)
-		elapsed := fmt.Sprintf("%.3f", line.Time)
+		elapsed := fmt.Sprintf("%.8f", line.Time)
 		data = append(data, []string{best, local, elapsed})
 	}
 
