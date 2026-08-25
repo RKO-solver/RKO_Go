@@ -1,6 +1,7 @@
 package multistart
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (m *MultiStart) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	configuration := m.configuration
 	rg := m.RG
 
@@ -21,12 +22,13 @@ func (m *MultiStart) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKey
 		Cost: 0,
 	}
 
-	start := time.Now()
-	for iteration := 0; iteration < configuration.MaxIterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
+	start := definition.StartTime(ctx)
+	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
+
 		rk.Reset(localSolution.RK, rg)
 		localSolution.Cost = m.env.Cost(localSolution.RK)
 
-		local.Search(localSolution)
+		local.Search(ctx, localSolution)
 
 		bestSolutionCost := solutionPool.BestSolutionCost()
 		if localSolution.Cost < bestSolutionCost {
@@ -37,7 +39,6 @@ func (m *MultiStart) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKey
 		elapsedTime := time.Since(start).Seconds()
 
 		m.logger.Register(localSolution.Cost, bestSolutionCost, elapsedTime, fmt.Sprintf("Iteration: %d", iteration))
-
 	}
 
 	return localSolution, time.Since(start).Seconds()

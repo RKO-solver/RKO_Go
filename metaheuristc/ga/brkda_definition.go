@@ -11,7 +11,6 @@ import (
 const nameBRKGA = "BRKGA"
 
 type ConfigurationBRKGA struct {
-	TimeLimitSeconds           float64
 	PopulationSize             int     `yaml:"PopulationSize"`
 	EliteRatio                 float64 `yaml:"EliteRatio"`
 	MutantRatio                float64 `yaml:"MutantRatio"`

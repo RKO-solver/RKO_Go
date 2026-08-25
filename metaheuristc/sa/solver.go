@@ -1,6 +1,7 @@
 package sa
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"time"
@@ -11,7 +12,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	configuration := sa.configuration
 	env := sa.env
 	rg := sa.RG
@@ -25,7 +26,7 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 
 	localSolution = solutionPool.BestSolution()
 
-	start := time.Now()
+	start := definition.StartTime(ctx)
 
 	if localSolution == nil {
 		localSolution = &metaheuristc.RandomKeyValue{
@@ -44,12 +45,13 @@ func (sa *SimulatedAnnealing) solve(solutionPool *solution.Pool) (*metaheuristc.
 
 	var bestSolutionCost int
 
-	for time.Since(start).Seconds() < configuration.TimeLimitSeconds && temperatureLocal > configuration.TemperatureGoal {
+	for temperatureLocal > configuration.TemperatureGoal && ctx.Err() == nil {
 
-		for iteration := 0; iteration < configuration.Iterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
+		for iteration := 0; iteration < configuration.Iterations && ctx.Err() == nil; iteration++ {
+
 			copy(neighbour.RK, localSolution.RK)
 			rk.Shake(neighbour, configuration.ShakeMin, configuration.ShakeMax, rg, env)
-			local.Search(neighbour)
+			local.Search(ctx, neighbour)
 
 			delta := neighbour.Cost - localSolution.Cost
 			if delta < 0 {

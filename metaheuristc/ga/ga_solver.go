@@ -1,6 +1,7 @@
 package ga
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	configuration := ga.configuration
 	env := ga.env
 	rg := ga.RG
@@ -32,13 +33,14 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 	hasImproved := false
 	generationNoImprovement := 0
 
-	start := time.Now()
+	start := definition.StartTime(ctx)
 	bestPerson := initialPopulation(population, env, false, rg)
 	if bestPerson.Cost < solutionPool.BestSolutionCost() {
 		solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
 	}
 
-	for generation := 0; generation < configuration.MaxGenerations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; generation++ {
+	for generation := 0; generation < configuration.MaxGenerations && ctx.Err() == nil; generation++ {
+
 		for j := 0; j < configuration.PopulationSize-1; j++ {
 			offspring1 := tournament(population, rg)
 			copy(children[j].RK, offspring1.RK)
@@ -70,7 +72,7 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 
 		// apply local search in random element
 		k := rg.IntN(configuration.PopulationSize)
-		local.Search(children[k])
+		local.Search(ctx, children[k])
 
 		if children[k].Cost < bestPerson.Cost {
 			bestPerson = children[k].Clone()
@@ -80,6 +82,10 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 		bestSolutionCost := solutionPool.BestSolutionCost()
 		if bestPerson.Cost < bestSolutionCost {
 			solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
+		}
+
+		if ctx.Err() != nil {
+			break
 		}
 
 		if hasImproved {
@@ -104,7 +110,6 @@ func (ga *GA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, 
 		} else {
 			copy(population, children)
 		}
-
 	}
 
 	return bestPerson, time.Since(start).Seconds()

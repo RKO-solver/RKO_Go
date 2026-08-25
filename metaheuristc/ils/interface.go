@@ -1,6 +1,8 @@
 package ils
 
 import (
+	"context"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/random"
 )
@@ -14,18 +16,14 @@ func (ils *ILS) Name() string {
 	return name
 }
 
-func (ils *ILS) Solve() definition.Result {
-	rko, elapsed := ils.solve(ils.solutionPool)
+func (ils *ILS) Solve(ctx context.Context) definition.Result {
+	rko, elapsed := ils.solve(ctx, ils.solutionPool)
 
 	return definition.Result{
 		Solution:        ils.env.Decode(rko.RK),
 		Cost:            rko.Cost,
 		TimeSpentSecond: elapsed,
 	}
-}
-
-func (ils *ILS) SetTimeLimitSecond(timeLimitSecond float64) {
-	ils.configuration.TimeLimitSeconds = timeLimitSecond
 }
 
 // --- The Compile-Time Check ---

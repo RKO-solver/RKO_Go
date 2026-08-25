@@ -1,6 +1,7 @@
 package ils
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"time"
@@ -11,12 +12,13 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	configuration := ils.configuration
 	env := ils.env
 	rg := ils.RG
 	local := ils.search
-	metropolisCriterion := configuration.MetropolisCriterion && (configuration.TimeLimitSeconds < math.MaxInt)
+	_, hasTimeOut := ctx.Deadline()
+	metropolisCriterion := configuration.MetropolisCriterion && hasTimeOut
 
 	historyInformation := &history{
 		defaultMin:         configuration.ShakeMin,
@@ -28,7 +30,7 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 
 	var localSolution, bestSolution, neighbour *metaheuristc.RandomKeyValue
 
-	start := time.Now()
+	start := definition.StartTime(ctx)
 
 	bestSolution = &metaheuristc.RandomKeyValue{
 		RK:   make(definition.RandomKey, env.NumKeys()),
@@ -45,10 +47,11 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		Cost: 0,
 	}
 
-	for iteration := 0; iteration < configuration.MaxIterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
+	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
+
 		copy(neighbour.RK, localSolution.RK)
 		shake(neighbour, historyInformation, rg, env)
-		local.Search(neighbour)
+		local.Search(ctx, neighbour)
 
 		// acceptance criterion
 		delta := neighbour.Cost - bestSolution.Cost
@@ -65,7 +68,10 @@ func (ils *ILS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		} else {
 			historyInformation.timesNoImprovement++
 			if metropolisCriterion {
-				prob := math.Exp(-(float64(delta) + 0.00001) / (1000.0 - 1000.0*(time.Since(start).Seconds()/(configuration.TimeLimitSeconds+0.5))))
+				deadline, _ := ctx.Deadline()
+				elapsed := time.Since(start).Seconds()
+				total := float64(time.Until(deadline)) + elapsed
+				prob := math.Exp(-(float64(delta) + 0.00001) / (1000.0 - 1000.0*(elapsed/total)))
 				if rg.Float64() < prob {
 					localSolution.Cost = neighbour.Cost
 					copy(localSolution.RK, neighbour.RK)

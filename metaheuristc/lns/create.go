@@ -11,10 +11,9 @@ import (
 
 func DefaultConfigurationVNS() *Configuration {
 	return &Configuration{
-		MaxIterations:    constants.DefaultMaxIterations,
-		TimeLimitSeconds: constants.DefaultTimeLimitSeconds,
-		BetaMin:          constants.DefaultShakeMin,
-		BetaMax:          constants.DefaultShakeMax,
+		MaxIterations: constants.DefaultMaxIterations,
+		BetaMin:       constants.DefaultShakeMin,
+		BetaMax:       constants.DefaultShakeMax,
 	}
 }
 

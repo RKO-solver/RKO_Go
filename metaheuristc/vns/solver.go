@@ -1,6 +1,7 @@
 package vns
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	configuration := vns.configuration
 	rg := vns.RG
 	local := vns.search
@@ -18,7 +19,7 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 
 	var bestSolution, localSolution, neighbour *metaheuristc.RandomKeyValue
 
-	start := time.Now()
+	start := definition.StartTime(ctx)
 
 	bestSolution = &metaheuristc.RandomKeyValue{
 		RK:   make(definition.RandomKey, env.NumKeys()),
@@ -35,14 +36,15 @@ func (vns *VNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		Cost: 0,
 	}
 
-	for iteration := 0; iteration < configuration.MaxIterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
+	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
+
 		k := 1
-		for k < rk.ShakeMax && time.Since(start).Seconds() < configuration.TimeLimitSeconds {
+		for k < rk.ShakeMax {
 			beta := rg.RangeFloat64(float64(k)*configuration.Rate, float64(k+1)*configuration.Rate)
 
 			copy(neighbour.RK, localSolution.RK)
 			rk.Shake(neighbour, beta, beta, rg, env)
-			local.Search(neighbour)
+			local.Search(ctx, neighbour)
 
 			if neighbour.Cost < bestSolution.Cost {
 				localSolution = neighbour

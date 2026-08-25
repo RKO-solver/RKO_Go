@@ -1,6 +1,8 @@
 package multistart
 
 import (
+	"context"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/random"
 )
@@ -14,18 +16,14 @@ func (m *MultiStart) Name() string {
 	return name
 }
 
-func (m *MultiStart) Solve() definition.Result {
-	rko, elapsed := m.solve(m.solutionPool)
+func (m *MultiStart) Solve(ctx context.Context) definition.Result {
+	rko, elapsed := m.solve(ctx, m.solutionPool)
 
 	return definition.Result{
 		Solution:        m.env.Decode(rko.RK),
 		Cost:            rko.Cost,
 		TimeSpentSecond: elapsed,
 	}
-}
-
-func (m *MultiStart) SetTimeLimitSecond(timeLimitSecond float64) {
-	m.configuration.TimeLimitSeconds = timeLimitSecond
 }
 
 // --- The Compile-Time Check ---

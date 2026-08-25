@@ -12,7 +12,6 @@ const name = "SA"
 
 type Configuration struct {
 	MaxIterations      int     `yaml:"MaxIterations"`
-	TimeLimitSeconds   float64 `yaml:"TimeLimitSeconds"`
 	Alpha              float64 `yaml:"Alpha"`
 	TemperatureInitial float64 `yaml:"TemperatureInitial"`
 	TemperatureGoal    float64 `yaml:"TemperatureGoal"`

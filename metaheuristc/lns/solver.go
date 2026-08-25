@@ -1,6 +1,7 @@
 package lns
 
 import (
+	"context"
 	"math"
 	"time"
 
@@ -20,7 +21,7 @@ var fareySequence = []float64{
 	0.333333,
 }
 
-func (lns *LNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	configuration := lns.configuration
 	rg := lns.RG
 	local := lns.search
@@ -28,7 +29,7 @@ func (lns *LNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 
 	var bestSolution, localSolution *metaheuristc.RandomKeyValue
 
-	start := time.Now()
+	start := definition.StartTime(ctx)
 
 	bestSolution = &metaheuristc.RandomKeyValue{
 		RK:   make(definition.RandomKey, env.NumKeys()),
@@ -43,7 +44,7 @@ func (lns *LNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 		Cost: 0,
 	}
 
-	for iteration := 0; iteration < configuration.MaxIterations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; iteration++ {
+	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
 		// Future Q-Learning
 		intensityMin, intensityMax := int(configuration.BetaMin*float64(env.NumKeys())), int(configuration.BetaMax*float64(env.NumKeys()))
 
@@ -60,9 +61,10 @@ func (lns *LNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 			rkBest := 0.0
 
 			for j := 0; j < len(fareySequence)-1; j++ {
-				elapsedTime := time.Since(start).Seconds()
-				if elapsedTime >= configuration.TimeLimitSeconds {
-					return bestSolution, elapsedTime
+				if ctx.Err() != nil {
+					lns.logger.Register(localSolution.Cost, bestSolution.Cost, time.Since(start).Seconds(), "")
+					return bestSolution, time.Since(start).Seconds()
+
 				}
 
 				localSolution.RK[pos] = rg.RangeFloat64(fareySequence[j], fareySequence[j+1])
@@ -80,7 +82,7 @@ func (lns *LNS) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue
 			localSolution.RK[pos] = rkBest
 		}
 
-		local.Search(localSolution)
+		local.Search(ctx, localSolution)
 
 		if localSolution.Cost < bestSolution.Cost {
 			copy(bestSolution.RK, localSolution.RK)

@@ -1,13 +1,19 @@
 package search
 
 import (
+	"context"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func swapSearch(rko *metaheuristc.RandomKeyValue, environment definition.Environment) {
+func swapSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment) {
 	for _, n := range environment.SwapSearch() {
+		if ctx.Err() != nil {
+			break
+		}
+
 		start := n[0]
 		end := n[1]
 		for i := start; i < end-1; i++ {
@@ -35,8 +41,8 @@ func (s swapLocalSearch) String() string {
 	return GetSearchString(Swap)
 }
 
-func (s swapLocalSearch) Search(rko *metaheuristc.RandomKeyValue) {
-	swapSearch(rko, s.environment)
+func (s swapLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
+	swapSearch(ctx, rko, s.environment)
 }
 
 func (s swapLocalSearch) SetRG(rg *random.Generator) {}

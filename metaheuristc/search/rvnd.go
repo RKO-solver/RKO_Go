@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"math"
 	"slices"
 
@@ -10,24 +11,29 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func rvnd(rko *metaheuristc.RandomKeyValue, environment definition.Environment, s *solution.Pool, r *random.Generator, neighbourhood []Type) {
+func rvnd(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment, s *solution.Pool, r *random.Generator, neighbourhood []Type) {
 
 	localSolutionCost := rko.Cost
 	maxIterations := int(float64(environment.NumKeys()) * math.Exp(-2))
 
 	for len(neighbourhood) > 0 {
+
+		if ctx.Err() != nil {
+			break
+		}
+
 		neighbourhoodId := r.IntN(len(neighbourhood))
 
 		switch neighbourhood[neighbourhoodId] {
 		case Swap:
-			swapSearch(rko, environment)
+			swapSearch(ctx, rko, environment)
 		case Mirror:
 
-			mirrorSearch(rko, environment)
+			mirrorSearch(ctx, rko, environment)
 		case Farey:
-			fareySearch(rko, environment, r)
+			fareySearch(ctx, rko, environment, r)
 		case Nelder:
-			nelderMeadSearch(rko, maxIterations, environment, s, r)
+			nelderMeadSearch(ctx, rko, maxIterations, environment, s, r)
 		}
 		// there was improvement
 		if localSolutionCost < rko.Cost {
@@ -36,6 +42,7 @@ func rvnd(rko *metaheuristc.RandomKeyValue, environment definition.Environment, 
 			// there wasn't improvement
 			// remove neighborhood
 			neighbourhood = slices.Delete(neighbourhood, neighbourhoodId, neighbourhoodId+1)
+
 		}
 	}
 }
@@ -58,10 +65,10 @@ func (s rvndseach) String() string {
 	return composition
 }
 
-func (s rvndseach) Search(rko *metaheuristc.RandomKeyValue) {
+func (s rvndseach) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
 	neighbourhood := make([]Type, len(s.neighbourhood))
 	copy(neighbourhood, s.neighbourhood)
-	rvnd(rko, s.environment, s.s, s.rg, neighbourhood)
+	rvnd(ctx, rko, s.environment, s.s, s.rg, neighbourhood)
 }
 
 func (s rvndseach) SetRG(rg *random.Generator) {

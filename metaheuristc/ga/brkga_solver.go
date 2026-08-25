@@ -1,6 +1,7 @@
 package ga
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	configuration := ga.configuration
 	env := ga.env
 	rg := ga.RG
@@ -33,7 +34,7 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 
 	generationNoImprovement := 0
 
-	start := time.Now()
+	start := definition.StartTime(ctx)
 	bestPerson := initialPopulation(population, env, true, rg)
 	if bestPerson.Cost < solutionPool.BestSolutionCost() {
 		solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
@@ -41,8 +42,7 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 
 	eliteSize := int(configuration.EliteRatio * float64(populationSize))
 	mutantSize := int(configuration.MutantRatio * float64(populationSize))
-	for generation := 0; generation < configuration.MaxGenerations && time.Since(start).Seconds() < configuration.TimeLimitSeconds; generation++ {
-
+	for generation := 0; generation < configuration.MaxGenerations && ctx.Err() == nil; generation++ {
 		for i := range eliteSize {
 			copy(populationIntermediary[i].RK, population[i].RK)
 			populationIntermediary[i].Cost = population[i].Cost
@@ -63,7 +63,17 @@ func (ga *BRKGA) solve(solutionPool *solution.Pool) (*metaheuristc.RandomKeyValu
 
 		// apply local search in random element
 		k := rg.IntN(populationSize)
-		local.Search(population[k])
+		local.Search(ctx, population[k])
+		if ctx.Err() != nil {
+			if population[k].Cost < bestPerson.Cost {
+				bestPerson = population[k].Clone()
+			}
+			bestSolutionCost := solutionPool.BestSolutionCost()
+			if bestPerson.Cost < bestSolutionCost {
+				solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
+			}
+			break
+		}
 
 		metaheuristc.Sort(population)
 

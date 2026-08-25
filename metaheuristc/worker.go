@@ -1,6 +1,7 @@
 package metaheuristc
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -19,10 +20,10 @@ type Configuration struct {
 //   - solver: the metaheuristic solver implementing definition.Solver
 //   - configuration: pointer to Configuration containing the worker Id
 //   - wg: pointer to sync.WaitGroup for goroutine synchronization
-func Worker(solver definition.Solver, configuration *Configuration, log logger.Logger, wg *sync.WaitGroup) {
+func Worker(ctx context.Context, solver definition.Solver, configuration *Configuration, log logger.Logger, wg *sync.WaitGroup) {
 	defer wg.Done()
 	id := configuration.Id
 
-	result := solver.Solve()
+	result := solver.Solve(ctx)
 	log.WorkerDone(fmt.Sprintf("(%d) %s\n\tBest Local Solution Cost: %d\n\tTime spent: %.2fs\n", id, solver.Name(), result.Cost, result.TimeSpentSecond))
 }

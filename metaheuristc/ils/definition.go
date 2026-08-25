@@ -12,7 +12,6 @@ const name = "ILS"
 
 type Configuration struct {
 	MaxIterations       int     `yaml:"MaxIterations"`
-	TimeLimitSeconds    float64 `yaml:"TimeLimitSeconds"`
 	ShakeMin            float64 `yaml:"ShakeMin"`
 	ShakeMax            float64 `yaml:"ShakeMax"`
 	MetropolisCriterion bool    `yaml:"MetropolisCriterion"`

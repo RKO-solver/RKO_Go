@@ -11,10 +11,9 @@ import (
 const name = "LNS"
 
 type Configuration struct {
-	MaxIterations    int     `yaml:"MaxIterations"`
-	TimeLimitSeconds float64 `yaml:"TimeLimitSeconds"`
-	BetaMin          float64 `yaml:"BetaMin"`
-	BetaMax          float64 `yaml:"BetaMax"`
+	MaxIterations int     `yaml:"MaxIterations"`
+	BetaMin       float64 `yaml:"BetaMin"`
+	BetaMax       float64 `yaml:"BetaMax"`
 }
 
 type LNS struct {

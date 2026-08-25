@@ -1,6 +1,8 @@
 package search
 
 import (
+	"context"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/random"
@@ -28,12 +30,16 @@ var fareySequence = []float64{
 	1.0,
 }
 
-func fareySearch(rko *metaheuristc.RandomKeyValue, environment definition.Environment, rg *random.Generator) {
+func fareySearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment, rg *random.Generator) {
 
 	fareyLen := len(fareySequence)
 	n := rko.RK.Len()
 
 	for i := 0; i < n; i++ {
+		if ctx.Err() != nil {
+			break
+		}
+
 		for j := 1; j < fareyLen-1; j++ {
 			oldValue := rko.RK[i]
 			value := rg.RangeFloat64(fareySequence[j], fareySequence[j+1])
@@ -60,8 +66,8 @@ func (s fareyLocalSearch) String() string {
 	return GetSearchString(Farey)
 }
 
-func (s fareyLocalSearch) Search(rko *metaheuristc.RandomKeyValue) {
-	fareySearch(rko, s.environment, s.rg)
+func (s fareyLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
+	fareySearch(ctx, rko, s.environment, s.rg)
 }
 
 func (s fareyLocalSearch) SetRG(rg *random.Generator) {

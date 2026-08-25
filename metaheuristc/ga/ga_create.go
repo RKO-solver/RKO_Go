@@ -11,7 +11,6 @@ import (
 
 func DefaultConfigurationGA() *ConfigurationGA {
 	return &ConfigurationGA{
-		TimeLimitSeconds:           constants.DefaultTimeLimitSeconds,
 		PopulationSize:             constants.DefaultPopulationSize,
 		CrossoverAlpha:             constants.DefaultCrossoverAlpha,
 		MutationAlpha:              constants.DefaultMutationAlpha,

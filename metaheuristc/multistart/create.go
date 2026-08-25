@@ -11,8 +11,7 @@ import (
 
 func DefaulConfigurationtMultiStart() *Configuration {
 	return &Configuration{
-		MaxIterations:    constants.DefaultMaxIterations,
-		TimeLimitSeconds: constants.DefaultTimeLimitSeconds,
+		MaxIterations: constants.DefaultMaxIterations,
 	}
 }
 

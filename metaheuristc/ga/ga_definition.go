@@ -11,7 +11,6 @@ import (
 const nameGA = "GA"
 
 type ConfigurationGA struct {
-	TimeLimitSeconds           float64 `yaml:"TimeLimitSeconds"`
 	PopulationSize             int     `yaml:"PopulationSize"`
 	CrossoverAlpha             float64 `yaml:"CrossoverAlpha"`
 	MutationAlpha              float64 `yaml:"MutationAlpha"`

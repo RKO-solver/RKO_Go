@@ -11,7 +11,6 @@ import (
 
 func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
 	return &ConfigurationBRKGA{
-		TimeLimitSeconds:           constants.DefaultTimeLimitSeconds,
 		PopulationSize:             constants.DefaultPopulationSize,
 		EliteRatio:                 constants.DefaultEliteRatio,
 		MutantRatio:                constants.DefaultMutantRation,

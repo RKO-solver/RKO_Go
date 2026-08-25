@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"math"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -58,8 +59,8 @@ func (n nelderMeadLocalSearch) SetRG(rg *random.Generator) {
 	n.rg = rg
 }
 
-func (n nelderMeadLocalSearch) Search(rko *metaheuristc.RandomKeyValue) {
-	nelderMeadSearch(rko, n.maxIterations, n.environment, n.solutionPool, n.rg)
+func (n nelderMeadLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
+	nelderMeadSearch(ctx, rko, n.maxIterations, n.environment, n.solutionPool, n.rg)
 }
 
 func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {
@@ -67,7 +68,7 @@ func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPoo
 	return nelderMeadLocalSearch{environment, solutionPool, rg, maxIterations}
 }
 
-func nelderMeadSearch(rko *metaheuristc.RandomKeyValue, maxIterations int, env definition.Environment, solutionPool *solution.Pool, rg *random.Generator) {
+func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, maxIterations int, env definition.Environment, solutionPool *solution.Pool, rg *random.Generator) {
 	var x1, x2, x3, x0, xR, xAux *metaheuristc.RandomKeyValue
 
 	poolSize := solutionPool.Size()
@@ -96,6 +97,10 @@ func nelderMeadSearch(rko *metaheuristc.RandomKeyValue, maxIterations int, env d
 	}
 
 	for i := 0; i < maxIterations; i++ {
+		if ctx.Err() != nil {
+			break
+		}
+
 		x0 = computeBlend(x1, x2, true, env, rg)
 		xR = computeBlend(x0, x3, false, env, rg)
 
@@ -151,6 +156,7 @@ func nelderMeadSearch(rko *metaheuristc.RandomKeyValue, maxIterations int, env d
 			x2 = x3
 			x3 = xAux
 		}
+
 	}
 
 	copy(rko.RK, x1.RK)

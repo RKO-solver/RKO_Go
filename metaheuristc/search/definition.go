@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"strings"
 
 	"github.com/RKO-solver/rko-go/metaheuristc"
@@ -19,7 +20,7 @@ const (
 
 type Local interface {
 	SetRG(rg *random.Generator)
-	Search(rko *metaheuristc.RandomKeyValue)
+	Search(ctx context.Context, rko *metaheuristc.RandomKeyValue)
 	String() string
 }
 

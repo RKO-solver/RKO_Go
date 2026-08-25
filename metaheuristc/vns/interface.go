@@ -1,6 +1,8 @@
 package vns
 
 import (
+	"context"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/random"
 )
@@ -13,18 +15,14 @@ func (vns *VNS) Name() string {
 	return name
 }
 
-func (vns *VNS) Solve() definition.Result {
-	rko, elapsed := vns.solve(vns.solutionPool)
+func (vns *VNS) Solve(ctx context.Context) definition.Result {
+	rko, elapsed := vns.solve(ctx, vns.solutionPool)
 
 	return definition.Result{
 		Solution:        vns.env.Decode(rko.RK),
 		Cost:            rko.Cost,
 		TimeSpentSecond: elapsed,
 	}
-}
-
-func (vns *VNS) SetTimeLimitSecond(timeLimitSecond float64) {
-	vns.configuration.TimeLimitSeconds = timeLimitSecond
 }
 
 // --- The Compile-Time Check ---

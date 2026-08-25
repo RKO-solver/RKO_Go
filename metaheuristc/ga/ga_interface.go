@@ -1,6 +1,8 @@
 package ga
 
 import (
+	"context"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/random"
 )
@@ -14,18 +16,14 @@ func (ga *GA) Name() string {
 	return nameGA
 }
 
-func (ga *GA) Solve() definition.Result {
-	rko, elapsed := ga.solve(ga.solutionPool)
+func (ga *GA) Solve(ctx context.Context) definition.Result {
+	rko, elapsed := ga.solve(ctx, ga.solutionPool)
 
 	return definition.Result{
 		Solution:        ga.env.Decode(rko.RK),
 		Cost:            rko.Cost,
 		TimeSpentSecond: elapsed,
 	}
-}
-
-func (ga *GA) SetTimeLimitSecond(timeLimitSecond float64) {
-	ga.configuration.TimeLimitSeconds = timeLimitSecond
 }
 
 // --- The Compile-Time Check ---

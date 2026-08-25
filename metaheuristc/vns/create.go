@@ -11,9 +11,8 @@ import (
 
 func DefaultConfigurationVNS() *Configuration {
 	return &Configuration{
-		MaxIterations:    constants.DefaultMaxIterations,
-		TimeLimitSeconds: constants.DefaultTimeLimitSeconds,
-		Rate:             constants.DefaultRate,
+		MaxIterations: constants.DefaultMaxIterations,
+		Rate:          constants.DefaultRate,
 	}
 }
 
