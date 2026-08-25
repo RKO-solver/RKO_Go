@@ -2,9 +2,11 @@ package rko
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristc/constants"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
 	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
@@ -46,11 +48,12 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger 
 	}
 
 	return &Solver{
-		l:            logger,
-		rg:           rg,
-		env:          env,
-		solutionPool: solutionPool,
-		solvers:      solvers,
+		l:                logger,
+		rg:               rg,
+		env:              env,
+		solutionPool:     solutionPool,
+		solvers:          solvers,
+		timeLimitSeconds: constants.DefaultTimeLimit,
 	}
 }
 
@@ -67,21 +70,21 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger 
 //
 // Returns:
 //   - Pointer to a configured Solver with time limits set for all metaheuristics.
-func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond float64, env definition.Environment, logger logger.Logger) *Solver {
+func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond time.Duration, env definition.Environment, logger logger.Logger) *Solver {
 	solver := CreateDefaultSolver(mh, env, logger)
-	for _, sol := range solver.solvers {
-		sol.SetTimeLimitSecond(timeLimitSecond)
-	}
+
+	solver.timeLimitSeconds = timeLimitSecond
 
 	return solver
 }
 
-func CreateFullSolver(logger logger.Logger, rg *random.Generator, env definition.Environment, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
+func CreateFullSolver(logger logger.Logger, rg *random.Generator, env definition.Environment, timeLimitSeconds int64, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
 	return &Solver{
-		l:            logger,
-		rg:           rg,
-		env:          env,
-		solutionPool: solutionPool,
-		solvers:      solvers,
+		l:                logger,
+		rg:               rg,
+		env:              env,
+		solutionPool:     solutionPool,
+		solvers:          solvers,
+		timeLimitSeconds: time.Duration(timeLimitSeconds),
 	}
 }

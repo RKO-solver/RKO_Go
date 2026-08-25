@@ -4,11 +4,28 @@
 package definition
 
 import (
+	"context"
 	"math"
 	"sort"
+	"time"
 
 	"github.com/RKO-solver/rko-go/random"
 )
+
+type contextKey struct{}
+
+var startTimeKey = contextKey{}
+
+func WithStartTime(ctx context.Context, t time.Time) context.Context {
+	return context.WithValue(ctx, startTimeKey, t)
+}
+
+func StartTime(ctx context.Context) time.Time {
+	if t, ok := ctx.Value(startTimeKey).(time.Time); ok {
+		return t
+	}
+	return time.Now()
+}
 
 // RandomKey represents a solution as a slice of float64 values (random keys).
 type RandomKey []float64
@@ -16,13 +33,11 @@ type RandomKey []float64
 // Solver is the interface that wraps the basic methods required for a metaheuristic solver.
 type Solver interface {
 	// Solve executes the metaheuristic and returns a Result.
-	Solve() Result
+	Solve(ctx context.Context) Result
 	// Name returns the name of the solver.
 	Name() string
 	// SetRG sets the random number generator for the solver.
 	SetRG(rg *random.Generator)
-	// SetTimeLimitSecond sets the time limit for the solver in seconds.
-	SetTimeLimitSecond(timeLimitSecond float64)
 	// Print its configuration
 	Print()
 }

@@ -1,8 +1,11 @@
 package constants
 
-import "math"
+import (
+	"math"
+	"time"
+)
 
-const DefaultTimeLimitSeconds = float64(150)
+const DefaultTimeLimit = 150 * time.Second
 const DefaultMaxIterations = math.MaxInt
 const DefaultShakeMin = 0.01
 const DefaultShakeMax = 0.05

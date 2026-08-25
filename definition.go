@@ -1,6 +1,7 @@
 package rko
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -17,19 +18,15 @@ import (
 // sharing a solution pool and environment. It manages logging, random number generation,
 // and provides a unified interface for running and retrieving the best solution.
 type Solver struct {
-	l            logger.Logger
-	rg           *random.Generator      // Random number generator
-	env          definition.Environment // Problem environment (user implementation)
-	solutionPool *solution.Pool         // Shared pool of solutions among solvers
-	solvers      []definition.Solver    // List of metaheuristic solvers to run
+	l                logger.Logger
+	rg               *random.Generator      // Random number generator
+	env              definition.Environment // Problem environment (user implementation)
+	solutionPool     *solution.Pool         // Shared pool of solutions among solvers
+	solvers          []definition.Solver    // List of metaheuristic solvers to run
+	timeLimitSeconds time.Duration
 }
 
-// Solve runs all configured metaheuristic solvers in parallel, waits for their completion,
-// and returns the best solution decoded into the problem's representation.
-//
-// Returns:
-//   - The best solution found, decoded using the Environment's Decode method.
-func (s *Solver) Solve() any {
+func (s *Solver) SolveCtx(ctx context.Context) any {
 	logLevel := s.l.GetLogLevel()
 	var loggerWg sync.WaitGroup
 
@@ -38,12 +35,13 @@ func (s *Solver) Solve() any {
 	}
 
 	var wg sync.WaitGroup
+	ctxStartTime := definition.WithStartTime(ctx, time.Now())
 	for i, sv := range s.solvers {
 		if logLevel > logger.SILENT {
 			fmt.Printf("Running solver %s (%d)\n", sv.Name(), i)
 		}
 		wg.Add(1)
-		go metaheuristc.Worker(sv, &metaheuristc.Configuration{Id: i}, s.l, &wg)
+		go metaheuristc.Worker(ctxStartTime, sv, &metaheuristc.Configuration{Id: i}, s.l, &wg)
 	}
 
 	if l, ok := s.l.(*channel.Log); ok {
@@ -81,6 +79,23 @@ func (s *Solver) Solve() any {
 
 	rk := s.solutionPool.BestSolution()
 	return s.env.Decode(rk.RK)
+}
+
+// Solve runs all configured metaheuristic solvers in parallel, waits for their completion,
+// and returns the best solution decoded into the problem's representation.
+//
+// Returns:
+//   - The best solution found, decoded using the Environment's Decode method.
+func (s *Solver) Solve() any {
+	if s.timeLimitSeconds > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), s.timeLimitSeconds)
+		defer cancel()
+
+		return s.SolveCtx(ctx)
+	}
+	ctx := context.Background()
+
+	return s.SolveCtx(ctx)
 }
 
 func (s *Solver) GetSolutionPool() *solution.Pool {
