@@ -1,6 +1,5 @@
-// Package definition provides core interfaces and types for defining optimization problems
-// and solvers in the RKO. Users must implement the Environment interface
-// for their specific problem to use the metaheuristics provided by the library.
+// Package definition provides core interfaces and types for optimization problems.
+// Implement Environment for your problem to use this library's metaheuristics.
 package definition
 
 import (
@@ -16,10 +15,12 @@ type contextKey struct{}
 
 var startTimeKey = contextKey{}
 
+// WithStartTime returns a context carrying the given start time.
 func WithStartTime(ctx context.Context, t time.Time) context.Context {
 	return context.WithValue(ctx, startTimeKey, t)
 }
 
+// StartTime returns the start time stored in ctx, or time.Now().
 func StartTime(ctx context.Context) time.Time {
 	if t, ok := ctx.Value(startTimeKey).(time.Time); ok {
 		return t
