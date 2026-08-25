@@ -6,6 +6,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger"
 )
 
+// SaveCsv writes a per-solver CSV and a pool CSV.
 func (l *Log) SaveCsv(filename ...string) {
 	for _, report := range l.GetReportData() {
 		if len(filename) > 0 {

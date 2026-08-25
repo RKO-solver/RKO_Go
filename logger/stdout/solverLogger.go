@@ -49,7 +49,5 @@ func (s *SolverLogger) getReportData() logger.SolverInformation {
 	return solverReport
 }
 
-// --- The Compile-Time Check ---
-// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
-// If it doesn't, the code will not compile.
+// Compile-time check that *SolverLogger implements logger.SolverLogger.
 var _ logger.SolverLogger = (*SolverLogger)(nil)

@@ -67,38 +67,107 @@ const (
 )
 ```
 
+`DefaultLogLevel` is `INFO`. Two helpers parse a level from a string, with different behavior for unrecognized input:
+
+| Function | On unrecognized input | Where it's used |
+|---|---|---|
+| `GetLogLevel(name string) Level` | returns `INFO` | `configuration` package, YAML `logLevel` key |
+| `GetLevel(level string) (Level, error)` | returns `SILENT` and an error | manual parsing where you want to reject bad input |
+
+`GetLevelString(level Level) string` does the reverse, returning `"Silent"`, `"Info"`, or `"Verbose"`.
+
+### Choosing a Built-in Logger
+
+| | `channel` | `stdout` |
+|---|---|---|
+| Output | Live-refreshing terminal dashboard (redraws in place) | Plain lines, one per event |
+| Best for | Interactive terminal runs | Batch jobs, CI, redirecting to a file |
+
+`configuration.SolverConfiguration.LoggerType` (a `logger.LogType`, backed by the YAML `logType` key) picks between them:
+
+```go
+type LogType = uint8
+
+const (
+    CHANNEL LogType = iota // use logger/channel
+    PRINT                   // use logger/stdout
+)
+
+func GetLogType(label string) LogType // "CHANNEL" or "PRINT", unknown -> PRINT
+```
+
+The `channel.Log` lifecycle methods (`Start`, `Shutdown`, `Print`, `WorkersPrint`, `GetTicker`) are driven by the solver itself — you don't call them directly. The knobs you do set yourself, before passing the logger to a solver:
+
+- `SetTicker(timeMilliseconds int)` — dashboard refresh interval; values below 300ms are silently ignored.
+- `SetNumPoolMessages(num int)` — how many recent pool entries the dashboard shows.
+- `SetNumVerboseMessages(num int)` — how many recent verbose messages per solver the dashboard shows.
+
 You can implement your own logger by satisfying the `Logger` interface.
 
 ## Usage Example
 
 ```go
 import (
-    "github.com/RKO-solver/rko-go"
+    "fmt"
+
+    rko "github.com/RKO-solver/rko-go"
+    "github.com/RKO-solver/rko-go/logger"
     "github.com/RKO-solver/rko-go/logger/channel"
 )
 
-// Create a logger with default INFO level
-logger := channel.DefaultLogger("MyOptimizationProblem")
+env := MyEnvironment{}                        // your definition.Environment
+mh := []rko.MetaHeuristic{rko.GA, rko.SA}      // metaheuristics to run
 
-// Or create with a specific log level
-logger := channel.NewLoggerLevel("MyOptimizationProblem", logger.VERBOSE)
+log := channel.NewLoggerLevel("MyOptimizationProblem", logger.VERBOSE)
+
+solver := rko.CreateDefaultSolver(mh, env, log)
+result := solver.Solve()
+fmt.Printf("Best solution: %+v\n", result)
+
+// Retrieve and use the logged data.
+reportData := log.GetReportData()
+solutionData := log.GetSolutionData()
+fmt.Printf("%d solver(s), %d pooled solution(s)\n", len(reportData), len(solutionData))
 ```
 
-Pass your logger to the solver when creating it:
+`channel.DefaultLogger("MyOptimizationProblem")` is equivalent, using `logger.DefaultLogLevel` (`INFO`) instead.
+
+### Constructors
+
+| Package | Function | Level | Buffer size |
+|---|---|---|---|
+| `channel` | `DefaultLogger(problemName string)` | `logger.DefaultLogLevel` | default |
+| `channel` | `NewLoggerLevel(problemName string, level logger.Level)` | given | default |
+| `channel` | `NewLogger(problemName string, logLevel logger.Level, bufferSize int)` | given | given |
+| `stdout` | `DefaultLogger(problemName string)` | `logger.DefaultLogLevel` | n/a |
+| `stdout` | `NewLogger(problemName string, logLevel logger.Level)` | given | n/a |
+
+## Exporting Results to CSV
+
+`helpers.go` provides plain CSV writers, all under package `logger`:
+
+- `SaveCsvFile(filename string, data [][]string)` — writes rows as CSV; calls `log.Fatal` on I/O error.
+- `SavePoolCsv(poolData []SolutionData, problemName string, filename ...string)` — header `cost,time`; default filename `<problemName>-pool.csv`.
+- `SaveSolverCSV(solverInfo SolverInformation, problemName string, filename ...string)` — header `best,local,time`; default filename `<problemName>-<solverInfo.Name>-<solverInfo.Id>.csv`.
+
+Both `*channel.Log` and `*stdout.Log` also have a concrete `SaveCsv(filename ...string)` method that combines the two above (one CSV per solver, plus one pool CSV). **`SaveCsv` is not part of the `logger.Logger` interface**, so if you only have a `logger.Logger` value (for example, the one returned by `configuration.CreateSolver`), you must type-assert to reach it:
 
 ```go
-solver := rko.CreateDefaultSolver(mh, env, logger)
-result := solver.Solve()
+solver, log := configuration.CreateSolver(problemName, env, solverConfig, mhConfig)
+solver.Solve()
 
-// Retrieve and use the logged data
-reportData := logger.GetReportData()
-solutionData := logger.GetSolutionData()
+if saver, ok := log.(interface{ SaveCsv(filename ...string) }); ok {
+    saver.SaveCsv()
+}
 ```
 
+If you built the logger yourself with `channel.DefaultLogger` or `stdout.DefaultLogger`, you already hold the concrete type and can call `log.SaveCsv()` directly.
+
 ## Files
-- `definition.go`: Contains the `Logger`, `SolverLogger` interfaces and data structures.
-- `constants.go`: Contains `Level` type and log level constants.
-- `helpers.go`: Helper functions for logging utilities.
+- `definition.go`: Contains the `Logger`, `SolverLogger` interfaces, data structures, and `LogType`.
+- `constants.go`: Contains `Level` type, log level constants, and `GetLogLevel`.
+- `read.go`: Contains `GetLevel` and `GetLevelString`.
+- `helpers.go`: CSV export helpers (`SaveCsvFile`, `SavePoolCsv`, `SaveSolverCSV`).
 - `channel/`: Channel-based logger implementation for detailed, real-time logging.
 - `stdout/`: Stdout logger implementation for simple console output.
 

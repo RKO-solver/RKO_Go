@@ -2,8 +2,10 @@ package logger
 
 import "strings"
 
+// DefaultLogLevel is used when no level is explicitly configured.
 const DefaultLogLevel = INFO
 
+// Level controls how much detail a Logger prints.
 type Level uint8
 
 const (
@@ -12,6 +14,7 @@ const (
 	VERBOSE
 )
 
+// GetLogLevel parses name into a Level, defaulting to INFO when unrecognized.
 func GetLogLevel(name string) Level {
 	name = strings.ToUpper(name)
 	switch name {

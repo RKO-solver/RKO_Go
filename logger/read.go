@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// GetLevel parses level into a Level, returning an error if it is not recognized.
 func GetLevel(level string) (Level, error) {
 	check := strings.ToUpper(level)
 	switch check {
@@ -18,6 +19,7 @@ func GetLevel(level string) (Level, error) {
 	return SILENT, errors.New("invalid Level")
 }
 
+// GetLevelString returns the human-readable name of a Level, e.g. "Verbose".
 func GetLevelString(level Level) string {
 	switch level {
 	case SILENT:

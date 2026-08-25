@@ -41,7 +41,5 @@ func (sl *SolverLoggerChannel) Verbose(message string, timeStamp float64) {
 	}
 }
 
-// --- The Compile-Time Check ---
-// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
-// If it doesn't, the code will not compile.
+// Compile-time check that *SolverLoggerChannel implements logger.SolverLogger.
 var _ logger.SolverLogger = (*SolverLoggerChannel)(nil)

@@ -1,3 +1,4 @@
+// Package stdout implements a plain-text terminal Logger for batch or CI runs.
 package stdout
 
 import (
@@ -71,7 +72,5 @@ func (l *Log) GetSolutionData() []logger.SolutionData {
 	return report
 }
 
-// --- The Compile-Time Check ---
-// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
-// If it doesn't, the code will not compile.
+// Compile-time check that *Log implements logger.Logger.
 var _ logger.Logger = (*Log)(nil)
