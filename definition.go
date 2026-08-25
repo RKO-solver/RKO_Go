@@ -14,9 +14,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// Solver coordinates the execution of multiple metaheuristic solvers in parallel,
-// sharing a solution pool and environment. It manages logging, random number generation,
-// and provides a unified interface for running and retrieving the best solution.
+// Solver runs several metaheuristics in parallel over a shared solution pool.
 type Solver struct {
 	l                logger.Logger
 	rg               *random.Generator      // Random number generator
@@ -26,6 +24,7 @@ type Solver struct {
 	timeLimitSeconds time.Duration
 }
 
+// SolveCtx is like Solve but stops when ctx is cancelled or expires.
 func (s *Solver) SolveCtx(ctx context.Context) any {
 	logLevel := s.l.GetLogLevel()
 	var loggerWg sync.WaitGroup
@@ -81,11 +80,7 @@ func (s *Solver) SolveCtx(ctx context.Context) any {
 	return s.env.Decode(rk.RK)
 }
 
-// Solve runs all configured metaheuristic solvers in parallel, waits for their completion,
-// and returns the best solution decoded into the problem's representation.
-//
-// Returns:
-//   - The best solution found, decoded using the Environment's Decode method.
+// Solve runs every metaheuristic under the configured time limit and returns the best solution.
 func (s *Solver) Solve() any {
 	if s.timeLimitSeconds > 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), s.timeLimitSeconds)
@@ -98,10 +93,12 @@ func (s *Solver) Solve() any {
 	return s.SolveCtx(ctx)
 }
 
+// GetSolutionPool returns the pool shared by every running metaheuristic.
 func (s *Solver) GetSolutionPool() *solution.Pool {
 	return s.solutionPool
 }
 
+// Print prints the configuration of every metaheuristic in the solver.
 func (s *Solver) Print() {
 	for i, sv := range s.solvers {
 		fmt.Printf("(%d) ", i)

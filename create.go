@@ -17,6 +17,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// CreateDefaultSolver creates a Solver running the given metaheuristics with default parameters.
 func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger logger.Logger) *Solver {
 	rg := random.GetGlobalInstance()
 	solutionPool := solution.NewDefaultPool(env, rg, logger)
@@ -60,19 +61,7 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger 
 	}
 }
 
-// CreateDefaultSolverTimeLimitSecond creates a Solver as in CreateDefaultSolver, but also sets
-// a time limit (in seconds) for all metaheuristics.
-//
-// Parameters:
-//   - mh: slice of MetaHeuristic types to run
-//   - timeLimitSecond: time limit in seconds for each metaheuristic
-//   - env: user-implemented problem environment
-//   - logLevel: logging level for all solvers
-//   - saveReport: whether to save progress reports
-//   - handler: logger implementation
-//
-// Returns:
-//   - Pointer to a configured Solver with time limits set for all metaheuristics.
+// CreateDefaultSolverTimeLimitSecond is like CreateDefaultSolver with an explicit time limit.
 func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond time.Duration, env definition.Environment, logger logger.Logger) *Solver {
 	solver := CreateDefaultSolver(mh, env, logger)
 
@@ -81,6 +70,7 @@ func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond time
 	return solver
 }
 
+// CreateFullSolver creates a Solver from already-built solvers, pool and generator.
 func CreateFullSolver(logger logger.Logger, rg *random.Generator, env definition.Environment, timeLimitSeconds int64, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
 	return &Solver{
 		l:                logger,
