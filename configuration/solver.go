@@ -72,7 +72,7 @@ func createSolver(problemName string, env definition.Environment, solverConfig *
 		}
 	}
 
-	return rko.CreateFullSolver(log, rg, env, solutionPool, solvers), log
+	return rko.CreateFullSolver(log, rg, env, solverConfig.TimeLimitSeconds, solutionPool, solvers), log
 }
 
 func CreateSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration) (*rko.Solver, logger.Logger) {

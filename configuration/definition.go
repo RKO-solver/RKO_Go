@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/logger"
@@ -28,14 +29,13 @@ type MetaheuristicsConfiguration struct {
 }
 
 type mhYamlConfiguration struct {
-	TimeLimitSeconds float64                   `yaml:"TimeLimitSeconds"`
-	MultiStart       *multistart.Configuration `yaml:"MultiStart"`
-	BRKGA            *ga.ConfigurationBRKGA    `yaml:"BRKGA"`
-	GA               *ga.ConfigurationGA       `yaml:"GA"`
-	ILS              *ils.Configuration        `yaml:"ILS"`
-	SA               *sa.Configuration         `yaml:"SA"`
-	VNS              *vns.Configuration        `yaml:"VNS"`
-	LNS              *lns.Configuration        `yaml:"LNS"`
+	MultiStart *multistart.Configuration `yaml:"MultiStart"`
+	BRKGA      *ga.ConfigurationBRKGA    `yaml:"BRKGA"`
+	GA         *ga.ConfigurationGA       `yaml:"GA"`
+	ILS        *ils.Configuration        `yaml:"ILS"`
+	SA         *sa.Configuration         `yaml:"SA"`
+	VNS        *vns.Configuration        `yaml:"VNS"`
+	LNS        *lns.Configuration        `yaml:"LNS"`
 }
 type Option func(*MetaheuristicsConfiguration)
 
@@ -74,22 +74,23 @@ func CreateYamlMHConfiguration(filePath string) (*MetaheuristicsConfiguration, e
 	}
 
 	var opts = []Option{
-		withMultiStart(configuration.MultiStart, configuration.TimeLimitSeconds),
-		withGA(configuration.GA, configuration.TimeLimitSeconds),
-		withBRKGA(configuration.BRKGA, configuration.TimeLimitSeconds),
-		withSA(configuration.SA, configuration.TimeLimitSeconds),
-		withVNS(configuration.VNS, configuration.TimeLimitSeconds),
-		withILS(configuration.ILS, configuration.TimeLimitSeconds),
-		withLNS(configuration.LNS, configuration.TimeLimitSeconds),
+		withMultiStart(configuration.MultiStart),
+		withGA(configuration.GA),
+		withBRKGA(configuration.BRKGA),
+		withSA(configuration.SA),
+		withVNS(configuration.VNS),
+		withILS(configuration.ILS),
+		withLNS(configuration.LNS),
 	}
 
 	return newYamlConfiguration(opts...), nil
 }
 
 type configurationSolver struct {
-	LogLevel       string   `yaml:"logLevel"`
-	LogType        string   `yaml:"logType"`
-	Metaheuristics []string `yaml:"metaheuristics"`
+	LogLevel         string   `yaml:"logLevel"`
+	LogType          string   `yaml:"logType"`
+	TimeLimitSeconds int64    `yaml:"timeLimitSeconds"`
+	Metaheuristics   []string `yaml:"metaheuristics"`
 }
 
 type Solver struct {
@@ -97,9 +98,10 @@ type Solver struct {
 	Search        []search.Type
 }
 type SolverConfiguration struct {
-	LoggerLevel logger.Level
-	LoggerType  logger.LogType
-	Solvers     []Solver
+	LoggerLevel      logger.Level
+	LoggerType       logger.LogType
+	TimeLimitSeconds int64
+	Solvers          []Solver
 }
 
 func processMetaheuristics(metaheuristics []string) []Solver {
@@ -151,9 +153,10 @@ func CreateYamlSolverConfiguration(filePath string) (*SolverConfiguration, error
 	}
 
 	problemConfiguration := &SolverConfiguration{
-		LoggerLevel: logger.GetLogLevel(config.LogLevel),
-		LoggerType:  logger.GetLogType(config.LogType),
-		Solvers:     processMetaheuristics(config.Metaheuristics),
+		LoggerLevel:      logger.GetLogLevel(config.LogLevel),
+		LoggerType:       logger.GetLogType(config.LogType),
+		TimeLimitSeconds: config.TimeLimitSeconds * int64(time.Second),
+		Solvers:          processMetaheuristics(config.Metaheuristics),
 	}
 
 	return problemConfiguration, nil
