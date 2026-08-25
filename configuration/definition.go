@@ -1,3 +1,4 @@
+// Package configuration builds solvers from Go structs or YAML files.
 package configuration
 
 import (
@@ -18,6 +19,7 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
+// MetaheuristicsConfiguration holds the parameters for every metaheuristic.
 type MetaheuristicsConfiguration struct {
 	MultiStart *multistart.Configuration
 	BRKGA      *ga.ConfigurationBRKGA
@@ -37,6 +39,8 @@ type mhYamlConfiguration struct {
 	VNS        *vns.Configuration        `yaml:"VNS"`
 	LNS        *lns.Configuration        `yaml:"LNS"`
 }
+
+// Option is a function that modifies a MetaheuristicsConfiguration.
 type Option func(*MetaheuristicsConfiguration)
 
 func newYamlConfiguration(opts ...Option) *MetaheuristicsConfiguration {
@@ -59,6 +63,7 @@ func newYamlConfiguration(opts ...Option) *MetaheuristicsConfiguration {
 	return config
 }
 
+// CreateYamlMHConfiguration loads metaheuristic parameters from a YAML file.
 func CreateYamlMHConfiguration(filePath string) (*MetaheuristicsConfiguration, error) {
 
 	data, err := os.ReadFile(filePath)
@@ -93,10 +98,13 @@ type configurationSolver struct {
 	Metaheuristics   []string `yaml:"metaheuristics"`
 }
 
+// Solver pairs a metaheuristic with the local search strategies it should use.
 type Solver struct {
 	MetaHeuristic rko.MetaHeuristic
 	Search        []search.Type
 }
+
+// SolverConfiguration holds logger settings, the time limit, and which metaheuristics to run.
 type SolverConfiguration struct {
 	LoggerLevel      logger.Level
 	LoggerType       logger.LogType
@@ -140,6 +148,7 @@ func processMetaheuristics(metaheuristics []string) []Solver {
 	return mhs
 }
 
+// CreateYamlSolverConfiguration loads solver settings from a YAML file.
 func CreateYamlSolverConfiguration(filePath string) (*SolverConfiguration, error) {
 
 	data, err := os.ReadFile(filePath)

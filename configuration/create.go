@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/vns"
 )
 
+// DefaultConfiguration returns the default parameters for every metaheuristic.
 func DefaultConfiguration() *MetaheuristicsConfiguration {
 	return &MetaheuristicsConfiguration{
 		MultiStart: multistart.DefaulConfigurationtMultiStart(),

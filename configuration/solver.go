@@ -75,15 +75,18 @@ func createSolver(problemName string, env definition.Environment, solverConfig *
 	return rko.CreateFullSolver(log, rg, env, solverConfig.TimeLimitSeconds, solutionPool, solvers), log
 }
 
+// CreateSolver builds a solver from the given configurations.
 func CreateSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration) (*rko.Solver, logger.Logger) {
 	return createSolver(problemName, env, solverConfig, mhConfig, random.GetGlobalInstance())
 }
 
+// CreateSolverSeed is like CreateSolver but uses a fixed random seed for reproducible runs.
 func CreateSolverSeed(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration, seed uint64) (*rko.Solver, logger.Logger) {
 	rg := random.NewGeneratorSeed(seed)
 	return createSolver(problemName, env, solverConfig, mhConfig, rg)
 }
 
+// CreateSolverDefaultConfig is like CreateSolver but with default metaheuristic parameters.
 func CreateSolverDefaultConfig(problemName string, env definition.Environment, solverConfig *SolverConfiguration) (*rko.Solver, logger.Logger) {
 	return createSolver(problemName, env, solverConfig, DefaultConfiguration(), random.GetGlobalInstance())
 }
