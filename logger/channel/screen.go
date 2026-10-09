@@ -21,6 +21,14 @@ const lastNVerboses = 3
 
 const cleanLineCode = "\033[K"
 
+const enterAltScreenCode = "\033[?1049h"
+
+const leaveAltScreenCode = "\033[?1049l"
+
+const cursorHomeCode = "\033[H"
+
+const clearToEndCode = "\033[J"
+
 func setFixedLength(s string, length int, pad bool) string {
 	if len(s) > length {
 		// Truncate the string
@@ -34,16 +42,38 @@ func setFixedLength(s string, length int, pad bool) string {
 	return s + cleanLineCode
 }
 
+// printShell redraws the dashboard in the alternate screen, entering it on the first frame.
 func (d *information) printShell() {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	if !d.init {
-		d.init = true
-	} else {
-		fmt.Print(fmt.Sprintf("\033[%dA", d.previousLineCount))
+	var b strings.Builder
+	if !d.altScreen {
+		d.altScreen = true
+		b.WriteString(enterAltScreenCode)
 	}
+	b.WriteString(cursorHomeCode)
+	d.writeFrame(&b)
+	b.WriteString(clearToEndCode)
+	fmt.Print(b.String())
+}
 
+// printFinal leaves the alternate screen, if entered, and prints the frame once on the normal screen.
+func (d *information) printFinal() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	var b strings.Builder
+	if d.altScreen {
+		d.altScreen = false
+		b.WriteString(leaveAltScreenCode)
+	}
+	d.writeFrame(&b)
+	fmt.Print(b.String())
+}
+
+// writeFrame appends the dashboard lines to b, one per line; the caller must hold d.mu.
+func (d *information) writeFrame(b *strings.Builder) {
 	lines := make([]string, 0)
 
 	// Top Text
@@ -110,9 +140,7 @@ func (d *information) printShell() {
 	}
 
 	for _, line := range lines {
-		fmt.Println(line)
+		b.WriteString(line)
+		b.WriteByte('\n')
 	}
-
-	d.previousLineCount = len(lines)
-
 }

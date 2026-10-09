@@ -86,15 +86,18 @@ func (l *Log) Print() {
 	l.data.printShell()
 }
 
-// CleanScreen erases the previously printed dashboard lines.
+// Finish leaves the alternate screen, if entered, and prints the final dashboard frame on the normal screen.
+func (l *Log) Finish() {
+	l.data.printFinal()
+}
+
+// CleanScreen clears the dashboard while it is drawn in the alternate screen.
 func (l *Log) CleanScreen() {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()
-	fmt.Print(fmt.Sprintf("\033[%dA", l.data.previousLineCount))
-	for _ = range l.data.previousLineCount {
-		fmt.Print(cleanLineCode)
+	if l.data.altScreen {
+		fmt.Print(cursorHomeCode + clearToEndCode)
 	}
-	fmt.Print(fmt.Sprintf("\033[%dA", l.data.previousLineCount))
 }
 
 // WorkersPrint prints all recorded worker-done messages.

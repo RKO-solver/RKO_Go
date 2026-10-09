@@ -24,14 +24,13 @@ type extraInfo struct {
 }
 type information struct {
 	mu                 sync.RWMutex
-	init               bool
+	altScreen          bool // the dashboard is drawn in the terminal's alternate screen
 	numLinesPool       int
 	numVerboseMessages int
 	pool               []poolInfo
 	solvers            [][]solverInfo
 	extraMessages      [][]extraInfo
 	workerMessages     []string
-	previousLineCount  int
 }
 
 func (d *information) registerInfo(id int, info solverInfo) {
@@ -59,6 +58,5 @@ func (d *information) reset() {
 	}
 	d.pool = make([]poolInfo, 0)
 	d.workerMessages = make([]string, 0)
-	d.init = false
-	d.previousLineCount = 0
+	d.altScreen = false
 }

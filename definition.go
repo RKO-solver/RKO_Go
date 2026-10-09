@@ -79,6 +79,7 @@ func (s *Solver) Solve(ctx context.Context) any {
 		l.Shutdown()
 		loggerWg.Wait()
 		if logLevel > logger.SILENT {
+			l.Finish()
 			l.WorkersPrint()
 		}
 	} else {

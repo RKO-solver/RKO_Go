@@ -20,8 +20,6 @@ func NewLoggerLevel(problemName string, level logger.Level) *Log {
 func NewLogger(problemName string, logLevel logger.Level, bufferSize int) *Log {
 	// The final data store
 	store := &information{
-		init:               false,
-		previousLineCount:  0,
 		numLinesPool:       numLinesSolutionPool,
 		numVerboseMessages: lastNVerboses,
 		pool:               make([]poolInfo, 0, 100),
