@@ -22,7 +22,7 @@ func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
 }
 
 func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA {
-	local := search.CreateMirrorLocalSearch(env)
+	local := search.CreateDefault(env, solutionPool, rg)
 
 	return &BRKGA{
 		env:           env,

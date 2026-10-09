@@ -20,7 +20,7 @@ func DefaultConfigurationGA() *ConfigurationGA {
 }
 
 func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
-	local := search.CreateMirrorLocalSearch(env)
+	local := search.CreateDefault(env, solutionPool, rg)
 
 	return &GA{
 		env:           env,
