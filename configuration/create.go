@@ -18,6 +18,6 @@ func DefaultConfiguration() *MetaheuristicsConfiguration {
 		ILS:        ils.DefaultConfigurationILS(),
 		SA:         sa.DefaultConfigurationSA(),
 		VNS:        vns.DefaultConfigurationVNS(),
-		LNS:        lns.DefaultConfigurationVNS(),
+		LNS:        lns.DefaultConfigurationLNS(),
 	}
 }

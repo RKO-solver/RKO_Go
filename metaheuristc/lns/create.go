@@ -9,7 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func DefaultConfigurationVNS() *Configuration {
+func DefaultConfigurationLNS() *Configuration {
 	return &Configuration{
 		MaxIterations: constants.DefaultMaxIterations,
 		BetaMin:       constants.DefaultShakeMin,
@@ -22,7 +22,7 @@ func CreateDefaultLNS(env definition.Environment, rg *random.Generator, solution
 
 	return &LNS{
 		env:           env,
-		configuration: DefaultConfigurationVNS(),
+		configuration: DefaultConfigurationLNS(),
 		logger:        logger.GetLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,

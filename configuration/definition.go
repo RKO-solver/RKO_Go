@@ -52,7 +52,7 @@ func newYamlConfiguration(opts ...Option) *MetaheuristicsConfiguration {
 		ILS:        ils.DefaultConfigurationILS(),
 		SA:         sa.DefaultConfigurationSA(),
 		VNS:        vns.DefaultConfigurationVNS(),
-		LNS:        lns.DefaultConfigurationVNS(),
+		LNS:        lns.DefaultConfigurationLNS(),
 	}
 
 	// Apply all provided options, which will overwrite the defaults if specified.
