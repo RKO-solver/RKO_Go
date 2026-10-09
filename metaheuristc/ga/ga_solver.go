@@ -41,26 +41,15 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 	for generation := 0; generation < configuration.MaxGenerations && ctx.Err() == nil; generation++ {
 
-		for j := 0; j < configuration.PopulationSize-1; j++ {
+		for j := 0; j < configuration.PopulationSize; j++ {
 			offspring1 := tournament(population, rg)
-			copy(children[j].RK, offspring1.RK)
-			children[j].Cost = offspring1.Cost
-			offspring1 = children[j]
-
 			offspring2 := tournament(population, rg)
-			copy(children[j+1].RK, offspring2.RK)
-			children[j+1].Cost = offspring2.Cost
-			offspring2 = children[j+1]
 
-			crossover(offspring1, offspring2, configuration.CrossoverAlpha, configuration.MutationAlpha, rg)
+			crossover(children[j], offspring1, offspring2, configuration.CrossoverAlpha, configuration.MutationAlpha, rg)
+			children[j].Cost = env.Cost(children[j].RK)
 
-			if offspring1.Cost < bestPerson.Cost {
-				bestPerson = offspring1.Clone()
-				hasImproved = true
-			}
-
-			if offspring2.Cost < bestPerson.Cost {
-				bestPerson = offspring2.Clone()
+			if children[j].Cost < bestPerson.Cost {
+				bestPerson = children[j].Clone()
 				hasImproved = true
 			}
 

@@ -6,29 +6,23 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func crossover(offspring1 *metaheuristc.RandomKeyValue, offspring2 *metaheuristc.RandomKeyValue, probabilityCrossover float64, probabilityMutation float64, rg *random.Generator) {
+func crossover(child, offspring1, offspring2 *metaheuristc.RandomKeyValue, probabilityCrossover float64, probabilityMutation float64, rg *random.Generator) {
+	copy(child.RK, offspring1.RK)
 
 	if rg.Float64() < probabilityCrossover {
-		n := offspring1.RK.Len()
-
-		for i := 0; i < n; i++ {
-			// swap alleles of offspring1
+		for i := range child.RK {
 			if rg.Float64() < 0.5 {
-				offspring1.RK[i] = offspring2.RK[i]
-			} else {
-				offspring2.RK[i] = offspring1.RK[i]
-			}
-
-			// mutation
-			if rg.Float64() < probabilityMutation {
-				offspring1.RK[i] = rg.Float64()
-			}
-
-			if rg.Float64() < probabilityMutation {
-				offspring2.RK[i] = rg.Float64()
+				child.RK[i] = offspring2.RK[i]
 			}
 		}
 	}
+
+	for i := range child.RK {
+		if rg.Float64() < probabilityMutation {
+			child.RK[i] = rg.Float64()
+		}
+	}
+
 }
 
 func crossoverUniformElite(population []*metaheuristc.RandomKeyValue, eliteSize, populationSize int, alphaMutation, alphaCrossover float64, rg *random.Generator) definition.RandomKey {
