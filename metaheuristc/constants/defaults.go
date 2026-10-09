@@ -12,7 +12,6 @@ const DefaultShakeMax = 0.05
 const DefaultRate = 0.2
 
 const DefaultAlphaSimulationAnnealing = 0.0005
-const DefaultImpact = 0.20
 const DefaultTemperatureInitial = 10000000.0
 const DefaultTemperatureGoal = 0.0000000000000001
 const DefaultReheat = 5.0
