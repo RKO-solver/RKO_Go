@@ -39,7 +39,7 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
 
 		k := 1
-		for k < rk.ShakeMax {
+		for k < rk.ShakeMax && ctx.Err() == nil {
 			beta := rg.RangeFloat64(float64(k)*configuration.Rate, float64(k+1)*configuration.Rate)
 
 			copy(neighbour.RK, localSolution.RK)
