@@ -3,6 +3,7 @@ package multistart
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -25,6 +26,7 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 		Cost: 0,
 	}
 
+	bestSolutionCost := math.MaxInt
 	start := definition.StartTime(ctx)
 	for ; ctx.Err() == nil; ctxAction.Step() {
 
@@ -33,7 +35,6 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 
 		local.Search(ctx, localSolution)
 
-		bestSolutionCost := solutionPool.BestSolutionCost()
 		if localSolution.Cost < bestSolutionCost {
 			solutionPool.AddSolution(localSolution, time.Since(start).Seconds())
 			bestSolutionCost = localSolution.Cost

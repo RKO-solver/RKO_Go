@@ -46,7 +46,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 		Cost: 0,
 	}
 
-	var bestSolutionCost int
+	bestSolutionCost := localSolution.Cost
 
 	for ; temperatureLocal > configuration.TemperatureGoal && ctx.Err() == nil; ctxAction.Step() {
 
@@ -60,6 +60,10 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 			if delta < 0 {
 				localSolution.Cost = neighbour.Cost
 				copy(localSolution.RK, neighbour.RK)
+
+				if localSolution.Cost < bestSolutionCost {
+					bestSolutionCost = localSolution.Cost
+				}
 
 				solutionPool.AddSolution(localSolution, time.Since(start).Seconds())
 			} else {
