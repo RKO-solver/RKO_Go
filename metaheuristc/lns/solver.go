@@ -70,14 +70,13 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 		order := rg.Permutation(env.NumKeys())
 
-		for k := 0; k < intensity; k++ {
+		for k := range intensity {
 			pos := order[k]
 			currentBest := math.MaxInt
 			rkBest := 0.0
 
 			for j := 0; j < len(fareySequence)-1; j++ {
 				if ctx.Err() != nil {
-					lns.logger.Register(localSolution.Cost, bestSolution.Cost, time.Since(start).Seconds(), "")
 					return bestSolution, time.Since(start).Seconds()
 
 				}
