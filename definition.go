@@ -15,14 +15,15 @@ import (
 
 // Solver runs several metaheuristics in parallel over a shared solution pool.
 type Solver struct {
-	l            logger.Logger
-	env          definition.Environment // Problem environment (user implementation)
-	solutionPool *solution.Pool         // Shared pool of solutions among solvers
-	solvers      []definition.Solver    // List of metaheuristic solvers to run
-	timeLimit    time.Duration
+	l             logger.Logger
+	env           definition.Environment // Problem environment (user implementation)
+	solutionPool  *solution.Pool         // Shared pool of solutions among solvers
+	solvers       []definition.Solver    // List of metaheuristic solvers to run
+	timeLimit     time.Duration
+	maxIterations int // iteration limit of each metaheuristic; 0 or negative means no limit
 }
 
-// SolveCtx is like Solve but stops when ctx is cancelled or expires.
+// SolveCtx runs every metaheuristic until ctx is done or each reaches the iteration limit; the time limit is not applied.
 func (s *Solver) SolveCtx(ctx context.Context) any {
 	logLevel := s.l.GetLogLevel()
 	var loggerWg sync.WaitGroup
@@ -32,6 +33,9 @@ func (s *Solver) SolveCtx(ctx context.Context) any {
 	}
 
 	var wg sync.WaitGroup
+	if s.maxIterations > 0 {
+		ctx = definition.WithMaxIterations(ctx, s.maxIterations)
+	}
 	ctxStartTime := definition.WithStartTime(ctx, time.Now())
 	for i, sv := range s.solvers {
 		if logLevel > logger.SILENT {
@@ -78,7 +82,7 @@ func (s *Solver) SolveCtx(ctx context.Context) any {
 	return s.env.Decode(rk.RK)
 }
 
-// Solve runs every metaheuristic under the configured time limit and returns the best solution.
+// Solve runs every metaheuristic until the time limit or the iteration limit is reached, and returns the best solution.
 func (s *Solver) Solve() any {
 	if s.timeLimit > 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), s.timeLimit)

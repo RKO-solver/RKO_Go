@@ -14,7 +14,6 @@ func DefaultConfigurationGA() *ConfigurationGA {
 		PopulationSize:             constants.DefaultPopulationSize,
 		CrossoverAlpha:             constants.DefaultCrossoverAlpha,
 		MutationAlpha:              constants.DefaultMutationAlpha,
-		MaxGenerations:             constants.DefaultMaxGenerations,
 		MaxGenerationNoImprovement: constants.DefaultMaxGenerationNoImprovement,
 	}
 }

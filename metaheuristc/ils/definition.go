@@ -11,7 +11,6 @@ import (
 const name = "ILS"
 
 type Configuration struct {
-	MaxIterations       int     `yaml:"MaxIterations"`
 	ShakeMin            float64 `yaml:"ShakeMin"`
 	ShakeMax            float64 `yaml:"ShakeMax"`
 	MetropolisCriterion bool    `yaml:"MetropolisCriterion"`

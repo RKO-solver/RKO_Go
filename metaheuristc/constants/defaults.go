@@ -1,12 +1,8 @@
 package constants
 
-import (
-	"math"
-	"time"
-)
+import "time"
 
 const DefaultTimeLimit = 150 * time.Second
-const DefaultMaxIterations = math.MaxInt
 const DefaultShakeMin = 0.01
 const DefaultShakeMax = 0.05
 const DefaultRate = 0.2
@@ -23,7 +19,6 @@ const DefaultIterationsSimulationAnnealing = 1000
 const DefaultPopulationSize = 200
 const DefaultCrossoverAlpha = 0.95
 const DefaultMutationAlpha = 0.005
-const DefaultMaxGenerations = math.MaxInt
 const DefaultMaxGenerationNoImprovement = 100
 
 const DefaultEliteRatio = 0.2

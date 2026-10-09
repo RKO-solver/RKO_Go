@@ -4,22 +4,9 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
 	"github.com/RKO-solver/rko-go/metaheuristc/lns"
-	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
 	"github.com/RKO-solver/rko-go/metaheuristc/sa"
 	"github.com/RKO-solver/rko-go/metaheuristc/vns"
 )
-
-// withMultiStart copies the positive fields of cfg into the MultiStart defaults.
-func withMultiStart(cfg *multistart.Configuration) Option {
-	return func(c *MetaheuristicsConfiguration) {
-		if cfg == nil {
-			return
-		}
-		if cfg.MaxIterations > 0 {
-			c.MultiStart.MaxIterations = cfg.MaxIterations
-		}
-	}
-}
 
 // withBRKGA copies the positive fields of cfg into the BRKGA defaults.
 func withBRKGA(cfg *ga.ConfigurationBRKGA) Option {
@@ -43,9 +30,6 @@ func withBRKGA(cfg *ga.ConfigurationBRKGA) Option {
 		if cfg.MutationAlpha > 0 {
 			c.BRKGA.MutationAlpha = cfg.MutationAlpha
 		}
-		if cfg.MaxGenerations > 0 {
-			c.BRKGA.MaxGenerations = cfg.MaxGenerations
-		}
 		if cfg.MaxGenerationNoImprovement > 0 {
 			c.BRKGA.MaxGenerationNoImprovement = cfg.MaxGenerationNoImprovement
 		}
@@ -68,9 +52,6 @@ func withGA(cfg *ga.ConfigurationGA) Option {
 		if cfg.MutationAlpha > 0 {
 			c.GA.MutationAlpha = cfg.MutationAlpha
 		}
-		if cfg.MaxGenerations > 0 {
-			c.GA.MaxGenerations = cfg.MaxGenerations
-		}
 		if cfg.MaxGenerationNoImprovement > 0 {
 			c.GA.MaxGenerationNoImprovement = cfg.MaxGenerationNoImprovement
 		}
@@ -78,7 +59,7 @@ func withGA(cfg *ga.ConfigurationGA) Option {
 	}
 }
 
-// withSA copies the positive fields of cfg, except the unused MaxIterations, into the SA defaults.
+// withSA copies the positive fields of cfg into the SA defaults.
 func withSA(cfg *sa.Configuration) Option {
 	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
@@ -119,9 +100,6 @@ func withILS(cfg *ils.Configuration) Option {
 			return
 		}
 
-		if cfg.MaxIterations > 0 {
-			c.ILS.MaxIterations = cfg.MaxIterations
-		}
 		if cfg.ShakeMin > 0 {
 			c.ILS.ShakeMin = cfg.ShakeMin
 		}
@@ -141,9 +119,6 @@ func withVNS(cfg *vns.Configuration) Option {
 			return
 		}
 
-		if cfg.MaxIterations > 0 {
-			c.VNS.MaxIterations = cfg.MaxIterations
-		}
 		if cfg.Rate > 0 {
 			c.VNS.Rate = cfg.Rate
 		}
@@ -157,9 +132,6 @@ func withLNS(cfg *lns.Configuration) Option {
 			return
 		}
 
-		if cfg.MaxIterations > 0 {
-			c.LNS.MaxIterations = cfg.MaxIterations
-		}
 		if cfg.BetaMin > 0 {
 			c.LNS.BetaMin = cfg.BetaMin
 		}

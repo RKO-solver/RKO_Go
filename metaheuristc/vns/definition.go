@@ -11,8 +11,7 @@ import (
 const name = "VNS"
 
 type Configuration struct {
-	MaxIterations int     `yaml:"MaxIterations"`
-	Rate          float64 `yaml:"Rate"`
+	Rate float64 `yaml:"Rate"`
 }
 
 type VNS struct {

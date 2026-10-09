@@ -11,9 +11,8 @@ import (
 
 func DefaultConfigurationLNS() *Configuration {
 	return &Configuration{
-		MaxIterations: constants.DefaultMaxIterations,
-		BetaMin:       constants.DefaultShakeMin,
-		BetaMax:       constants.DefaultShakeMax,
+		BetaMin: constants.DefaultShakeMin,
+		BetaMax: constants.DefaultShakeMax,
 	}
 }
 

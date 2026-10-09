@@ -37,29 +37,25 @@ func TestCreateSolverConfigurationFull(t *testing.T) {
 LogLevel: VERBOSE
 LogType: CHANNEL
 TimeLimitSeconds: 60
+MaxIterations: 500
 Metaheuristics:
   - "ILS=Swap, Mirror"
   - "BRKGA"
   - "SA=Farey"
 Configuration:
-  MultiStart:
-    MaxIterations: 11
   BRKGA:
     PopulationSize: 300
     EliteRatio: 0.25
     MutantRatio: 0.1
     CrossoverAlpha: 0.6
     MutationAlpha: 0.15
-    MaxGenerations: 80
     MaxGenerationNoImprovement: 20
   GA:
     PopulationSize: 123
     CrossoverAlpha: 0.7
     MutationAlpha: 0.2
-    MaxGenerations: 50
     MaxGenerationNoImprovement: 10
   ILS:
-    MaxIterations: 88
     ShakeMin: 2.0
     ShakeMax: 8.0
     MetropolisCriterion: true
@@ -73,10 +69,8 @@ Configuration:
     QtdReheat: 3
     Iterations: 100
   VNS:
-    MaxIterations: 77
     Rate: 0.33
   LNS:
-    MaxIterations: 99
     BetaMin: 0.5
     BetaMax: 0.9
 `
@@ -85,6 +79,7 @@ Configuration:
 	assert.Equal(t, logger.VERBOSE, cfg.LoggerLevel)
 	assert.Equal(t, logger.CHANNEL, cfg.LoggerType)
 	assert.Equal(t, 60*time.Second, cfg.TimeLimit)
+	assert.Equal(t, 500, cfg.MaxIterations)
 	assert.Equal(t, []configuration.Solver{
 		{MetaHeuristic: rko.ILS, Search: []search.Type{search.Swap, search.Mirror}},
 		{MetaHeuristic: rko.BRKGA, Search: []search.Type{}},
@@ -92,23 +87,19 @@ Configuration:
 	}, cfg.Solvers)
 
 	mh := cfg.Configuration
-	assert.Equal(t, 11, mh.MultiStart.MaxIterations)
 
 	assert.Equal(t, 300, mh.BRKGA.PopulationSize)
 	assert.Equal(t, 0.25, mh.BRKGA.EliteRatio)
 	assert.Equal(t, 0.1, mh.BRKGA.MutantRatio)
 	assert.Equal(t, 0.6, mh.BRKGA.CrossoverAlpha)
 	assert.Equal(t, 0.15, mh.BRKGA.MutationAlpha)
-	assert.Equal(t, 80, mh.BRKGA.MaxGenerations)
 	assert.Equal(t, 20, mh.BRKGA.MaxGenerationNoImprovement)
 
 	assert.Equal(t, 123, mh.GA.PopulationSize)
 	assert.Equal(t, 0.7, mh.GA.CrossoverAlpha)
 	assert.Equal(t, 0.2, mh.GA.MutationAlpha)
-	assert.Equal(t, 50, mh.GA.MaxGenerations)
 	assert.Equal(t, 10, mh.GA.MaxGenerationNoImprovement)
 
-	assert.Equal(t, 88, mh.ILS.MaxIterations)
 	assert.Equal(t, 2.0, mh.ILS.ShakeMin)
 	assert.Equal(t, 8.0, mh.ILS.ShakeMax)
 	assert.True(t, mh.ILS.MetropolisCriterion)
@@ -122,22 +113,10 @@ Configuration:
 	assert.Equal(t, uint8(3), mh.SA.QtdReheat)
 	assert.Equal(t, 100, mh.SA.Iterations)
 
-	assert.Equal(t, 77, mh.VNS.MaxIterations)
 	assert.Equal(t, 0.33, mh.VNS.Rate)
 
-	assert.Equal(t, 99, mh.LNS.MaxIterations)
 	assert.Equal(t, 0.5, mh.LNS.BetaMin)
 	assert.Equal(t, 0.9, mh.LNS.BetaMax)
-}
-
-func TestWithMultiStartYaml(t *testing.T) {
-	yaml := `
-Configuration:
-  MultiStart:
-    MaxIterations: 42
-`
-	cfg := loadConfig(t, yaml)
-	assert.Equal(t, 42, cfg.Configuration.MultiStart.MaxIterations)
 }
 
 func TestWithGAYaml(t *testing.T) {
@@ -147,14 +126,12 @@ Configuration:
     PopulationSize: 123
     CrossoverAlpha: 0.7
     MutationAlpha: 0.2
-    MaxGenerations: 50
     MaxGenerationNoImprovement: 10
 `
 	cfg := loadConfig(t, yaml).Configuration
 	assert.Equal(t, 123, cfg.GA.PopulationSize)
 	assert.Equal(t, 0.7, cfg.GA.CrossoverAlpha)
 	assert.Equal(t, 0.2, cfg.GA.MutationAlpha)
-	assert.Equal(t, 50, cfg.GA.MaxGenerations)
 	assert.Equal(t, 10, cfg.GA.MaxGenerationNoImprovement)
 }
 
@@ -167,7 +144,6 @@ Configuration:
     MutantRatio: 0.1
     CrossoverAlpha: 0.6
     MutationAlpha: 0.15
-    MaxGenerations: 80
     MaxGenerationNoImprovement: 20
 `
 	cfg := loadConfig(t, yaml).Configuration
@@ -176,7 +152,6 @@ Configuration:
 	assert.Equal(t, 0.1, cfg.BRKGA.MutantRatio)
 	assert.Equal(t, 0.6, cfg.BRKGA.CrossoverAlpha)
 	assert.Equal(t, 0.15, cfg.BRKGA.MutationAlpha)
-	assert.Equal(t, 80, cfg.BRKGA.MaxGenerations)
 	assert.Equal(t, 20, cfg.BRKGA.MaxGenerationNoImprovement)
 }
 
@@ -208,11 +183,9 @@ func TestWithVNSYaml(t *testing.T) {
 	yaml := `
 Configuration:
   VNS:
-    MaxIterations: 77
     Rate: 0.33
 `
 	cfg := loadConfig(t, yaml).Configuration
-	assert.Equal(t, 77, cfg.VNS.MaxIterations)
 	assert.Equal(t, 0.33, cfg.VNS.Rate)
 }
 
@@ -220,13 +193,11 @@ func TestWithILSYaml(t *testing.T) {
 	yaml := `
 Configuration:
   ILS:
-    MaxIterations: 88
     ShakeMin: 2.0
     ShakeMax: 8.0
     MetropolisCriterion: true
 `
 	cfg := loadConfig(t, yaml).Configuration
-	assert.Equal(t, 88, cfg.ILS.MaxIterations)
 	assert.Equal(t, 2.0, cfg.ILS.ShakeMin)
 	assert.Equal(t, 8.0, cfg.ILS.ShakeMax)
 	assert.True(t, cfg.ILS.MetropolisCriterion)
@@ -236,12 +207,10 @@ func TestWithLNSYaml(t *testing.T) {
 	yaml := `
 Configuration:
   LNS:
-    MaxIterations: 88
     BetaMin: 2.0
     BetaMax: 8.0
 `
 	cfg := loadConfig(t, yaml).Configuration
-	assert.Equal(t, 88, cfg.LNS.MaxIterations)
 	assert.Equal(t, 2.0, cfg.LNS.BetaMin)
 	assert.Equal(t, 8.0, cfg.LNS.BetaMax)
 }
@@ -267,7 +236,6 @@ Configuration:
 	expectedILS.ShakeMax = 0.4
 	assert.Equal(t, expectedILS, *cfg.ILS)
 
-	assert.Equal(t, defaults.MultiStart, cfg.MultiStart)
 	assert.Equal(t, defaults.BRKGA, cfg.BRKGA)
 	assert.Equal(t, defaults.GA, cfg.GA)
 	assert.Equal(t, defaults.VNS, cfg.VNS)
@@ -278,7 +246,6 @@ func TestNonPositiveValuesKeepDefaults(t *testing.T) {
 	yaml := `
 Configuration:
   VNS:
-    MaxIterations: 0
     Rate: -1
   ILS:
     MetropolisCriterion: false
@@ -318,6 +285,7 @@ func TestEmptyFileUsesDefaults(t *testing.T) {
 	assert.Equal(t, logger.DefaultLogLevel, cfg.LoggerLevel)
 	assert.Equal(t, logger.PRINT, cfg.LoggerType)
 	assert.Equal(t, time.Duration(0), cfg.TimeLimit)
+	assert.Equal(t, 0, cfg.MaxIterations)
 	assert.Empty(t, cfg.Solvers)
 	assert.Equal(t, configuration.DefaultConfiguration(), cfg.Configuration)
 }
@@ -392,11 +360,13 @@ func TestKeysAreCaseSensitive(t *testing.T) {
 loglevel: SILENT
 logtype: CHANNEL
 timelimitseconds: 10
+maxiterations: 10
 `
 	cfg := loadConfig(t, yaml)
 	assert.Equal(t, logger.DefaultLogLevel, cfg.LoggerLevel)
 	assert.Equal(t, logger.PRINT, cfg.LoggerType)
 	assert.Equal(t, time.Duration(0), cfg.TimeLimit)
+	assert.Equal(t, 0, cfg.MaxIterations)
 }
 
 func TestMetaheuristicsParsing(t *testing.T) {
@@ -461,4 +431,43 @@ func TestMetaheuristicsParsing(t *testing.T) {
 			assert.Equal(t, tt.expected, cfg.Solvers)
 		})
 	}
+}
+
+func TestMaxIterationsParsing(t *testing.T) {
+	tests := []struct {
+		name     string
+		yaml     string
+		expected int
+	}{
+		{"positive", "MaxIterations: 250", 250},
+		{"zero", "MaxIterations: 0", 0},
+		{"negative is clamped to zero", "MaxIterations: -5", 0},
+		{"unset", "LogLevel: INFO", 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := loadConfig(t, tt.yaml)
+			assert.Equal(t, tt.expected, cfg.MaxIterations)
+		})
+	}
+}
+
+func TestMaxIterationsAndTimeLimitTogether(t *testing.T) {
+	cfg := loadConfig(t, "TimeLimitSeconds: 10\nMaxIterations: 7")
+	assert.Equal(t, 10*time.Second, cfg.TimeLimit)
+	assert.Equal(t, 7, cfg.MaxIterations)
+}
+
+func TestMaxIterationsUnderConfigurationIsIgnored(t *testing.T) {
+	yaml := `
+Configuration:
+  ILS:
+    MaxIterations: 88
+  GA:
+    MaxGenerations: 50
+`
+	cfg := loadConfig(t, yaml)
+	assert.Equal(t, 0, cfg.MaxIterations)
+	assert.Equal(t, configuration.DefaultConfiguration(), cfg.Configuration)
 }

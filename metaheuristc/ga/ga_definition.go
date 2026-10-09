@@ -14,7 +14,6 @@ type ConfigurationGA struct {
 	PopulationSize             int     `yaml:"PopulationSize"`
 	CrossoverAlpha             float64 `yaml:"CrossoverAlpha"`
 	MutationAlpha              float64 `yaml:"MutationAlpha"`
-	MaxGenerations             int     `yaml:"MaxGenerations"`
 	MaxGenerationNoImprovement int     `yaml:"MaxGenerationNoImprovement"`
 }
 

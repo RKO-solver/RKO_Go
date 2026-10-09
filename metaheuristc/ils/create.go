@@ -11,7 +11,6 @@ import (
 
 func DefaultConfigurationILS() *Configuration {
 	return &Configuration{
-		MaxIterations:       constants.DefaultMaxIterations,
 		ShakeMin:            constants.DefaultShakeMin,
 		ShakeMax:            constants.DefaultShakeMax,
 		MetropolisCriterion: false,

@@ -16,7 +16,6 @@ func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
 		MutantRatio:                constants.DefaultMutantRation,
 		CrossoverAlpha:             constants.DefaultCrossoverAlpha,
 		MutationAlpha:              constants.DefaultMutationAlpha,
-		MaxGenerations:             constants.DefaultMaxGenerations,
 		MaxGenerationNoImprovement: constants.DefaultMaxGenerationNoImprovement,
 	}
 }

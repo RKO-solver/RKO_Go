@@ -70,13 +70,14 @@ func CreateDefaultSolverTimeLimit(mh []MetaHeuristic, timeLimit time.Duration, e
 	return solver
 }
 
-// CreateFullSolver creates a Solver from already-built solvers, pool and generator.
-func CreateFullSolver(logger logger.Logger, env definition.Environment, timeLimit time.Duration, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
+// CreateFullSolver creates a Solver from already-built solvers and pool; a non-positive timeLimit or maxIterations means no limit.
+func CreateFullSolver(logger logger.Logger, env definition.Environment, timeLimit time.Duration, maxIterations int, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
 	return &Solver{
-		l:            logger,
-		env:          env,
-		solutionPool: solutionPool,
-		solvers:      solvers,
-		timeLimit:    timeLimit,
+		l:             logger,
+		env:           env,
+		solutionPool:  solutionPool,
+		solvers:       solvers,
+		timeLimit:     timeLimit,
+		maxIterations: maxIterations,
 	}
 }

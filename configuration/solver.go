@@ -2,6 +2,8 @@ package configuration
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/definition"
@@ -18,8 +20,19 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// createSolver builds the logger, shared pool and one solver per implemented entry; a nil Configuration is set to DefaultConfiguration().
+// noLimitWarning is printed when a solver has neither a time limit nor an iteration limit.
+const noLimitWarning = "Warning: neither TimeLimitSeconds nor MaxIterations is set; the solver will run until its context is cancelled"
+
+// warnIfUnbounded writes noLimitWarning to w when neither TimeLimit nor MaxIterations is positive.
+func warnIfUnbounded(w io.Writer, solverConfig *SolverConfiguration) {
+	if solverConfig.TimeLimit <= 0 && solverConfig.MaxIterations <= 0 {
+		fmt.Fprintln(w, noLimitWarning)
+	}
+}
+
+// createSolver builds the logger, shared pool and one solver per implemented entry, warning when no limit is set; a nil Configuration is set to DefaultConfiguration().
 func createSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, rg *random.Generator) (*rko.Solver, logger.Logger) {
+	warnIfUnbounded(os.Stdout, solverConfig)
 	var log logger.Logger
 	solvers := make([]definition.Solver, 0)
 	if solverConfig.Configuration == nil {
@@ -50,9 +63,7 @@ func createSolver(problemName string, env definition.Environment, solverConfig *
 
 			solver = vns.CreateVNSComplete(env, conf, se, srg, solutionPool, log)
 		case rko.MULTISTART:
-			conf := mhConfig.MultiStart
-
-			solver = multistart.CreateMultiStart(env, conf, se, srg, solutionPool, log)
+			solver = multistart.CreateMultiStart(env, se, srg, solutionPool, log)
 		case rko.SA:
 			conf := mhConfig.SA
 
@@ -79,7 +90,7 @@ func createSolver(problemName string, env definition.Environment, solverConfig *
 		}
 	}
 
-	return rko.CreateFullSolver(log, env, solverConfig.TimeLimit, solutionPool, solvers), log
+	return rko.CreateFullSolver(log, env, solverConfig.TimeLimit, solverConfig.MaxIterations, solutionPool, solvers), log
 }
 
 // CreateSolver builds a solver from solverConfig using the global random generator.

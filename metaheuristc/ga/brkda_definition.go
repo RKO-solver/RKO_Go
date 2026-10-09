@@ -16,7 +16,6 @@ type ConfigurationBRKGA struct {
 	MutantRatio                float64 `yaml:"MutantRatio"`
 	CrossoverAlpha             float64 `yaml:"CrossoverAlpha"`
 	MutationAlpha              float64 `yaml:"MutationAlpha"`
-	MaxGenerations             int     `yaml:"MaxGenerations"`
 	MaxGenerationNoImprovement int     `yaml:"MaxGenerationNoImprovement"`
 }
 

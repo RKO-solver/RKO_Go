@@ -11,7 +11,6 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
 	"github.com/RKO-solver/rko-go/metaheuristc/lns"
-	"github.com/RKO-solver/rko-go/metaheuristc/multistart"
 	"github.com/RKO-solver/rko-go/metaheuristc/sa"
 	"github.com/RKO-solver/rko-go/metaheuristc/search"
 	"github.com/RKO-solver/rko-go/metaheuristc/vns"
@@ -21,13 +20,12 @@ import (
 // DefaultConfiguration returns the default parameters for every metaheuristic.
 func DefaultConfiguration() *MetaheuristicsConfiguration {
 	return &MetaheuristicsConfiguration{
-		MultiStart: multistart.DefaulConfigurationtMultiStart(),
-		BRKGA:      ga.DefaultConfigurationBRKGA(),
-		GA:         ga.DefaultConfigurationGA(),
-		ILS:        ils.DefaultConfigurationILS(),
-		SA:         sa.DefaultConfigurationSA(),
-		VNS:        vns.DefaultConfigurationVNS(),
-		LNS:        lns.DefaultConfigurationLNS(),
+		BRKGA: ga.DefaultConfigurationBRKGA(),
+		GA:    ga.DefaultConfigurationGA(),
+		ILS:   ils.DefaultConfigurationILS(),
+		SA:    sa.DefaultConfigurationSA(),
+		VNS:   vns.DefaultConfigurationVNS(),
+		LNS:   lns.DefaultConfigurationLNS(),
 	}
 }
 
@@ -92,7 +90,6 @@ func CreateSolverConfiguration(filePath string) (*SolverConfiguration, error) {
 	mhConfiguration := config.Configuration
 
 	var opts = []Option{
-		withMultiStart(mhConfiguration.MultiStart),
 		withGA(mhConfiguration.GA),
 		withBRKGA(mhConfiguration.BRKGA),
 		withSA(mhConfiguration.SA),
@@ -105,6 +102,7 @@ func CreateSolverConfiguration(filePath string) (*SolverConfiguration, error) {
 		LoggerLevel:   logger.GetLogLevel(config.LogLevel),
 		LoggerType:    logger.GetLogType(config.LogType),
 		TimeLimit:     time.Duration(config.TimeLimitSeconds * int64(time.Second)),
+		MaxIterations: max(config.MaxIterations, 0),
 		Solvers:       processMetaheuristics(config.Metaheuristics),
 		Configuration: createMHConfiguration(opts...),
 	}
