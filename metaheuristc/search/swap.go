@@ -16,7 +16,7 @@ func swapSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environme
 
 		start := n[0]
 		end := n[1]
-		for i := start; i < end-1; i++ {
+		for i := start; i < end-1 && ctx.Err() == nil; i++ {
 			for j := i + 1; j < end; j++ {
 				rko.RK[i], rko.RK[j] = rko.RK[j], rko.RK[i]
 				cost := environment.Cost(rko.RK)
