@@ -22,6 +22,7 @@ type Logger interface {
     GetLogLevel() Level
     GetReportData() []SolverInformation
     GetSolutionData() []SolutionData
+    Reset()
 }
 ```
 - `AddSolutionPool`: Report a new best solution found across all solvers.
@@ -30,6 +31,7 @@ type Logger interface {
 - `GetLogLevel`: Returns the current logging level (`SILENT`, `INFO`, or `VERBOSE`).
 - `GetReportData`: Returns performance data for all solvers.
 - `GetSolutionData`: Returns the best solution data found.
+- `Reset`: Called by `Solve` at the start of every run; empties the previous run's data.
 
 **SolverLogger Interface** - Implement this for solver-specific logging:
 
@@ -40,7 +42,7 @@ type SolverLogger interface {
 }
 ```
 - `Register`: Record progress from a solver (local cost, best cost, elapsed time, and optional extra data).
-- `Verbose`: Log detailed messages with timestamps.
+- `Verbose`: Log an event, such as a population restart, with its timestamp. Per-iteration progress goes in `Register`'s `extra`.
 
 ### Data Structures
 
@@ -80,7 +82,7 @@ const (
 
 | | `channel` | `stdout` |
 |---|---|---|
-| Output | Live-refreshing terminal dashboard (redraws in place) | Plain lines, one per event |
+| Output | Live-refreshing terminal dashboard (redraws in place) | Plain lines; solver progress on improvement or once per print interval |
 | Best for | Interactive terminal runs | Batch jobs, CI, redirecting to a file |
 
 `configuration.SolverConfiguration.LoggerType` (a `logger.LogType`, backed by the YAML `logType` key) picks between them:
@@ -96,11 +98,19 @@ const (
 func GetLogType(label string) LogType // "CHANNEL" or "PRINT", unknown -> PRINT
 ```
 
-The `channel.Log` lifecycle methods (`Start`, `Shutdown`, `Print`, `WorkersPrint`, `GetTicker`) are driven by the solver itself — you don't call them directly. The knobs you do set yourself, before passing the logger to a solver:
+The `channel` dashboard draws in the terminal's alternate screen. When the run ends, it leaves the alternate screen and prints the final frame, followed by each solver's done message, to the normal terminal, so the result stays in the scrollback.
+
+The `channel.Log` lifecycle methods (`Start`, `Shutdown`, `Print`, `Finish`, `WorkersPrint`, `GetTicker`) are driven by the solver itself — you don't call them directly. The knobs you do set yourself, before passing the logger to a solver:
 
 - `SetTicker(timeMilliseconds int)` — dashboard refresh interval; values below 300ms are silently ignored.
 - `SetNumPoolMessages(num int)` — how many recent pool entries the dashboard shows.
 - `SetNumVerboseMessages(num int)` — how many recent verbose messages per solver the dashboard shows.
+
+The `stdout.Log` prints a solver's progress when its best cost improves, otherwise at most once per print interval (default 500 ms). Verbose messages are always printed.
+
+- `SetPrintInterval(timeMilliseconds int)` — minimum time between two prints of the same solver.
+
+With both loggers, each `Solve` empties the previous run's information, so `GetReportData` and `GetSolutionData` return the last run.
 
 You can implement your own logger by satisfying the `Logger` interface.
 

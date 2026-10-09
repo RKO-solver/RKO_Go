@@ -120,6 +120,7 @@ type Logger interface {
     GetLogLevel() Level
     GetReportData() []SolverInformation
     GetSolutionData() []SolutionData
+    Reset()
 }
 ```
 
