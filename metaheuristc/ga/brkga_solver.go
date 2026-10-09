@@ -12,6 +12,9 @@ import (
 )
 
 func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+	ctx, ctxAction := definition.GetMHContext(ctx)
+	defer ctxAction.Stop()
+
 	configuration := ga.configuration
 	env := ga.env
 	rg := ga.RG
@@ -40,7 +43,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 	eliteSize := int(configuration.EliteRatio * float64(populationSize))
 	mutantSize := int(configuration.MutantRatio * float64(populationSize))
-	for generation := 0; generation < configuration.MaxGenerations && ctx.Err() == nil; generation++ {
+	for ; ctx.Err() == nil; ctxAction.Step() {
 		for i := range eliteSize {
 			copy(populationIntermediary[i].RK, population[i].RK)
 			populationIntermediary[i].Cost = population[i].Cost
@@ -87,7 +90,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 		elapsed := time.Since(start).Seconds()
 
 		ga.logger.Verbose(fmt.Sprintf("Generations without improvement: %d", generationNoImprovement), elapsed)
-		ga.logger.Register(population[0].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d", generation))
+		ga.logger.Register(population[0].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d", ctxAction.Iteration()))
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
 			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population", time.Since(start).Seconds())

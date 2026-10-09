@@ -11,6 +11,9 @@ import (
 )
 
 func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+	ctx, ctxAction := definition.GetMHContext(ctx)
+	defer ctxAction.Stop()
+
 	configuration := ga.configuration
 	env := ga.env
 	rg := ga.RG
@@ -37,7 +40,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 	bestPerson := initialPopulation(population, env, false, rg)
 	solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 
-	for generation := 0; generation < configuration.MaxGenerations && ctx.Err() == nil; generation++ {
+	for ; ctx.Err() == nil; ctxAction.Step() {
 
 		for j := 0; j < configuration.PopulationSize-1; j++ {
 			offspring1 := tournament(population, rg)
@@ -85,7 +88,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 		elapsed := time.Since(start).Seconds()
 
 		ga.logger.Verbose(fmt.Sprintf("Generations without improvement: %d", generationNoImprovement), elapsed)
-		ga.logger.Register(children[k].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d", generation))
+		ga.logger.Register(children[k].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d", ctxAction.Iteration()))
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
 			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population", time.Since(start).Seconds())
@@ -99,6 +102,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 		} else {
 			population, children = children, population
 		}
+
 	}
 
 	return bestPerson, time.Since(start).Seconds()

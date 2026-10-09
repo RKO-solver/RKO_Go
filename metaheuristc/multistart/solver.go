@@ -11,8 +11,11 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
+// solve restarts from random keys, adding improvements to the pool, and returns the last local solution and the elapsed seconds.
 func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
-	configuration := m.configuration
+	ctx, ctxAction := definition.GetMHContext(ctx)
+	defer ctxAction.Stop()
+
 	rg := m.RG
 
 	local := m.search
@@ -23,7 +26,7 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 	}
 
 	start := definition.StartTime(ctx)
-	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
+	for ; ctx.Err() == nil; ctxAction.Step() {
 
 		rk.Reset(localSolution.RK, rg)
 		localSolution.Cost = m.env.Cost(localSolution.RK)
@@ -38,7 +41,7 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 
 		elapsedTime := time.Since(start).Seconds()
 
-		m.logger.Register(localSolution.Cost, bestSolutionCost, elapsedTime, fmt.Sprintf("Iteration: %d", iteration))
+		m.logger.Register(localSolution.Cost, bestSolutionCost, elapsedTime, fmt.Sprintf("Iteration: %d", ctxAction.Iteration()))
 	}
 
 	return localSolution, time.Since(start).Seconds()

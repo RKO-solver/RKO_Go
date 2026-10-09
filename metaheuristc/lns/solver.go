@@ -34,6 +34,9 @@ var fareySequence = []float64{
 }
 
 func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+	ctx, ctxAction := definition.GetMHContext(ctx)
+	defer ctxAction.Stop()
+
 	configuration := lns.configuration
 	rg := lns.RG
 	local := lns.search
@@ -56,7 +59,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		Cost: 0,
 	}
 
-	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
+	for ; ctx.Err() == nil; ctxAction.Step() {
 		// Future Q-Learning
 		intensityMin, intensityMax := int(configuration.BetaMin*float64(env.NumKeys())), int(configuration.BetaMax*float64(env.NumKeys()))
 

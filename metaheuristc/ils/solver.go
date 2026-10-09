@@ -13,6 +13,9 @@ import (
 )
 
 func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+	ctx, ctxAction := definition.GetMHContext(ctx)
+	defer ctxAction.Stop()
+
 	configuration := ils.configuration
 	env := ils.env
 	rg := ils.RG
@@ -47,7 +50,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		Cost: 0,
 	}
 
-	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
+	for ; ctx.Err() == nil; ctxAction.Step() {
 
 		copy(neighbour.RK, localSolution.RK)
 		shake(neighbour, historyInformation, rg, env)
@@ -85,7 +88,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 		elapsedTime := time.Since(start).Seconds()
 
-		ils.logger.Register(localSolution.Cost, bestSolution.Cost, elapsedTime, fmt.Sprintf("Iteration: %d", iteration))
+		ils.logger.Register(localSolution.Cost, bestSolution.Cost, elapsedTime, fmt.Sprintf("Iteration: %d", ctxAction.Iteration()))
 	}
 
 	return bestSolution, time.Since(start).Seconds()

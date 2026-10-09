@@ -13,6 +13,9 @@ import (
 )
 
 func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+	ctx, ctxAction := definition.GetMHContext(ctx)
+	defer ctxAction.Stop()
+
 	configuration := sa.configuration
 	env := sa.env
 	rg := sa.RG
@@ -45,7 +48,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 
 	var bestSolutionCost int
 
-	for temperatureLocal > configuration.TemperatureGoal && ctx.Err() == nil {
+	for ; temperatureLocal > configuration.TemperatureGoal && ctx.Err() == nil; ctxAction.Step() {
 
 		for iteration := 0; iteration < configuration.Iterations && ctx.Err() == nil; iteration++ {
 

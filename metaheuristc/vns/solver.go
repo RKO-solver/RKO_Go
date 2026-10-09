@@ -12,6 +12,9 @@ import (
 )
 
 func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+	ctx, ctxAction := definition.GetMHContext(ctx)
+	defer ctxAction.Stop()
+
 	configuration := vns.configuration
 	rg := vns.RG
 	local := vns.search
@@ -36,7 +39,7 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		Cost: 0,
 	}
 
-	for iteration := 0; iteration < configuration.MaxIterations && ctx.Err() == nil; iteration++ {
+	for ; ctx.Err() == nil; ctxAction.Step() {
 
 		k := 1
 		for k < rk.ShakeMax && ctx.Err() == nil {
@@ -62,7 +65,7 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 			elapsedTime := time.Since(start).Seconds()
 
-			message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d", iteration, bestSolution.Cost, localSolution.Cost)
+			message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d", ctxAction.Iteration(), bestSolution.Cost, localSolution.Cost)
 			vns.logger.Verbose(message, elapsedTime)
 		}
 
