@@ -56,7 +56,9 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		// acceptance criterion
 		delta := neighbour.Cost - bestSolution.Cost
 		if delta < 0 {
-			localSolution = neighbour
+			copy(localSolution.RK, neighbour.RK)
+			localSolution.Cost = neighbour.Cost
+
 			copy(bestSolution.RK, localSolution.RK)
 			bestSolution.Cost = localSolution.Cost
 			historyInformation.timesNoImprovement = 0
