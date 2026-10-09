@@ -45,6 +45,14 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 	return solverLogger
 }
 
+// Reset empties the pool and every solver's history and print state, keeping the registered solvers.
+func (l *Log) Reset() {
+	l.pool = make([]poolInfo, 0)
+	for _, solverLogger := range l.solversLogger {
+		solverLogger.reset()
+	}
+}
+
 // SetPrintInterval sets the minimum time between two progress prints of the same solver.
 func (l *Log) SetPrintInterval(timeMilliseconds int) {
 	l.printInterval = float64(timeMilliseconds) / 1000

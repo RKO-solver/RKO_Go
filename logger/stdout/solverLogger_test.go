@@ -51,6 +51,27 @@ func TestVerboseAlwaysPrints(t *testing.T) {
 	require.Equal(t, 3, strings.Count(out, "Verbose:"))
 }
 
+func TestResetStartsFreshRun(t *testing.T) {
+	l := NewLogger("test", logger.INFO)
+	sl := l.GetLogger("solver").(*SolverLogger)
+	captureStdout(t, func() {
+		sl.Register(5, 5, 0.0, "")
+		l.AddSolutionPool(5, 0.0)
+	})
+
+	l.Reset()
+	require.Empty(t, l.GetSolutionData())
+	require.Len(t, l.GetReportData(), 1)
+	require.Empty(t, l.GetReportData()[0].Performance)
+	require.Equal(t, math.Inf(-1), sl.lastPrint)
+	require.Equal(t, math.MaxInt, sl.lastBest)
+
+	out := captureStdout(t, func() {
+		sl.Register(9, 9, 0.1, "") // first Register of the run: printed
+	})
+	require.Equal(t, 1, strings.Count(out, "\tLocal "))
+}
+
 func TestSilentPrintsNothing(t *testing.T) {
 	sl := NewLogger("test", logger.SILENT).GetLogger("solver").(*SolverLogger)
 	out := captureStdout(t, func() {

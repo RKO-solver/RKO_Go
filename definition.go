@@ -28,6 +28,7 @@ func (s *Solver) Solve(ctx context.Context) any {
 	logLevel := s.l.GetLogLevel()
 	var loggerWg sync.WaitGroup
 
+	s.l.Reset()
 	if l, ok := s.l.(*channel.Log); ok {
 		l.Start(&loggerWg)
 	}

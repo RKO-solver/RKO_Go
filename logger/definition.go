@@ -31,6 +31,7 @@ type Logger interface {
 	GetLogLevel() Level
 	GetReportData() []SolverInformation
 	GetSolutionData() []SolutionData
+	Reset()
 }
 
 // SolverLogger records progress messages for a single running solver.

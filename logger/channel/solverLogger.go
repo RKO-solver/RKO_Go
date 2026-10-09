@@ -3,15 +3,14 @@ package channel
 import "github.com/RKO-solver/rko-go/logger"
 
 type SolverLoggerChannel struct {
-	id         int
-	name       string
-	logLevel   logger.Level
-	updateChan chan channelMessage
-	extraChan  chan string
+	id       int
+	name     string
+	logLevel logger.Level
+	log      *Log
 }
 
 func (sl *SolverLoggerChannel) Register(local int, localBest int, timeStamp float64, extra string) {
-	sl.updateChan <- channelMessage{
+	sl.log.updateChan <- channelMessage{
 		t:  infoMessage,
 		id: sl.id,
 		info: solverInfo{
@@ -29,7 +28,7 @@ func (sl *SolverLoggerChannel) Register(local int, localBest int, timeStamp floa
 func (sl *SolverLoggerChannel) Verbose(message string, timeStamp float64) {
 	// ignore if log level is not verbose
 	if sl.logLevel >= logger.VERBOSE {
-		sl.updateChan <- channelMessage{
+		sl.log.updateChan <- channelMessage{
 			t:    verboseMessage,
 			id:   sl.id,
 			info: solverInfo{},

@@ -18,9 +18,6 @@ func NewLoggerLevel(problemName string, level logger.Level) *Log {
 
 // NewLogger creates a Log with the given level and channel buffer size.
 func NewLogger(problemName string, logLevel logger.Level, bufferSize int) *Log {
-	// The channel for communication
-	progressChan := make(chan channelMessage, bufferSize)
-
 	// The final data store
 	store := &information{
 		init:               false,
@@ -34,7 +31,7 @@ func NewLogger(problemName string, logLevel logger.Level, bufferSize int) *Log {
 	}
 
 	return &Log{
-		updateChan:  progressChan,
+		bufferSize:  bufferSize,
 		data:        store,
 		LogLevel:    logLevel,
 		ticker:      defaultTickerMilliseconds * time.Millisecond,

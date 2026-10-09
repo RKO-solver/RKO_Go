@@ -12,6 +12,7 @@ import (
 // Log is the channel-based Logger.
 type Log struct {
 	updateChan  chan channelMessage
+	bufferSize  int
 	data        *information
 	LogLevel    logger.Level
 	ticker      time.Duration
@@ -32,7 +33,13 @@ func (l *Log) WorkerDone(message string) {
 	l.data.workerMessages = append(l.data.workerMessages, message)
 }
 
-// Start launches the goroutine that aggregates channel messages.
+// Reset empties the previous run's data and opens a fresh update channel.
+func (l *Log) Reset() {
+	l.data.reset()
+	l.updateChan = make(chan channelMessage, l.bufferSize)
+}
+
+// Start launches the goroutine that aggregates the update channel into the run's data.
 func (l *Log) Start(aggregatorWg *sync.WaitGroup) {
 	progressChan := l.updateChan
 	store := l.data
@@ -119,10 +126,10 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 	l.data.extraMessages = append(l.data.extraMessages, make([]extraInfo, 0))
 
 	return &SolverLoggerChannel{
-		id:         id,
-		name:       name,
-		logLevel:   l.LogLevel,
-		updateChan: l.updateChan,
+		id:       id,
+		name:     name,
+		logLevel: l.LogLevel,
+		log:      l,
 	}
 }
 

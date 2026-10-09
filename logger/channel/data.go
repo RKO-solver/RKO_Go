@@ -47,3 +47,18 @@ func (d *information) registerVerbose(id int, extra extraInfo) {
 
 	d.extraMessages[id] = append(d.extraMessages[id], extra)
 }
+
+// reset empties the recorded run, keeping one slot per registered solver.
+func (d *information) reset() {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	for id := range d.solvers {
+		d.solvers[id] = make([]solverInfo, 0)
+		d.extraMessages[id] = make([]extraInfo, 0)
+	}
+	d.pool = make([]poolInfo, 0)
+	d.workerMessages = make([]string, 0)
+	d.init = false
+	d.previousLineCount = 0
+}
