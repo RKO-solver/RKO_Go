@@ -78,7 +78,7 @@ The search stops when its time limit expires, when the context is cancelled, or 
 |---|---|
 | `rko.CreateDefaultSolver(mh, env, log)` | 150 seconds by default |
 | `rko.CreateDefaultSolverTimeLimitSecond(mh, limit, env, log)` | the limit you pass |
-| `configuration.CreateSolver(...)` | the `timeLimitSeconds` key in the solver YAML |
+| `configuration.CreateSolver(...)` | the `timeLimit` key in the solver YAML |
 
 To choose the limit explicitly:
 
