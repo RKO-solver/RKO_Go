@@ -40,7 +40,7 @@ func fareySearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environm
 			break
 		}
 
-		for j := 1; j < fareyLen-1; j++ {
+		for j := 0; j < fareyLen-1; j++ {
 			oldValue := rko.RK[i]
 			value := rg.RangeFloat64(fareySequence[j], fareySequence[j+1])
 			rko.RK[i] = value
