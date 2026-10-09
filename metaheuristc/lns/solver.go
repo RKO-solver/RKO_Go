@@ -19,6 +19,18 @@ var fareySequence = []float64{
 	0.25,
 	0.285714,
 	0.333333,
+	0.40,
+	0.428571,
+	0.50,
+	0.571429,
+	0.60,
+	0.666667,
+	0.714286,
+	0.75,
+	0.80,
+	0.833333,
+	0.857143,
+	1.0,
 }
 
 func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
