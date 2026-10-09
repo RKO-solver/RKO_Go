@@ -19,28 +19,29 @@ import (
 
 // CreateDefaultSolver creates a Solver running the given metaheuristics with default parameters.
 func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger logger.Logger) *Solver {
-	rg := random.GetGlobalInstance()
+	rg := random.NewGenerator()
 	solutionPool := solution.NewDefaultPool(env, rg, logger)
 
 	solvers := make([]definition.Solver, 0, len(mh))
 
 	for _, m := range mh {
 		var solver definition.Solver
+		srg := rg.Split()
 		switch m {
 		case ILS:
-			solver = ils.CreateDefaultILS(env, rg, solutionPool, logger)
+			solver = ils.CreateDefaultILS(env, srg, solutionPool, logger)
 		case VNS:
-			solver = vns.CreateDefaultVNS(env, rg, solutionPool, logger)
+			solver = vns.CreateDefaultVNS(env, srg, solutionPool, logger)
 		case MULTISTART:
-			solver = multistart.CreateDefaultMultiStart(env, rg, solutionPool, logger)
+			solver = multistart.CreateDefaultMultiStart(env, srg, solutionPool, logger)
 		case SA:
-			solver = sa.CreateDefaultSA(env, rg, solutionPool, logger)
+			solver = sa.CreateDefaultSA(env, srg, solutionPool, logger)
 		case GA:
-			solver = ga.CreateDefaultGA(env, rg, solutionPool, logger)
+			solver = ga.CreateDefaultGA(env, srg, solutionPool, logger)
 		case BRKGA:
-			solver = ga.CreateDefaultBRKGA(env, rg, solutionPool, logger)
+			solver = ga.CreateDefaultBRKGA(env, srg, solutionPool, logger)
 		case LNS:
-			solver = lns.CreateDefaultLNS(env, rg, solutionPool, logger)
+			solver = lns.CreateDefaultLNS(env, srg, solutionPool, logger)
 		default:
 			fmt.Printf("%s not implemented yet\n", GetMetaHeuristicString(m))
 			continue

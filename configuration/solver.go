@@ -33,35 +33,36 @@ func createSolver(problemName string, env definition.Environment, solverConfig *
 
 	for _, sol := range solverConfig.Solvers {
 		var solver definition.Solver
-		se := getSearch(sol.Search, env, solutionPool, rg)
+		srg := rg.Split()
+		se := getSearch(sol.Search, env, solutionPool, srg)
 
 		switch sol.MetaHeuristic {
 		case rko.ILS:
 			conf := mhConfig.ILS
 
-			solver = ils.CreateILSComplete(env, conf, se, rg, solutionPool, log)
+			solver = ils.CreateILSComplete(env, conf, se, srg, solutionPool, log)
 		case rko.VNS:
 			conf := mhConfig.VNS
 
-			solver = vns.CreateVNSComplete(env, conf, se, rg, solutionPool, log)
+			solver = vns.CreateVNSComplete(env, conf, se, srg, solutionPool, log)
 		case rko.MULTISTART:
-			solver = multistart.CreateDefaultMultiStart(env, rg, solutionPool, log)
+			solver = multistart.CreateDefaultMultiStart(env, srg, solutionPool, log)
 		case rko.SA:
 			conf := mhConfig.SA
 
-			solver = sa.CreateSAComplete(env, conf, se, rg, solutionPool, log)
+			solver = sa.CreateSAComplete(env, conf, se, srg, solutionPool, log)
 		case rko.GA:
 			conf := mhConfig.GA
 
-			solver = ga.CreateGAComplete(env, conf, se, rg, solutionPool, log)
+			solver = ga.CreateGAComplete(env, conf, se, srg, solutionPool, log)
 		case rko.BRKGA:
 			conf := mhConfig.BRKGA
 
-			solver = ga.CreateBRKGAComplete(env, conf, se, rg, solutionPool, log)
+			solver = ga.CreateBRKGAComplete(env, conf, se, srg, solutionPool, log)
 		case rko.LNS:
 			conf := mhConfig.LNS
 
-			solver = lns.CreateLNSComplete(env, conf, se, rg, solutionPool, log)
+			solver = lns.CreateLNSComplete(env, conf, se, srg, solutionPool, log)
 		default:
 			fmt.Printf("%s not implemented yet\n", rko.GetMetaHeuristicString(sol.MetaHeuristic))
 			continue
