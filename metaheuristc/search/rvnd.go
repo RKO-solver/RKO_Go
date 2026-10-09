@@ -71,7 +71,7 @@ func (s rvndseach) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue)
 	rvnd(ctx, rko, s.environment, s.s, s.rg, neighbourhood)
 }
 
-func (s rvndseach) SetRG(rg *random.Generator) {
+func (s *rvndseach) SetRG(rg *random.Generator) {
 	s.rg = rg
 }
 
@@ -90,7 +90,7 @@ func CreateRVND(environment definition.Environment, s *solution.Pool, rg *random
 	// It updates the slice's length to only include the elements we kept.
 	neighbourhood = neighbourhood[:n]
 
-	return rvndseach{environment, rg, s, neighbourhood}
+	return &rvndseach{environment, rg, s, neighbourhood}
 }
 
 // --- The Compile-Time Check ---

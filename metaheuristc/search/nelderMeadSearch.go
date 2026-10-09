@@ -55,7 +55,7 @@ func (n nelderMeadLocalSearch) String() string {
 	return GetSearchString(Nelder)
 }
 
-func (n nelderMeadLocalSearch) SetRG(rg *random.Generator) {
+func (n *nelderMeadLocalSearch) SetRG(rg *random.Generator) {
 	n.rg = rg
 }
 
@@ -65,7 +65,7 @@ func (n nelderMeadLocalSearch) Search(ctx context.Context, rko *metaheuristc.Ran
 
 func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {
 	maxIterations := int(float64(environment.NumKeys()) * math.Exp(-2))
-	return nelderMeadLocalSearch{environment, solutionPool, rg, maxIterations}
+	return &nelderMeadLocalSearch{environment, solutionPool, rg, maxIterations}
 }
 
 func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, maxIterations int, env definition.Environment, solutionPool *solution.Pool, rg *random.Generator) {
