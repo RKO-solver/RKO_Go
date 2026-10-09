@@ -6,27 +6,9 @@ import (
 	"context"
 	"math"
 	"sort"
-	"time"
 
 	"github.com/RKO-solver/rko-go/random"
 )
-
-type contextKey struct{}
-
-var startTimeKey = contextKey{}
-
-// WithStartTime returns a context carrying the given start time.
-func WithStartTime(ctx context.Context, t time.Time) context.Context {
-	return context.WithValue(ctx, startTimeKey, t)
-}
-
-// StartTime returns the start time stored in ctx, or time.Now().
-func StartTime(ctx context.Context) time.Time {
-	if t, ok := ctx.Value(startTimeKey).(time.Time); ok {
-		return t
-	}
-	return time.Now()
-}
 
 // RandomKey represents a solution as a slice of float64 values (random keys).
 type RandomKey []float64
@@ -113,7 +95,7 @@ func (keys RandomKey) Similarity(key RandomKey) float64 {
 func dotMultiplier(key1 RandomKey, key2 RandomKey) float64 {
 	result := 0.0
 
-	for i := 0; i < len(key1); i++ {
+	for i := range key1 {
 		result += key1[i] * key2[i]
 	}
 
