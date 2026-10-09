@@ -36,7 +36,7 @@ func rvnd(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment def
 			nelderMeadSearch(ctx, rko, maxIterations, environment, s, r)
 		}
 		// there was improvement
-		if localSolutionCost < rko.Cost {
+		if rko.Cost < localSolutionCost {
 			localSolutionCost = rko.Cost
 		} else {
 			// there wasn't improvement
