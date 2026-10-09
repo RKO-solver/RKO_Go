@@ -9,6 +9,7 @@ import (
 
 func (lns *LNS) SetRG(rg *random.Generator) {
 	lns.RG = rg
+	lns.search.SetRG(rg)
 }
 
 func (lns *LNS) Name() string {

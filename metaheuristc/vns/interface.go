@@ -9,6 +9,7 @@ import (
 
 func (vns *VNS) SetRG(rg *random.Generator) {
 	vns.RG = rg
+	vns.search.SetRG(rg)
 }
 
 func (vns *VNS) Name() string {
