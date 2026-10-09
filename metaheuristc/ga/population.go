@@ -32,7 +32,7 @@ func initialPopulation(population []*metaheuristc.RandomKeyValue, env definition
 		bestPerson = population[0]
 	}
 
-	return bestPerson
+	return bestPerson.Clone()
 }
 
 func tournament(population []*metaheuristc.RandomKeyValue, rg *random.Generator) *metaheuristc.RandomKeyValue {
