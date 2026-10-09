@@ -56,17 +56,20 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 		for i := populationSize - mutantSize; i < populationSize; i++ {
 			rk.Reset(populationIntermediary[i].RK, rg)
-			populationIntermediary[i].Cost = population[i].Cost
+			populationIntermediary[i].Cost = env.Cost(populationIntermediary[i].RK)
 		}
 
-		copy(population, populationIntermediary)
+		population, populationIntermediary = populationIntermediary, population
 
 		// apply local search in random element
 		k := rg.IntN(populationSize)
 		local.Search(ctx, population[k])
+
+		metaheuristc.Sort(population)
+
 		if ctx.Err() != nil {
-			if population[k].Cost < bestPerson.Cost {
-				bestPerson = population[k].Clone()
+			if population[0].Cost < bestPerson.Cost {
+				bestPerson = population[0].Clone()
 			}
 			bestSolutionCost := solutionPool.BestSolutionCost()
 			if bestPerson.Cost < bestSolutionCost {
@@ -74,8 +77,6 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 			}
 			break
 		}
-
-		metaheuristc.Sort(population)
 
 		if population[0].Cost < bestPerson.Cost {
 			bestPerson = population[0].Clone()
@@ -96,11 +97,15 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
 			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population", time.Since(start).Seconds())
-			bestPerson = initialPopulation(population, env, true, rg)
+			restartBest := initialPopulation(population, env, true, rg)
+			if restartBest.Cost < bestPerson.Cost {
+				bestPerson = restartBest
 
-			if bestPerson.Cost < bestSolutionCost {
+			}
+			if restartBest.Cost < bestSolutionCost {
 				solutionPool.AddSolution(bestPerson.Clone(), elapsed)
 			}
+
 			generationNoImprovement = 0
 		}
 
