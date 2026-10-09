@@ -2,6 +2,7 @@ package configuration
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/definition"
@@ -73,7 +74,7 @@ func createSolver(problemName string, env definition.Environment, solverConfig *
 		}
 	}
 
-	return rko.CreateFullSolver(log, rg, env, solverConfig.TimeLimitSeconds, solutionPool, solvers), log
+	return rko.CreateFullSolver(log, env, time.Duration(solverConfig.TimeLimitSeconds), solutionPool, solvers), log
 }
 
 // CreateSolver builds a solver from the given configurations.

@@ -11,17 +11,15 @@ import (
 	"github.com/RKO-solver/rko-go/logger/channel"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
-	"github.com/RKO-solver/rko-go/random"
 )
 
 // Solver runs several metaheuristics in parallel over a shared solution pool.
 type Solver struct {
-	l                logger.Logger
-	rg               *random.Generator      // Random number generator
-	env              definition.Environment // Problem environment (user implementation)
-	solutionPool     *solution.Pool         // Shared pool of solutions among solvers
-	solvers          []definition.Solver    // List of metaheuristic solvers to run
-	timeLimitSeconds time.Duration
+	l            logger.Logger
+	env          definition.Environment // Problem environment (user implementation)
+	solutionPool *solution.Pool         // Shared pool of solutions among solvers
+	solvers      []definition.Solver    // List of metaheuristic solvers to run
+	timeLimit    time.Duration
 }
 
 // SolveCtx is like Solve but stops when ctx is cancelled or expires.
@@ -82,8 +80,8 @@ func (s *Solver) SolveCtx(ctx context.Context) any {
 
 // Solve runs every metaheuristic under the configured time limit and returns the best solution.
 func (s *Solver) Solve() any {
-	if s.timeLimitSeconds > 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), s.timeLimitSeconds)
+	if s.timeLimit > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), s.timeLimit)
 		defer cancel()
 
 		return s.SolveCtx(ctx)

@@ -53,32 +53,30 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger 
 	}
 
 	return &Solver{
-		l:                logger,
-		rg:               rg,
-		env:              env,
-		solutionPool:     solutionPool,
-		solvers:          solvers,
-		timeLimitSeconds: constants.DefaultTimeLimit,
+		l:            logger,
+		env:          env,
+		solutionPool: solutionPool,
+		solvers:      solvers,
+		timeLimit:    constants.DefaultTimeLimit,
 	}
 }
 
-// CreateDefaultSolverTimeLimitSecond is like CreateDefaultSolver with an explicit time limit.
-func CreateDefaultSolverTimeLimitSecond(mh []MetaHeuristic, timeLimitSecond time.Duration, env definition.Environment, logger logger.Logger) *Solver {
+// CreateDefaultSolverTimeLimit is like CreateDefaultSolver with an explicit time limit.
+func CreateDefaultSolverTimeLimit(mh []MetaHeuristic, timeLimit time.Duration, env definition.Environment, logger logger.Logger) *Solver {
 	solver := CreateDefaultSolver(mh, env, logger)
 
-	solver.timeLimitSeconds = timeLimitSecond
+	solver.timeLimit = timeLimit
 
 	return solver
 }
 
 // CreateFullSolver creates a Solver from already-built solvers, pool and generator.
-func CreateFullSolver(logger logger.Logger, rg *random.Generator, env definition.Environment, timeLimitSeconds int64, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
+func CreateFullSolver(logger logger.Logger, env definition.Environment, timeLimit time.Duration, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
 	return &Solver{
-		l:                logger,
-		rg:               rg,
-		env:              env,
-		solutionPool:     solutionPool,
-		solvers:          solvers,
-		timeLimitSeconds: time.Duration(timeLimitSeconds),
+		l:            logger,
+		env:          env,
+		solutionPool: solutionPool,
+		solvers:      solvers,
+		timeLimit:    timeLimit,
 	}
 }
