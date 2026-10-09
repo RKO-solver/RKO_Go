@@ -108,6 +108,7 @@ You can implement your own logger by satisfying the `Logger` interface.
 
 ```go
 import (
+    "context"
     "fmt"
 
     rko "github.com/RKO-solver/rko-go"
@@ -121,7 +122,7 @@ mh := []rko.MetaHeuristic{rko.GA, rko.SA}      // metaheuristics to run
 log := channel.NewLoggerLevel("MyOptimizationProblem", logger.VERBOSE)
 
 solver := rko.CreateDefaultSolver(mh, env, log)
-result := solver.Solve()
+result := solver.Solve(context.Background())
 fmt.Printf("Best solution: %+v\n", result)
 
 // Retrieve and use the logged data.
@@ -154,7 +155,7 @@ Both `*channel.Log` and `*stdout.Log` also have a concrete `SaveCsv(filename ...
 
 ```go
 solver, log := configuration.CreateSolver(problemName, env, solverConfig, mhConfig)
-solver.Solve()
+solver.Solve(context.Background())
 
 if saver, ok := log.(interface{ SaveCsv(filename ...string) }); ok {
     saver.SaveCsv()

@@ -10,24 +10,19 @@ Everything below is read from source: `metaheuristc/constants/defaults.go`, `met
 
 | Name | Subpackage | Solver type | Configuration type | Default-config constructor |
 |---|---|---|---|---|
-| MultiStart | `metaheuristc/multistart` | `*MultiStart` | `*Configuration` | `DefaulConfigurationtMultiStart()` |
+| MultiStart | `metaheuristc/multistart` | `*MultiStart` | none | none |
 | Simulated Annealing | `metaheuristc/sa` | `*SimulatedAnnealing` | `*Configuration` | `DefaultConfigurationSA()` |
 | Genetic Algorithm | `metaheuristc/ga` | `*GA` | `*ConfigurationGA` | `DefaultConfigurationGA()` |
 | BRKGA | `metaheuristc/ga` | `*BRKGA` | `*ConfigurationBRKGA` | `DefaultConfigurationBRKGA()` |
 | Iterated Local Search | `metaheuristc/ils` | `*ILS` | `*Configuration` | `DefaultConfigurationILS()` |
 | Variable Neighborhood Search | `metaheuristc/vns` | `*VNS` | `*Configuration` | `DefaultConfigurationVNS()` |
-| Large Neighborhood Search | `metaheuristc/lns` | `*LNS` | `*Configuration` | `lns.DefaultConfigurationVNS()` |
-
-Two exported function names do not match what they build, and are the current names in the source (not typos to fix on your side):
-
-- `lns.DefaultConfigurationVNS()` returns an `lns.Configuration` (for LNS), not a VNS configuration.
-- `multistart.DefaulConfigurationtMultiStart()` — the name itself has a typo (`Defaul...tMultiStart`).
+| Large Neighborhood Search | `metaheuristc/lns` | `*LNS` | `*Configuration` | `DefaultConfigurationLNS()` |
 
 GA and BRKGA share the `ga` subpackage but are independent types with independent `Configuration` structs; there is no shared "GA family" Configuration.
 
 ## Constructors
 
-Every metaheuristic exposes up to three constructor shapes. All of them take `env definition.Environment`, a `*random.Generator`, a `*solution.Pool`, and a `logger.Logger`, in that order interleaved with the search/configuration arguments.
+Every metaheuristic exposes up to three constructor shapes (MultiStart has no configuration, so only the first and third, the latter without the configuration argument). All of them take `env definition.Environment`, a `*random.Generator`, a `*solution.Pool`, and a `logger.Logger`, in that order interleaved with the search/configuration arguments.
 
 1. `CreateDefaultX(env, rg, solutionPool, logger)` — default `Configuration` and a built-in default search.
 2. `CreateX(env, configuration, searchType, rg, solutionPool, logger)` — your `Configuration`, and a `search.Type` the constructor turns into a `search.Local` via `search.Create`.
@@ -39,10 +34,10 @@ Verified signatures per subpackage:
 
 ```go
 func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart
-func CreateMultiStart(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart
+func CreateMultiStart(env definition.Environment, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart
 ```
 
-There is no `CreateMultiStartComplete`. `CreateDefaultMultiStart` builds its search with `search.CreateDefault`.
+`CreateMultiStart` takes an already-built `search.Local`. `CreateDefaultMultiStart` builds its search with `search.CreateDefault`.
 
 ### `sa`
 
@@ -102,23 +97,16 @@ func CreateLNS(env definition.Environment, configuration *Configuration, searchT
 func CreateLNSComplete(env definition.Environment, configuration *Configuration, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS
 ```
 
-`CreateDefaultLNS` builds its search with `search.CreateDefault`, and gets its default `Configuration` from `lns.DefaultConfigurationVNS()` (see naming note above).
+`CreateDefaultLNS` builds its search with `search.CreateDefault`, and gets its default `Configuration` from `lns.DefaultConfigurationLNS()`.
 
 ## Configuration fields
 
-Defaults come from `metaheuristc/constants/defaults.go`.
-
-### `multistart.Configuration`
-
-| Field | Type | Default |
-|---|---|---|
-| `MaxIterations` | `int` | `math.MaxInt` (unlimited) |
+Defaults come from `metaheuristc/constants/defaults.go`. Iteration limits are not configured here; see "Solve and limits".
 
 ### `sa.Configuration`
 
 | Field | Type | Default |
 |---|---|---|
-| `MaxIterations` | `int` | `math.MaxInt` (unlimited) |
 | `Alpha` | `float64` | `0.0005` |
 | `TemperatureInitial` | `float64` | `10000000.0` |
 | `TemperatureGoal` | `float64` | `0.0000000000000001` |
@@ -135,7 +123,6 @@ Defaults come from `metaheuristc/constants/defaults.go`.
 | `PopulationSize` | `int` | `200` |
 | `CrossoverAlpha` | `float64` | `0.95` |
 | `MutationAlpha` | `float64` | `0.005` |
-| `MaxGenerations` | `int` | `math.MaxInt` (unlimited) |
 | `MaxGenerationNoImprovement` | `int` | `100` |
 
 ### `ga.ConfigurationBRKGA`
@@ -147,14 +134,12 @@ Defaults come from `metaheuristc/constants/defaults.go`.
 | `MutantRatio` | `float64` | `0.05` |
 | `CrossoverAlpha` | `float64` | `0.95` |
 | `MutationAlpha` | `float64` | `0.005` |
-| `MaxGenerations` | `int` | `math.MaxInt` (unlimited) |
 | `MaxGenerationNoImprovement` | `int` | `100` |
 
 ### `ils.Configuration`
 
 | Field | Type | Default |
 |---|---|---|
-| `MaxIterations` | `int` | `math.MaxInt` (unlimited) |
 | `ShakeMin` | `float64` | `0.01` |
 | `ShakeMax` | `float64` | `0.05` |
 | `MetropolisCriterion` | `bool` | `false` |
@@ -163,14 +148,12 @@ Defaults come from `metaheuristc/constants/defaults.go`.
 
 | Field | Type | Default |
 |---|---|---|
-| `MaxIterations` | `int` | `math.MaxInt` (unlimited) |
 | `Rate` | `float64` | `0.2` |
 
 ### `lns.Configuration`
 
 | Field | Type | Default |
 |---|---|---|
-| `MaxIterations` | `int` | `math.MaxInt` (unlimited) |
 | `BetaMin` | `float64` | `0.01` |
 | `BetaMax` | `float64` | `0.05` |
 
@@ -237,9 +220,13 @@ func CreateRVND(environment definition.Environment, s *solution.Pool, rg *random
 
 This means `search.Create(search.RVND, ...)` and `search.CreateDefault(...)` are **not** the same RVND: the first omits `Nelder`, the second includes it.
 
-## Solve and time limits
+## Solve and limits
 
-Every solver here implements `definition.Solver`. `Solve(ctx context.Context) definition.Result` runs until `ctx` is cancelled or its deadline passes — there is no solver-local time-limit field. The time limit itself is set at the level above this package; see [`../configuration/README.md`](../configuration/README.md).
+Every solver here implements `definition.Solver`. `Solve(ctx context.Context) definition.Result` runs until `ctx` is cancelled or its deadline passes, or until the iteration limit stored in `ctx` is reached. There is no solver-local limit field.
+
+Each solver calls `definition.GetMHContext(ctx)` at the start of `Solve`. It returns a derived context and an `IterationCounter`; the solver calls `Step` once per outer-loop pass (a generation for GA and BRKGA, a temperature step for SA) and `defer`s `Stop`. At the limit the counter cancels the derived context. See the [`definition` package](../definition/README.md).
+
+The limits themselves are set at the level above this package; see [`../configuration/README.md`](../configuration/README.md).
 
 ## See Also
 

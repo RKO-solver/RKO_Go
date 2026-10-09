@@ -8,7 +8,7 @@ RKO-Go optimizes problems by encoding a solution as a **random key**: a fixed-le
 
 `Cost` returns an `int`, and every metaheuristic in this library **minimizes** it. If your problem is naturally a maximization, negate the objective in `Cost`.
 
-Solvers are driven by `context.Context`. `Solve(ctx)` runs until `ctx` is cancelled or its deadline expires; there is no separate stop/time-limit parameter. A time limit is set by calling `Solve` with a context created via `context.WithTimeout` (or `context.WithDeadline`).
+Solvers are driven by `context.Context`. `Solve(ctx)` runs until `ctx` is cancelled or its deadline expires, or until the iteration limit stored in `ctx` is reached; there is no separate stop parameter. A time limit is set by calling `Solve` with a context created via `context.WithTimeout` (or `context.WithDeadline`).
 
 ## Environment
 
@@ -111,20 +111,42 @@ type Result struct {
 
 ## Context helpers
 
-`WithStartTime` and `StartTime` let a solver measure elapsed time against a shared start, even when the solver did not start the clock itself.
+Defined in `context.go`.
 
 ```go
 func WithStartTime(ctx context.Context, t time.Time) context.Context
 func StartTime(ctx context.Context) time.Time
+func WithMaxIterations(ctx context.Context, n int) context.Context
+func GetMHContext(ctx context.Context) (context.Context, *IterationCounter)
 ```
 
-`StartTime` reads the value stored by `WithStartTime`; if none was stored, it returns `time.Now()`. A custom `Solve` implementation typically starts with:
+| Helper | Description |
+|---|---|
+| `WithStartTime` | Stores a shared start time, so a solver can measure elapsed time even when it did not start the clock. |
+| `StartTime` | Reads the start time; if none was stored, returns `time.Now()`. |
+| `WithMaxIterations` | Stores the iteration limit of each metaheuristic; a non-positive `n` means no limit. `rko.Solver.Solve` calls it. |
+| `GetMHContext` | Returns a derived context and an `IterationCounter` for one metaheuristic. With no limit stored, it returns `ctx` unchanged. |
+
+An iteration is one outer-loop pass of a metaheuristic: a generation for GA and BRKGA, a temperature step for SA.
+
+`IterationCounter` methods:
+
+| Method | Description |
+|---|---|
+| `Step()` | Counts one iteration; cancels the derived context when the limit is reached. |
+| `Iteration() int` | Number of completed iterations. |
+| `Stop()` | Releases the derived context; call it with `defer`. |
+
+A custom `Solve` implementation typically starts with:
 
 ```go
 func (s *MySolver) Solve(ctx context.Context) definition.Result {
+    ctx, counter := definition.GetMHContext(ctx)
+    defer counter.Stop()
+
     start := definition.StartTime(ctx)
-    for ctx.Err() == nil {
-        // iterate, checking ctx.Err() to stop on cancellation/deadline
+    for ; ctx.Err() == nil; counter.Step() {
+        // iterate, checking ctx.Err() to stop on cancellation, deadline or iteration limit
     }
     elapsed := time.Since(start).Seconds()
     // ...
@@ -132,7 +154,8 @@ func (s *MySolver) Solve(ctx context.Context) definition.Result {
 ```
 
 ## Files
-- `definition.go`: `Environment`, `Solver`, `Result`, `RandomKey`, and the context start-time helpers.
+- `definition.go`: `Environment`, `Solver`, `Result` and `RandomKey`.
+- `context.go`: the context helpers and `IterationCounter`.
 
 ## See Also
 - [Project README](../README.md)

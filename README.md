@@ -52,6 +52,7 @@ See the [`definition` package](definition/README.md) for a complete, compiling e
 
 ```go
 import (
+    "context"
     "fmt"
 
     "github.com/RKO-solver/rko-go"
@@ -64,7 +65,7 @@ log := channel.DefaultLogger("MyProblem")
 
 solver := rko.CreateDefaultSolver(mh, env, log)
 
-result := solver.Solve()
+result := solver.Solve(context.Background())
 fmt.Printf("Best solution: %+v\n", result)
 ```
 
@@ -72,28 +73,33 @@ fmt.Printf("Best solution: %+v\n", result)
 
 ## Time limits and cancellation
 
-The search stops when its time limit expires, when the context is cancelled, or when a metaheuristic reaches its own iteration cap — whichever comes first.
+The search stops when its time limit expires, when its iteration limit is reached, or when the context is cancelled — whichever comes first.
 
-| Entry point | Time limit |
-|---|---|
-| `rko.CreateDefaultSolver(mh, env, log)` | 150 seconds by default |
-| `rko.CreateDefaultSolverTimeLimitSecond(mh, limit, env, log)` | the limit you pass |
-| `configuration.CreateSolver(...)` | the `timeLimit` key in the solver YAML |
+An iteration is one outer-loop pass of a metaheuristic: one generation for GA and BRKGA, one temperature step for SA. `Solve` applies the time limit; every limit is optional.
+
+| Entry point | Time limit | Iteration limit |
+|---|---|---|
+| `rko.CreateDefaultSolver(mh, env, log)` | 150 seconds | none |
+| `rko.CreateDefaultSolverTimeLimit(mh, limit, env, log)` | the limit you pass | none |
+| `rko.CreateFullSolver(log, env, timeLimit, maxIterations, pool, solvers)` | `timeLimit` | `maxIterations` |
+| `configuration.CreateSolver(...)` | the `TimeLimitSeconds` key in the solver YAML | the `MaxIterations` key in the solver YAML |
+
+A non-positive limit means not set. With neither limit, the solver runs until its context is cancelled.
 
 To choose the limit explicitly:
 
 ```go
-solver := rko.CreateDefaultSolverTimeLimitSecond(mh, 30*time.Second, env, log)
-result := solver.Solve()
+solver := rko.CreateDefaultSolverTimeLimit(mh, 30*time.Second, env, log)
+result := solver.Solve(context.Background())
 ```
 
-To own cancellation yourself — for example to stop the search on a shutdown signal — use `SolveCtx`:
+To stop the search yourself — for example on a shutdown signal — pass your own context to `Solve`. Both limits still apply:
 
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 defer cancel()
 
-result := solver.SolveCtx(ctx)
+result := solver.Solve(ctx)
 ```
 
 ## Selecting metaheuristics
@@ -133,7 +139,7 @@ Both can export the run to CSV. See the [`logger` package](logger/README.md).
 | [`logger`](logger/README.md) | Logging interfaces, the two built-in loggers, and CSV export. |
 | [`metaheuristc`](metaheuristc/README.md) | The metaheuristic implementations, their parameters, and local searches. |
 
-Root package entry points: `CreateDefaultSolver`, `CreateDefaultSolverTimeLimitSecond` and `CreateFullSolver` in [`create.go`](create.go); `Solve`, `SolveCtx` and `GetSolutionPool` in [`definition.go`](definition.go).
+Root package entry points: `CreateDefaultSolver`, `CreateDefaultSolverTimeLimit` and `CreateFullSolver` in [`create.go`](create.go); `Solve` and `GetSolutionPool` in [`definition.go`](definition.go).
 
 ## Maintainers
 
