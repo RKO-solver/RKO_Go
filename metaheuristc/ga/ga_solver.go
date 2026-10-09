@@ -74,10 +74,6 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 		solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 
-		if ctx.Err() != nil {
-			break
-		}
-
 		if hasImproved {
 			generationNoImprovement = 0
 		} else {
@@ -89,6 +85,10 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 		ga.logger.Verbose(fmt.Sprintf("Generations without improvement: %d", generationNoImprovement), elapsed)
 		ga.logger.Register(children[k].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d", ctxAction.Iteration()))
+
+		if ctx.Err() != nil {
+			break
+		}
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
 			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population", time.Since(start).Seconds())
