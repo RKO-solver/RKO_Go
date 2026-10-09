@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/vns"
 )
 
+// withMultiStart copies the positive fields of cfg into the MultiStart defaults.
 func withMultiStart(cfg *multistart.Configuration) Option {
 	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
@@ -20,6 +21,7 @@ func withMultiStart(cfg *multistart.Configuration) Option {
 	}
 }
 
+// withBRKGA copies the positive fields of cfg into the BRKGA defaults.
 func withBRKGA(cfg *ga.ConfigurationBRKGA) Option {
 	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
@@ -50,6 +52,7 @@ func withBRKGA(cfg *ga.ConfigurationBRKGA) Option {
 	}
 }
 
+// withGA copies the positive fields of cfg into the GA defaults.
 func withGA(cfg *ga.ConfigurationGA) Option {
 	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
@@ -75,6 +78,7 @@ func withGA(cfg *ga.ConfigurationGA) Option {
 	}
 }
 
+// withSA copies the positive fields of cfg, except the unused MaxIterations, into the SA defaults.
 func withSA(cfg *sa.Configuration) Option {
 	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
@@ -108,6 +112,7 @@ func withSA(cfg *sa.Configuration) Option {
 	}
 }
 
+// withILS copies the positive fields of cfg into the ILS defaults; MetropolisCriterion can only be turned on.
 func withILS(cfg *ils.Configuration) Option {
 	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
@@ -129,6 +134,7 @@ func withILS(cfg *ils.Configuration) Option {
 	}
 }
 
+// withVNS copies the positive fields of cfg into the VNS defaults.
 func withVNS(cfg *vns.Configuration) Option {
 	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {
@@ -144,6 +150,7 @@ func withVNS(cfg *vns.Configuration) Option {
 	}
 }
 
+// withLNS copies the positive fields of cfg into the LNS defaults.
 func withLNS(cfg *lns.Configuration) Option {
 	return func(c *MetaheuristicsConfiguration) {
 		if cfg == nil {

@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/definition"
@@ -19,10 +18,14 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func createSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration, rg *random.Generator) (*rko.Solver, logger.Logger) {
+// createSolver builds the logger, shared pool and one solver per implemented entry; a nil Configuration is set to DefaultConfiguration().
+func createSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, rg *random.Generator) (*rko.Solver, logger.Logger) {
 	var log logger.Logger
 	solvers := make([]definition.Solver, 0)
-
+	if solverConfig.Configuration == nil {
+		solverConfig.Configuration = DefaultConfiguration()
+	}
+	mhConfig := solverConfig.Configuration
 	switch solverConfig.LoggerType {
 	case logger.CHANNEL:
 		log = channel.NewLoggerLevel(problemName, solverConfig.LoggerLevel)
@@ -74,21 +77,16 @@ func createSolver(problemName string, env definition.Environment, solverConfig *
 		}
 	}
 
-	return rko.CreateFullSolver(log, env, time.Duration(solverConfig.TimeLimitSeconds), solutionPool, solvers), log
+	return rko.CreateFullSolver(log, env, solverConfig.TimeLimit, solutionPool, solvers), log
 }
 
-// CreateSolver builds a solver from the given configurations.
-func CreateSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration) (*rko.Solver, logger.Logger) {
-	return createSolver(problemName, env, solverConfig, mhConfig, random.GetGlobalInstance())
+// CreateSolver builds a solver from solverConfig using the global random generator.
+func CreateSolver(problemName string, env definition.Environment, solverConfig *SolverConfiguration) (*rko.Solver, logger.Logger) {
+	return createSolver(problemName, env, solverConfig, random.GetGlobalInstance())
 }
 
-// CreateSolverSeed is like CreateSolver but uses a fixed random seed for reproducible runs.
-func CreateSolverSeed(problemName string, env definition.Environment, solverConfig *SolverConfiguration, mhConfig *MetaheuristicsConfiguration, seed uint64) (*rko.Solver, logger.Logger) {
+// CreateSolverSeed is like CreateSolver but uses a random generator seeded with seed.
+func CreateSolverSeed(problemName string, env definition.Environment, solverConfig *SolverConfiguration, seed uint64) (*rko.Solver, logger.Logger) {
 	rg := random.NewGeneratorSeed(seed)
-	return createSolver(problemName, env, solverConfig, mhConfig, rg)
-}
-
-// CreateSolverDefaultConfig is like CreateSolver but with default metaheuristic parameters.
-func CreateSolverDefaultConfig(problemName string, env definition.Environment, solverConfig *SolverConfiguration) (*rko.Solver, logger.Logger) {
-	return createSolver(problemName, env, solverConfig, DefaultConfiguration(), random.GetGlobalInstance())
+	return createSolver(problemName, env, solverConfig, rg)
 }

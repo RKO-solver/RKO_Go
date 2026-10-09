@@ -2,9 +2,6 @@
 package configuration
 
 import (
-	"fmt"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/RKO-solver/rko-go"
@@ -16,10 +13,9 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/sa"
 	"github.com/RKO-solver/rko-go/metaheuristc/search"
 	"github.com/RKO-solver/rko-go/metaheuristc/vns"
-	"go.yaml.in/yaml/v3"
 )
 
-// MetaheuristicsConfiguration holds the parameters for every metaheuristic.
+// MetaheuristicsConfiguration holds the tuning parameters of every metaheuristic.
 type MetaheuristicsConfiguration struct {
 	MultiStart *multistart.Configuration
 	BRKGA      *ga.ConfigurationBRKGA
@@ -30,6 +26,31 @@ type MetaheuristicsConfiguration struct {
 	LNS        *lns.Configuration
 }
 
+// Solver pairs a metaheuristic with the local searches it uses.
+type Solver struct {
+	MetaHeuristic rko.MetaHeuristic
+	Search        []search.Type
+}
+
+// SolverConfiguration holds the logger, time limit, metaheuristics and tuning parameters of a solver.
+type SolverConfiguration struct {
+	LoggerLevel   logger.Level
+	LoggerType    logger.LogType
+	TimeLimit     time.Duration // 0 or negative means no limit
+	Solvers       []Solver
+	Configuration *MetaheuristicsConfiguration
+}
+
+// solverYamlConfiguration mirrors the top level of the YAML file.
+type solverYamlConfiguration struct {
+	LogLevel         string              `yaml:"LogLevel"`
+	LogType          string              `yaml:"LogType"`
+	TimeLimitSeconds int64               `yaml:"TimeLimitSeconds"`
+	Metaheuristics   []string            `yaml:"Metaheuristics"`
+	Configuration    mhYamlConfiguration `yaml:"Configuration"`
+}
+
+// mhYamlConfiguration mirrors the Configuration section of the YAML file.
 type mhYamlConfiguration struct {
 	MultiStart *multistart.Configuration `yaml:"MultiStart"`
 	BRKGA      *ga.ConfigurationBRKGA    `yaml:"BRKGA"`
@@ -40,133 +61,5 @@ type mhYamlConfiguration struct {
 	LNS        *lns.Configuration        `yaml:"LNS"`
 }
 
-// Option is a function that modifies a MetaheuristicsConfiguration.
+// Option modifies a MetaheuristicsConfiguration.
 type Option func(*MetaheuristicsConfiguration)
-
-func newYamlConfiguration(opts ...Option) *MetaheuristicsConfiguration {
-	// Start with a configuration struct populated with all default values.
-	config := &MetaheuristicsConfiguration{
-		MultiStart: multistart.DefaulConfigurationtMultiStart(),
-		BRKGA:      ga.DefaultConfigurationBRKGA(),
-		GA:         ga.DefaultConfigurationGA(),
-		ILS:        ils.DefaultConfigurationILS(),
-		SA:         sa.DefaultConfigurationSA(),
-		VNS:        vns.DefaultConfigurationVNS(),
-		LNS:        lns.DefaultConfigurationLNS(),
-	}
-
-	// Apply all provided options, which will overwrite the defaults if specified.
-	for _, opt := range opts {
-		opt(config)
-	}
-
-	return config
-}
-
-// CreateYamlMHConfiguration loads metaheuristic parameters from a YAML file.
-func CreateYamlMHConfiguration(filePath string) (*MetaheuristicsConfiguration, error) {
-
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-	configuration := mhYamlConfiguration{}
-
-	if err = yaml.Unmarshal(data, &configuration); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
-
-	}
-
-	var opts = []Option{
-		withMultiStart(configuration.MultiStart),
-		withGA(configuration.GA),
-		withBRKGA(configuration.BRKGA),
-		withSA(configuration.SA),
-		withVNS(configuration.VNS),
-		withILS(configuration.ILS),
-		withLNS(configuration.LNS),
-	}
-
-	return newYamlConfiguration(opts...), nil
-}
-
-type configurationSolver struct {
-	LogLevel         string   `yaml:"logLevel"`
-	LogType          string   `yaml:"logType"`
-	TimeLimitSeconds int64    `yaml:"timeLimitSeconds"`
-	Metaheuristics   []string `yaml:"metaheuristics"`
-}
-
-// Solver pairs a metaheuristic with the local search strategies it should use.
-type Solver struct {
-	MetaHeuristic rko.MetaHeuristic
-	Search        []search.Type
-}
-
-// SolverConfiguration holds logger settings, the time limit, and which metaheuristics to run.
-type SolverConfiguration struct {
-	LoggerLevel      logger.Level
-	LoggerType       logger.LogType
-	TimeLimitSeconds int64
-	Solvers          []Solver
-}
-
-func processMetaheuristics(metaheuristics []string) []Solver {
-	mhs := make([]Solver, 0)
-
-	for _, env := range metaheuristics {
-		// You can now process each string as needed
-		parts := strings.SplitN(env, "=", 2)
-		mhType := rko.GetMetaHeuristic(parts[0])
-		// not valid
-		if mhType < 0 {
-			continue
-		}
-
-		mh := Solver{
-			MetaHeuristic: mhType,
-			Search:        make([]search.Type, 0),
-		}
-
-		if len(parts) == 2 {
-			components := strings.Split(parts[1], ",")
-
-			for _, component := range components {
-				searchType := search.GetSearchType(component)
-				// ignore invalid and RVND for be circular
-				if searchType < 0 || searchType == search.RVND {
-					continue
-				}
-				mh.Search = append(mh.Search, searchType)
-			}
-		}
-
-		mhs = append(mhs, mh)
-	}
-
-	return mhs
-}
-
-// CreateYamlSolverConfiguration loads solver settings from a YAML file.
-func CreateYamlSolverConfiguration(filePath string) (*SolverConfiguration, error) {
-
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
-	}
-	config := configurationSolver{}
-
-	if err = yaml.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal yaml: %w", err)
-	}
-
-	problemConfiguration := &SolverConfiguration{
-		LoggerLevel:      logger.GetLogLevel(config.LogLevel),
-		LoggerType:       logger.GetLogType(config.LogType),
-		TimeLimitSeconds: config.TimeLimitSeconds * int64(time.Second),
-		Solvers:          processMetaheuristics(config.Metaheuristics),
-	}
-
-	return problemConfiguration, nil
-}
