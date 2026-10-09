@@ -81,9 +81,6 @@ func withSA(cfg *sa.Configuration) Option {
 			return
 		}
 
-		if cfg.MaxIterations > 0 {
-			c.SA.MaxIterations = cfg.MaxIterations
-		}
 		if cfg.Alpha > 0 {
 			c.SA.Alpha = cfg.Alpha
 		}

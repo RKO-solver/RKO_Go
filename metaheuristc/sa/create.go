@@ -11,7 +11,6 @@ import (
 
 func DefaultConfigurationSA() *Configuration {
 	return &Configuration{
-		MaxIterations:      constants.DefaultMaxIterations,
 		Alpha:              constants.DefaultAlphaSimulationAnnealing,
 		TemperatureInitial: constants.DefaultTemperatureInitial,
 		TemperatureGoal:    constants.DefaultTemperatureGoal,

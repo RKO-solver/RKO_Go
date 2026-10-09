@@ -59,7 +59,6 @@ BRKGA:
 func TestWithSAYaml(t *testing.T) {
 	yaml := `
 SA:
-  MaxIterations: 500
   Alpha: 0.95
   TemperatureInitial: 1000
   TemperatureGoal: 10
@@ -74,7 +73,6 @@ SA:
 	require.NoError(t, os.WriteFile(file, []byte(yaml), 0644))
 	cfg, err := configuration.CreateYamlMHConfiguration(file)
 	require.NoError(t, err)
-	assert.Equal(t, 500, cfg.SA.MaxIterations)
 	assert.Equal(t, 0.95, cfg.SA.Alpha)
 	assert.Equal(t, 1000.0, cfg.SA.TemperatureInitial)
 	assert.Equal(t, 10.0, cfg.SA.TemperatureGoal)
