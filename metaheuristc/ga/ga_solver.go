@@ -39,21 +39,27 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 	for generation := 0; generation < configuration.MaxGenerations && ctx.Err() == nil; generation++ {
 
-		for j := 0; j < configuration.PopulationSize; j++ {
+		for j := 0; j < configuration.PopulationSize-1; j++ {
 			offspring1 := tournament(population, rg)
 			offspring2 := tournament(population, rg)
+			copy(children[j].RK, offspring1.RK)
+			copy(children[j+1].RK, offspring2.RK)
 
-			crossover(children[j], offspring1, offspring2, configuration.CrossoverAlpha, configuration.MutationAlpha, rg)
+			crossover(children[j], children[j+1], configuration.CrossoverAlpha, configuration.MutationAlpha, rg)
 			children[j].Cost = env.Cost(children[j].RK)
+			children[j+1].Cost = env.Cost(children[j+1].RK)
 
 			if children[j].Cost < bestPerson.Cost {
 				bestPerson = children[j].Clone()
 				hasImproved = true
 			}
+			if children[j+1].Cost < bestPerson.Cost {
+				bestPerson = children[j+1].Clone()
+				hasImproved = true
+			}
 
 			solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 		}
-
 		// apply local search in random element
 		k := rg.IntN(configuration.PopulationSize)
 		local.Search(ctx, children[k])
