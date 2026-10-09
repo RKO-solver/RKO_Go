@@ -38,7 +38,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	}
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
-	solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
+	solutionPool.AddSolution(bestSolution, time.Since(start).Seconds())
 
 	localSolution = bestSolution.Clone()
 

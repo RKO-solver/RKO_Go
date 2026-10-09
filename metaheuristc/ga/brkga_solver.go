@@ -36,9 +36,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 	start := definition.StartTime(ctx)
 	bestPerson := initialPopulation(population, env, true, rg)
-	if bestPerson.Cost < solutionPool.BestSolutionCost() {
-		solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
-	}
+	solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 
 	eliteSize := int(configuration.EliteRatio * float64(populationSize))
 	mutantSize := int(configuration.MutantRatio * float64(populationSize))
@@ -71,10 +69,9 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 			if population[0].Cost < bestPerson.Cost {
 				bestPerson = population[0].Clone()
 			}
-			bestSolutionCost := solutionPool.BestSolutionCost()
-			if bestPerson.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
-			}
+
+			solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
+
 			break
 		}
 
@@ -85,10 +82,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 			generationNoImprovement++
 		}
 
-		bestSolutionCost := solutionPool.BestSolutionCost()
-		if bestPerson.Cost < bestSolutionCost {
-			solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
-		}
+		solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 
 		elapsed := time.Since(start).Seconds()
 
@@ -102,9 +96,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 				bestPerson = restartBest
 
 			}
-			if restartBest.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestPerson.Clone(), elapsed)
-			}
+			solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 
 			generationNoImprovement = 0
 		}

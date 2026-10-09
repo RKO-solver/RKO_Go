@@ -3,6 +3,7 @@ package solution
 
 import (
 	"math"
+	"slices"
 	"sort"
 	"sync"
 
@@ -81,18 +82,17 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, time float64) 
 	defer p.mu.Unlock()
 
 	if len(p.solutions) == 0 {
-		p.solutions = append(p.solutions, solution)
+		p.solutions = append(p.solutions, solution.Clone())
 		p.logger.AddSolutionPool(solution.Cost, time)
 		return
 	}
 
-	if p.solutions[len(p.solutions)-1].Cost < solution.Cost {
+	if p.solutions[0].Cost <= solution.Cost {
 		return
 	}
 
+	p.solutions = slices.Insert(p.solutions, 0, solution.Clone())
 	p.logger.AddSolutionPool(solution.Cost, time)
-	p.solutions = append(p.solutions, solution)
-	sort.Slice(p.solutions, func(i, j int) bool { return p.solutions[i].Cost < p.solutions[j].Cost })
 	if p.limited && len(p.solutions) >= p.maxSize {
 		p.solutions = p.solutions[:p.maxSize]
 	}

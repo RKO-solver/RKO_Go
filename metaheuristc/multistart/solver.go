@@ -32,7 +32,7 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 
 		bestSolutionCost := solutionPool.BestSolutionCost()
 		if localSolution.Cost < bestSolutionCost {
-			solutionPool.AddSolution(localSolution.Clone(), time.Since(start).Seconds())
+			solutionPool.AddSolution(localSolution, time.Since(start).Seconds())
 			bestSolutionCost = localSolution.Cost
 		}
 

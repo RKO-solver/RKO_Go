@@ -35,9 +35,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 	start := definition.StartTime(ctx)
 	bestPerson := initialPopulation(population, env, false, rg)
-	if bestPerson.Cost < solutionPool.BestSolutionCost() {
-		solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
-	}
+	solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 
 	for generation := 0; generation < configuration.MaxGenerations && ctx.Err() == nil; generation++ {
 
@@ -53,10 +51,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 				hasImproved = true
 			}
 
-			bestSolutionCost := solutionPool.BestSolutionCost()
-			if bestPerson.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
-			}
+			solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 		}
 
 		// apply local search in random element
@@ -68,10 +63,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 			hasImproved = true
 		}
 
-		bestSolutionCost := solutionPool.BestSolutionCost()
-		if bestPerson.Cost < bestSolutionCost {
-			solutionPool.AddSolution(bestPerson.Clone(), time.Since(start).Seconds())
-		}
+		solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 
 		if ctx.Err() != nil {
 			break
@@ -94,10 +86,8 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 			restartBest := initialPopulation(population, env, false, rg)
 			if restartBest.Cost < bestPerson.Cost {
 				bestPerson = restartBest
+				solutionPool.AddSolution(bestPerson, elapsed)
 
-			}
-			if restartBest.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestPerson.Clone(), elapsed)
 			}
 			generationNoImprovement = 0
 		} else {

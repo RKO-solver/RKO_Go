@@ -27,7 +27,7 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	}
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
-	solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
+	solutionPool.AddSolution(bestSolution, time.Since(start).Seconds())
 
 	localSolution = bestSolution.Clone()
 
@@ -53,10 +53,7 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 				copy(bestSolution.RK, localSolution.RK)
 				bestSolution.Cost = localSolution.Cost
 
-				bestSolutionCost := solutionPool.BestSolutionCost()
-				if bestSolution.Cost < bestSolutionCost {
-					solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
-				}
+				solutionPool.AddSolution(bestSolution, time.Since(start).Seconds())
 
 				k = 1
 			} else {
