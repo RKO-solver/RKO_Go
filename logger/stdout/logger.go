@@ -10,6 +10,7 @@ import (
 type Log struct {
 	LogLevel      logger.Level
 	problemName   string
+	printInterval float64
 	pool          []poolInfo
 	solversLogger []*SolverLogger
 }
@@ -32,15 +33,24 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 	id := len(l.solversLogger)
 
 	solverLogger := &SolverLogger{
-		id:       id,
-		name:     name,
-		logLevel: l.LogLevel,
-		solver:   make([]solverInfo, 0),
+		id:            id,
+		name:          name,
+		logLevel:      l.LogLevel,
+		printInterval: l.printInterval,
 	}
+	solverLogger.reset()
 
 	l.solversLogger = append(l.solversLogger, solverLogger)
 
 	return solverLogger
+}
+
+// SetPrintInterval sets the minimum time between two progress prints of the same solver.
+func (l *Log) SetPrintInterval(timeMilliseconds int) {
+	l.printInterval = float64(timeMilliseconds) / 1000
+	for _, solverLogger := range l.solversLogger {
+		solverLogger.printInterval = l.printInterval
+	}
 }
 
 func (l *Log) GetLogLevel() logger.Level {

@@ -11,10 +11,12 @@ func DefaultLogger(problemName string) *Log {
 
 // NewLogger creates a Log with the given level.
 func NewLogger(problemName string, logLevel logger.Level) *Log {
-	return &Log{
+	l := &Log{
 		LogLevel:      logLevel,
 		problemName:   problemName,
 		pool:          make([]poolInfo, 0),
 		solversLogger: make([]*SolverLogger, 0),
 	}
+	l.SetPrintInterval(defaultPrintIntervalMilliseconds)
+	return l
 }
