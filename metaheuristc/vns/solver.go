@@ -59,17 +59,17 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 				solutionPool.AddSolution(bestSolution, time.Since(start).Seconds())
 
 				k = 1
+
+				elapsedTime := time.Since(start).Seconds()
+
+				message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d", ctxAction.Iteration(), bestSolution.Cost, localSolution.Cost)
+				vns.logger.Verbose(message, elapsedTime)
 			} else {
 				k++
 			}
-
-			elapsedTime := time.Since(start).Seconds()
-
-			message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d", ctxAction.Iteration(), bestSolution.Cost, localSolution.Cost)
-			vns.logger.Verbose(message, elapsedTime)
 		}
 
-		vns.logger.Register(localSolution.Cost, bestSolution.Cost, time.Since(start).Seconds(), "")
+		vns.logger.Register(localSolution.Cost, bestSolution.Cost, time.Since(start).Seconds(), fmt.Sprintf("Iteration: %d", ctxAction.Iteration()))
 	}
 
 	return bestSolution, time.Since(start).Seconds()
