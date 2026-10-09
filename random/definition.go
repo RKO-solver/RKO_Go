@@ -45,6 +45,10 @@ func NewGeneratorSeed(seed uint64) *Generator {
 	}
 }
 
+func (g *Generator) Split() *Generator {
+	return &Generator{rand: rand.New(rand.NewPCG(g.rand.Uint64(), g.rand.Uint64()))}
+}
+
 // Float64 returns a pseudo-random number in [0.0, 1.0).
 func (g *Generator) Float64() float64 {
 	return g.rand.Float64()
