@@ -44,6 +44,17 @@ func computeBlend(keyA *metaheuristc.RandomKeyValue, keyB *metaheuristc.RandomKe
 	}
 }
 
+func rank(x1, x2, p *metaheuristc.RandomKeyValue) (*metaheuristc.RandomKeyValue, *metaheuristc.RandomKeyValue, *metaheuristc.RandomKeyValue) {
+	switch {
+	case p.Cost < x1.Cost:
+		return p, x1, x2
+	case p.Cost < x2.Cost:
+		return x1, p, x2
+	default:
+		return x1, x2, p
+	}
+}
+
 type nelderMeadLocalSearch struct {
 	environment   definition.Environment
 	solutionPool  *solution.Pool
@@ -72,29 +83,13 @@ func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, max
 	var x1, x2, x3, x0, xR, xAux *metaheuristc.RandomKeyValue
 
 	poolSize := solutionPool.Size()
-	firstElement := rg.IntN(poolSize)
-	x1 = solutionPool.GetSolution(firstElement)
-
-	secondElement := rg.IntN(poolSize)
-	x2 = solutionPool.GetSolution(secondElement)
+	x1 = solutionPool.GetSolution(rg.IntN(poolSize))
+	x2 = solutionPool.GetSolution(rg.IntN(poolSize))
 
 	if x2.Cost < x1.Cost {
-		xAux = x1
-		x1 = x2
-		x2 = xAux
+		x1, x2 = x2, x1
 	}
-
-	x3 = rko.Clone()
-	if x3.Cost < x1.Cost {
-		xAux = x1
-		x1 = x3
-		x3 = x2
-		x2 = xAux
-	} else if x3.Cost < x2.Cost {
-		xAux = x2
-		x2 = x3
-		x3 = xAux
-	}
+	x1, x2, x3 = rank(x1, x2, rko.Clone())
 
 	for i := 0; i < maxIterations; i++ {
 		if ctx.Err() != nil {
@@ -106,33 +101,29 @@ func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, max
 
 		if xR.Cost < x1.Cost {
 			xAux = computeBlend(xR, x0, false, env, rg)
-
-			x3 = x2
-			x2 = x1
 			if xAux.Cost < xR.Cost {
-				x1 = xAux
+				x1, x2, x3 = xAux, x1, x2
 			} else {
-				x1 = xR
+				x1, x2, x3 = xR, x1, x2
 			}
 			continue
 		}
 
 		if xR.Cost < x2.Cost {
-			x3 = x2
-			x2 = xR
+			x2, x3 = xR, x2
 			continue
 		}
 
 		if xR.Cost < x3.Cost {
 			xAux = computeBlend(xR, x0, true, env, rg)
 			if xAux.Cost < xR.Cost {
-				x3 = xAux
+				x1, x2, x3 = rank(x1, x2, xAux)
 				continue
 			}
 		} else {
 			xAux = computeBlend(x0, x3, true, env, rg)
 			if xAux.Cost < x3.Cost {
-				x3 = xAux
+				x1, x2, x3 = rank(x1, x2, xAux)
 				continue
 			}
 		}
@@ -140,22 +131,10 @@ func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, max
 		// shrink
 		x2 = computeBlend(x1, x2, true, env, rg)
 		x3 = computeBlend(x1, x3, true, env, rg)
-
 		if x2.Cost < x1.Cost {
-			xAux = x1
-			x1 = x2
-			x2 = xAux
+			x1, x2 = x2, x1
 		}
-		if x3.Cost < x1.Cost {
-			xAux = x1
-			x3 = x2
-			x1 = x3
-			x2 = xAux
-		} else if x3.Cost < x2.Cost {
-			xAux = x2
-			x2 = x3
-			x3 = xAux
-		}
+		x1, x2, x3 = rank(x1, x2, x3)
 
 	}
 
