@@ -72,7 +72,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 			if metropolisCriterion {
 				deadline, _ := ctx.Deadline()
 				elapsed := time.Since(start).Seconds()
-				total := float64(time.Until(deadline)) + elapsed
+				total := time.Until(deadline).Seconds() + elapsed
 				prob := math.Exp(-(float64(delta) + 0.00001) / (1000.0 - 1000.0*(elapsed/total)))
 				if rg.Float64() < prob {
 					localSolution.Cost = neighbour.Cost
