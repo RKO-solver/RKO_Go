@@ -1,6 +1,7 @@
 package configuration_test
 
 import (
+	"context"
 	"math"
 	"testing"
 	"time"
@@ -32,7 +33,7 @@ func (e testEnv) SwapSearch() [][2]int              { return [][2]int{{0, e.n}} 
 func solveWithin(t *testing.T, solver *rko.Solver, d time.Duration) {
 	t.Helper()
 	done := make(chan struct{})
-	go func() { solver.Solve(); close(done) }()
+	go func() { solver.Solve(context.Background()); close(done) }()
 	select {
 	case <-done:
 	case <-time.After(d):
