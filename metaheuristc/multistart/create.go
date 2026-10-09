@@ -28,13 +28,12 @@ func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, s
 	}
 }
 
-func CreateMultiStart(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart {
-	local := search.Create(searchType, env, solutionPool, rg)
+func CreateMultiStart(env definition.Environment, configuration *Configuration, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart {
 	return &MultiStart{
 		env:           env,
 		configuration: configuration,
 		logger:        logger.GetLogger(name),
-		search:        local,
+		search:        se,
 		solutionPool:  solutionPool,
 		RG:            rg,
 	}

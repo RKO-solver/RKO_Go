@@ -50,7 +50,9 @@ func createSolver(problemName string, env definition.Environment, solverConfig *
 
 			solver = vns.CreateVNSComplete(env, conf, se, srg, solutionPool, log)
 		case rko.MULTISTART:
-			solver = multistart.CreateDefaultMultiStart(env, srg, solutionPool, log)
+			conf := mhConfig.MultiStart
+
+			solver = multistart.CreateMultiStart(env, conf, se, srg, solutionPool, log)
 		case rko.SA:
 			conf := mhConfig.SA
 
