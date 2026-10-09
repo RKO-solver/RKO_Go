@@ -1,8 +1,8 @@
 module github.com/RKO-solver/rko-go
 
-go 1.24
+go 1.26
 
-require go.yaml.in/yaml/v3 v3.0.4
+require go.yaml.in/yaml/v3 v3.0.5
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
