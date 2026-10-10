@@ -14,15 +14,18 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-const defaultMaxSize = 10
+const DefaultSize = 10
+
+//const similarlyMinimum = 0.8
 
 // Pool is a thread-safe set of solutions sorted by ascending cost.
 type Pool struct {
 	mu        sync.RWMutex
 	solutions []*metaheuristc.RandomKeyValue
 	limited   bool
-	maxSize   int
-	logger    logger.Logger
+	//similarity bool
+	maxSize int
+	logger  logger.Logger
 }
 
 var (
@@ -45,11 +48,11 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 		maxSize:   maxSize,
 		logger:    logger,
 		limited:   maxSize >= 1 && maxSize < math.MaxInt,
-		solutions: make([]*metaheuristc.RandomKeyValue, 0, initialSize),
+		solutions: make([]*metaheuristc.RandomKeyValue, 0, max(maxSize, initialSize)),
 	}
 
-	if pool.limited && initialSize > maxSize {
-		pool.maxSize = initialSize
+	if pool.limited {
+		pool.maxSize = max(initialSize, maxSize)
 	}
 
 	for range initialSize {
@@ -68,12 +71,12 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 
 // NewDefaultPool creates a Pool of 10 random solutions capped at 10.
 func NewDefaultPool(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
-	return NewPool(defaultMaxSize, defaultMaxSize, env, rg, logger)
+	return NewPool(DefaultSize, DefaultSize, env, rg, logger)
 }
 
 // NewDefaultPoolUnlimited creates an uncapped Pool of 10 random solutions.
 func NewDefaultPoolUnlimited(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
-	return NewPool(-1, defaultMaxSize, env, rg, logger)
+	return NewPool(-1, DefaultSize, env, rg, logger)
 }
 
 // AddSolution adds a copy of solution if it beats the pool's best.
@@ -90,6 +93,16 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, time float64) 
 	if p.solutions[0].Cost <= solution.Cost {
 		return
 	}
+
+	//if p.solutions[0].Cost < solution.Cost {
+	//	return
+	//}
+	//
+	//if p.similarity && p.solutions[0].Cost == solution.Cost {
+	//	if p.solutions[0].RK.Similarity(solution.RK) >= similarlyMinimum {
+	//		return
+	//	}
+	//}
 
 	p.solutions = slices.Insert(p.solutions, 0, solution.Clone())
 	p.logger.AddSolutionPool(solution.Cost, time)
