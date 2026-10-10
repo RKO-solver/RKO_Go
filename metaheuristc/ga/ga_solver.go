@@ -28,6 +28,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 	}
 
 	hasImproved := false
+	isOdd := configuration.PopulationSize%2 == 1
 	generationNoImprovement := 0
 
 	start := definition.StartTime(ctx)
@@ -36,7 +37,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 	for ; ctx.Err() == nil; ctxAction.Step() {
 
-		for j := 0; j < configuration.PopulationSize-1; j++ {
+		for j := 0; j < configuration.PopulationSize-1; j += 2 {
 			offspring1 := tournament(population, rg)
 			offspring2 := tournament(population, rg)
 			copy(children[j].RK, offspring1.RK)
@@ -57,6 +58,12 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 			solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 		}
+
+		if isOdd {
+			copy(children[configuration.PopulationSize-1].RK, bestPerson.RK)
+			children[configuration.PopulationSize-1].Cost = bestPerson.Cost
+		}
+
 		k := rg.IntN(configuration.PopulationSize)
 		local.Search(ctx, children[k])
 
