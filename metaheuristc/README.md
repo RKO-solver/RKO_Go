@@ -1,198 +1,128 @@
 # `metaheuristc` Package
 
-This package holds the implementations of every metaheuristic in RKO-Go: `multistart`, `sa`, `ga` (GA and BRKGA), `ils`, `vns`, `lns`, plus the shared `search` (local search), `solution` (solution pool), `rk` (random-key helpers) and `constants` (default values) subpackages.
+The metaheuristic implementations and the pieces they share: local searches, the solution pool and random-key helpers.
 
-Most users never import `metaheuristc` directly — the root [`rko`](../create.go) package or [`configuration`](../configuration/README.md) build and run these solvers for you. Come here when you need to hand-build a solver, pick or combine local searches yourself, or read the exact default value of a tuning parameter.
+Most programs never import these packages: [`rko.CreateDefaultSolver`](../README.md#quick-start) and the [`configuration` package](../configuration/README.md) build everything for you. Come here to build solvers by hand, combine local searches yourself, or add your own metaheuristic next to the built-in ones.
 
-Everything below is read from source: `metaheuristc/constants/defaults.go`, `metaheuristc/*/definition.go`, `metaheuristc/*/create.go`, `metaheuristc/*/interface.go`, and `metaheuristc/search/*.go`.
-
-## The seven metaheuristics
-
-| Name | Subpackage | Solver type | Configuration type | Default-config constructor |
-|---|---|---|---|---|
-| MultiStart | `metaheuristc/multistart` | `*MultiStart` | none | none |
-| Simulated Annealing | `metaheuristc/sa` | `*SimulatedAnnealing` | `*Configuration` | `DefaultConfigurationSA()` |
-| Genetic Algorithm | `metaheuristc/ga` | `*GA` | `*ConfigurationGA` | `DefaultConfigurationGA()` |
-| BRKGA | `metaheuristc/ga` | `*BRKGA` | `*ConfigurationBRKGA` | `DefaultConfigurationBRKGA()` |
-| Iterated Local Search | `metaheuristc/ils` | `*ILS` | `*Configuration` | `DefaultConfigurationILS()` |
-| Variable Neighborhood Search | `metaheuristc/vns` | `*VNS` | `*Configuration` | `DefaultConfigurationVNS()` |
-| Large Neighborhood Search | `metaheuristc/lns` | `*LNS` | `*Configuration` | `DefaultConfigurationLNS()` |
-
-GA and BRKGA share the `ga` subpackage but are independent types with independent `Configuration` structs; there is no shared "GA family" Configuration.
-
-## Constructors
-
-Every metaheuristic exposes up to three constructor shapes (MultiStart has no configuration, so only the first and third, the latter without the configuration argument). All of them take `env definition.Environment`, a `*random.Generator`, a `*solution.Pool`, and a `logger.Logger`, in that order interleaved with the search/configuration arguments.
-
-1. `CreateDefaultX(env, rg, solutionPool, logger)` — default `Configuration` and a built-in default search.
-2. `CreateX(env, configuration, searchType, rg, solutionPool, logger)` — your `Configuration`, and a `search.Type` the constructor turns into a `search.Local` via `search.Create`.
-3. `CreateXComplete(env, configuration, searchLocal, rg, solutionPool, logger)` — your `Configuration` and an already-built `search.Local` (e.g. a custom `search.CreateRVND` neighbourhood).
-
-Verified signatures per subpackage:
-
-### `multistart`
-
-```go
-func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart
-func CreateMultiStart(env definition.Environment, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart
-```
-
-`CreateMultiStart` takes an already-built `search.Local`. `CreateDefaultMultiStart` builds its search with `search.CreateDefault`.
-
-### `sa`
-
-```go
-func CreateDefaultSA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *SimulatedAnnealing
-func CreateSA(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *SimulatedAnnealing
-func CreateSAComplete(env definition.Environment, config *Configuration, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) definition.Solver
-```
-
-`CreateSAComplete` returns `definition.Solver`, not `*SimulatedAnnealing` — unlike every other `...Complete` constructor in this package, which returns its concrete type. `CreateDefaultSA` builds its search with `search.CreateDefault`.
-
-### `ga` (GA)
-
-```go
-func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA
-func CreateGA(env definition.Environment, configuration *ConfigurationGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA
-func CreateGAComplete(env definition.Environment, config *ConfigurationGA, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *GA
-```
-
-`CreateDefaultGA` builds its search with `search.CreateMirrorLocalSearch(env)` — Mirror only, not `search.CreateDefault`'s four-neighbourhood RVND.
-
-### `ga` (BRKGA)
-
-```go
-func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA
-func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA
-func CreateBRKGAComplete(env definition.Environment, config *ConfigurationBRKGA, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *BRKGA
-```
-
-Same as GA: `CreateDefaultBRKGA` also uses `search.CreateMirrorLocalSearch(env)`, not `search.CreateDefault`.
-
-### `ils`
-
-```go
-func CreateDefaultILS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *ILS
-func CreateILS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *ILS
-func CreateILSComplete(env definition.Environment, config *Configuration, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *ILS
-```
-
-`CreateDefaultILS` builds its search with `search.CreateDefault`.
-
-### `vns`
-
-```go
-func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS
-func CreateVNS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS
-func CreateVNSComplete(env definition.Environment, configuration *Configuration, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS
-```
-
-`CreateDefaultVNS` builds its search with `search.CreateDefault`.
-
-### `lns`
-
-```go
-func CreateDefaultLNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS
-func CreateLNS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS
-func CreateLNSComplete(env definition.Environment, configuration *Configuration, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS
-```
-
-`CreateDefaultLNS` builds its search with `search.CreateDefault`, and gets its default `Configuration` from `lns.DefaultConfigurationLNS()`.
-
-## Configuration fields
-
-Defaults come from `metaheuristc/constants/defaults.go`. Iteration limits are not configured here; see "Solve and limits".
-
-### `sa.Configuration`
-
-| Field | Type | Default |
-|---|---|---|
-| `Alpha` | `float64` | `0.0005` |
-| `TemperatureInitial` | `float64` | `10000000.0` |
-| `TemperatureGoal` | `float64` | `0.0000000000000001` |
-| `TemperatureReheat` | `float64` | `5.0` |
-| `ShakeMin` | `float64` | `0.1` |
-| `ShakeMax` | `float64` | `0.3` |
-| `QtdReheat` | `uint8` | `0` |
-| `Iterations` | `int` | `1000` |
-
-### `ga.ConfigurationGA`
-
-| Field | Type | Default |
-|---|---|---|
-| `PopulationSize` | `int` | `200` |
-| `CrossoverAlpha` | `float64` | `0.95` |
-| `MutationAlpha` | `float64` | `0.005` |
-| `MaxGenerationNoImprovement` | `int` | `100` |
-
-### `ga.ConfigurationBRKGA`
-
-| Field | Type | Default |
-|---|---|---|
-| `PopulationSize` | `int` | `200` |
-| `EliteRatio` | `float64` | `0.2` |
-| `MutantRatio` | `float64` | `0.05` |
-| `CrossoverAlpha` | `float64` | `0.95` |
-| `MutationAlpha` | `float64` | `0.005` |
-| `MaxGenerationNoImprovement` | `int` | `100` |
-
-### `ils.Configuration`
-
-| Field | Type | Default |
-|---|---|---|
-| `ShakeMin` | `float64` | `0.01` |
-| `ShakeMax` | `float64` | `0.05` |
-| `MetropolisCriterion` | `bool` | `false` |
-
-### `vns.Configuration`
-
-| Field | Type | Default |
-|---|---|---|
-| `Rate` | `float64` | `0.2` |
-
-### `lns.Configuration`
-
-| Field | Type | Default |
-|---|---|---|
-| `BetaMin` | `float64` | `0.01` |
-| `BetaMax` | `float64` | `0.05` |
-
-## Local search (`search` subpackage)
-
-Local searches are user-selectable, both in the `Create*` constructors above (`search.Type` argument) and in the solver YAML consumed by `configuration` (see [`../configuration/README.md`](../configuration/README.md)).
-
-### `search.Type`
-
-```go
-type Type = int
-
-const (
-    Swap Type = iota
-    Mirror
-    Farey
-    Nelder
-    RVND
-)
-```
-
-| Type | Perturbs |
+| Package | Contents |
 |---|---|
-| `Swap` | Pairs of key positions within the `(start, end)` ranges from `Environment.SwapSearch()`. |
-| `Mirror` | Each key value, one at a time, to `1 - value`. |
-| `Farey` | Each key value, one at a time, to values drawn from sub-intervals of a fixed Farey sequence. |
-| `Nelder` | The solution by blending it with other solutions drawn from the shared `solution.Pool`. |
-| `RVND` | Nothing itself — it cycles through a configurable list of the searches above. |
+| `metaheuristc/multistart`, `sa`, `ga`, `ils`, `vns`, `lns` | The seven metaheuristics (`ga` holds GA and BRKGA). |
+| `metaheuristc/search` | Local searches. |
+| `metaheuristc/solution` | The solution pool shared by every metaheuristic. |
+| `metaheuristc/rk` | `Generate`, `Reset` and `Shake` for random keys. |
+| `metaheuristc/constants` | Default parameter values and `DefaultTimeLimit` (150 s). |
+| `metaheuristc` | `RandomKeyValue` (a key and its cost), `Sort` and the `Worker` used by `rko.Solver`. |
 
-Name/type conversion:
+## Metaheuristics
+
+| Metaheuristic | Type | `rko` constant | One iteration is |
+|---|---|---|---|
+| MultiStart | `*multistart.MultiStart` | `MULTISTART` | a random solution improved by the local search |
+| Simulated Annealing | `*sa.SimulatedAnnealing` | `SA` | one temperature step of `Iterations` moves |
+| Genetic Algorithm | `*ga.GA` | `GA` | one generation |
+| BRKGA | `*ga.BRKGA` | `BRKGA` | one generation |
+| Iterated Local Search | `*ils.ILS` | `ILS` | one shake followed by the local search |
+| Variable Neighbourhood Search | `*vns.VNS` | `VNS` | one pass through neighbourhoods 1 to 3, restarting at 1 after each improvement |
+| Large Neighbourhood Search | `*lns.LNS` | `LNS` | one rebuild of some keys followed by the local search |
+
+The iteration limit counts these iterations (see [Stopping](#stopping)). Every metaheuristic offers its improvements to the shared pool.
+
+- **MultiStart** draws a random solution and improves it with the local search, over and over.
+- **SA** starts from the pool's best solution. Each move shakes the current solution and runs the local search on it; a worse result is accepted with probability `exp(-Δ / T)`. It reheats up to `QtdReheat` times and ends when the temperature reaches `TemperatureGoal`.
+- **GA** picks parents by 3-way tournament, applies uniform crossover with mutation, and runs the local search on one random child per generation.
+- **BRKGA** keeps the elite, breeds each child from an elite and a non-elite parent, adds random mutants, and runs the local search on one random individual per generation.
+- GA and BRKGA restart their population after more than `MaxGenerationNoImprovement` generations without improvement, keeping the best solution.
+- **ILS** shakes the current solution and runs the local search, keeping the result when it beats the best. After more than 10 (and fewer than 1000) consecutive iterations without improvement, the shake range grows by 5% per iteration, falling back to 1.1 times the configured range if it passes `1.0`; an improvement restores it. With `MetropolisCriterion` and a deadline, it may also continue from a worse solution.
+- **VNS** shakes with a growing intensity: neighbourhood `k` shakes with `r` drawn from `[k × Rate, (k+1) × Rate)` (a shake applies `int(NumKeys × r) + 1` random moves), then runs the local search.
+- **LNS** picks some keys of the best solution at random and, for each one, tries a random value in each interval of a Farey sequence and keeps the best; then it runs the local search.
+
+Parameters, their meaning and their defaults are in the [`configuration` package](../configuration/README.md#configuration-section).
+
+## Building a solver by hand
+
+Create one pool, then each metaheuristic with its configuration and local search, and pass them to `rko.CreateFullSolver`:
 
 ```go
-func GetSearchType(name string) Type   // case-insensitive: "SWAP", "MIRROR", "FAREY", "NELDER", "RVND"; unknown -> -1
-func GetSearchString(se Type) string   // Swap, Mirror, Farey, "Nelder-Mead", RVND; unknown -> ""
+rg := random.NewGeneratorSeed(42)
+log := stdout.DefaultLogger("knapsack")
+pool := solution.NewDefaultPool(env, rg, log)
+
+ilsConfig := ils.DefaultConfigurationILS()
+ilsConfig.MetropolisCriterion = true
+
+brkgaConfig := ga.DefaultConfigurationBRKGA()
+brkgaConfig.PopulationSize = 100
+
+brkgaRG := rg.Split()
+solvers := []definition.Solver{
+	ils.CreateILSComplete(env, ilsConfig, search.CreateMirrorLocalSearch(env), rg.Split(), pool, log),
+	ga.CreateBRKGAComplete(env, brkgaConfig,
+		search.CreateRVND(env, pool, brkgaRG, []search.Type{search.Mirror, search.Farey}),
+		brkgaRG, pool, log),
+}
+
+solver := rko.CreateFullSolver(log, env, 30*time.Second, 1000, pool, solvers)
+items := solver.Solve(context.Background()).([]int)
 ```
 
-`GetSearchType` and `GetSearchString` are not exact inverses: the type `Nelder` round-trips through the string `"Nelder-Mead"`, not `"Nelder"`, but `GetSearchType` still accepts the input string `"Nelder"` (case-insensitive) to produce it.
+- Give every solver the pool and logger you pass to `CreateFullSolver`: `Solve` returns the best solution of that pool.
+- Give each solver its own generator with `rg.Split()`: a `random.Generator` is not safe for concurrent use. A local search that draws random numbers (`Farey`, `Nelder`, RVND) should use the same generator as its metaheuristic.
+- `CreateFullSolver(log, env, timeLimit, maxIterations, pool, solvers)`: a zero or negative `timeLimit` or `maxIterations` means no limit.
+- Your own [`definition.Solver`](../definition/README.md#writing-a-metaheuristic) can go in the same slice.
 
-### `search.Local` interface
+### Constructors
+
+Each metaheuristic has up to three constructors, with these arguments:
+
+```go
+CreateDefaultX(env, rg, pool, log)                    // default configuration, default local search
+CreateX(env, config, searchType, rg, pool, log)       // your configuration, local search from a search.Type
+CreateXComplete(env, config, localSearch, rg, pool, log) // your configuration, a ready search.Local
+```
+
+`env` is a `definition.Environment`, `rg` a `*random.Generator`, `pool` a `*solution.Pool`, `log` a `logger.Logger`, `searchType` a `search.Type` and `localSearch` a `search.Local`.
+
+| Package | Default | With `search.Type` | With `search.Local` | Configuration |
+|---|---|---|---|---|
+| `multistart` | `CreateDefaultMultiStart` | | `CreateMultiStart(env, localSearch, rg, pool, log)` | none |
+| `sa` | `CreateDefaultSA` | `CreateSA` | `CreateSAComplete` | `*sa.Configuration`, `sa.DefaultConfigurationSA()` |
+| `ga` (GA) | `CreateDefaultGA` | `CreateGA` | `CreateGAComplete` | `*ga.ConfigurationGA`, `ga.DefaultConfigurationGA()` |
+| `ga` (BRKGA) | `CreateDefaultBRKGA` | `CreateBRKGA` | `CreateBRKGAComplete` | `*ga.ConfigurationBRKGA`, `ga.DefaultConfigurationBRKGA()` |
+| `ils` | `CreateDefaultILS` | `CreateILS` | `CreateILSComplete` | `*ils.Configuration`, `ils.DefaultConfigurationILS()` |
+| `vns` | `CreateDefaultVNS` | `CreateVNS` | `CreateVNSComplete` | `*vns.Configuration`, `vns.DefaultConfigurationVNS()` |
+| `lns` | `CreateDefaultLNS` | `CreateLNS` | `CreateLNSComplete` | `*lns.Configuration`, `lns.DefaultConfigurationLNS()` |
+
+- Constructors return the concrete type (`*ils.ILS`, ...), except `sa.CreateSAComplete`, which returns `definition.Solver`.
+- `CreateDefaultX` uses the default local search, `search.CreateDefault` (RVND over all four searches).
+- `CreateX` builds its local search with `search.Create(searchType, ...)`.
+
+### Configuration structs
+
+The configuration structs have exactly the fields of the YAML sections, with the same names and types; `DefaultConfigurationX()` returns them at their defaults. See the [`configuration` package](../configuration/README.md#configuration-section) for each field. Fields are used as is: change them on a default configuration rather than starting from a zero struct.
+
+## Local searches
+
+A local search improves a solution in place, never making it worse, and returns early when `ctx` is done.
+
+| `search.Type` | Tries |
+|---|---|
+| `Swap` | Swapping every pair of keys inside each `Environment.SwapSearch()` range. |
+| `Mirror` | Replacing each key `v` with `1 - v`. |
+| `Farey` | For each key, a random value in each interval of a Farey sequence. |
+| `Nelder` | A Nelder-Mead-style search that blends the solution with two solutions from the pool. |
+| `RVND` | The searches in its list in random order, dropping each one that fails to improve, until none is left. |
+
+| Constructor | Builds |
+|---|---|
+| `CreateSwapLocalSearch(env)` | `Swap` |
+| `CreateMirrorLocalSearch(env)` | `Mirror` |
+| `CreateFareyLocalSearch(env, rg)` | `Farey` |
+| `CreateNelderMeadLocalSearch(env, pool, rg)` | `Nelder` |
+| `CreateRVND(env, pool, rg, types)` | RVND over `types` (`RVND` entries are removed) |
+| `CreateDefault(env, pool, rg)` | RVND over `Swap`, `Mirror`, `Farey`, `Nelder` |
+| `Create(searchType, env, pool, rg)` | The single search for `Swap`, `Mirror`, `Farey` or `Nelder`; RVND over `Swap`, `Mirror`, `Farey` for `RVND`; `CreateDefault` for any other value |
+
+All return a `search.Local`:
 
 ```go
 type Local interface {
@@ -202,37 +132,34 @@ type Local interface {
 }
 ```
 
-### Constructors
+`GetSearchType(name)` parses `"Swap"`, `"Mirror"`, `"Farey"`, `"Nelder"` or `"RVND"` (case-insensitive; `-1` if unknown). `GetSearchString(t)` returns the display name (`"Nelder-Mead"` for `Nelder`).
 
-```go
-func Create(typeSearch Type, environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local
-func CreateDefault(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local
-func CreateSwapLocalSearch(environment definition.Environment) Local
-func CreateMirrorLocalSearch(environment definition.Environment) Local
-func CreateFareyLocalSearch(environment definition.Environment, rg *random.Generator) Local
-func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local
-func CreateRVND(environment definition.Environment, s *solution.Pool, rg *random.Generator, neighbourhood []Type) Local
-```
+## Solution pool
 
-`Create` dispatches on `typeSearch`: `Swap`, `Mirror`, `Farey`, and `Nelder` each build their own single search; `RVND` builds `CreateRVND` over `[Swap, Mirror, Farey]` (three neighbourhoods, no `Nelder`); any other value (including the `-1` that `GetSearchType` returns for an unrecognized name) falls back to `CreateDefault`.
+`solution.Pool` is the thread-safe store through which the metaheuristics share solutions. `rko.Solver.Solve` returns the decoded best solution of the pool.
 
-`CreateDefault` builds `CreateRVND` over `[Swap, Mirror, Farey, Nelder]` — all four neighbourhoods, including `Nelder`.
+| Function | Creates |
+|---|---|
+| `NewDefaultPool(env, rg, log)` | A pool seeded with 10 random solutions, keeping at most 10. |
+| `NewDefaultPoolUnlimited(env, rg, log)` | The same, without a size cap. |
+| `NewPool(maxSize, initialSize, env, rg, log)` | A pool seeded with `initialSize` random solutions. `maxSize` below 1 means no cap; a cap below `initialSize` is raised to it. |
+| `GetGlobalInstance(env, log, rg)` | A process-wide default pool, created on the first call. |
 
-This means `search.Create(search.RVND, ...)` and `search.CreateDefault(...)` are **not** the same RVND: the first omits `Nelder`, the second includes it.
+| Method | Does |
+|---|---|
+| `AddSolution(s, time)` | Adds a copy of `s` only if its cost is strictly lower than the pool's best, and reports it to `log.AddSolutionPool`. |
+| `BestSolution()` | Returns a copy of the best solution, or nil if the pool is empty. |
+| `BestSolutionCost()` | Returns the best cost, or `math.MaxInt` if the pool is empty. |
+| `GetSolution(i)` | Returns a copy of the `i`-th best solution (`0` is the best). |
+| `Size()` | Returns the number of solutions. |
 
-## Solve and limits
+## Stopping
 
-Every solver here implements `definition.Solver`. `Solve(ctx context.Context) definition.Result` runs until `ctx` is cancelled or its deadline passes, or until the iteration limit stored in `ctx` is reached. There is no solver-local limit field.
+Each metaheuristic calls `definition.GetMHContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.CreateFullSolver` or the [`configuration` package](../configuration/README.md#stopping). See the [`definition` package](../definition/README.md#context-helpers) for the helpers.
 
-Each solver calls `definition.GetMHContext(ctx)` at the start of `Solve`. It returns a derived context and an `IterationCounter`; the solver calls `Step` once per outer-loop pass (a generation for GA and BRKGA, a temperature step for SA) and `defer`s `Stop`. At the limit the counter cancels the derived context. See the [`definition` package](../definition/README.md).
-
-The limits themselves are set at the level above this package; see [`../configuration/README.md`](../configuration/README.md).
-
-## See Also
+## See also
 
 - [Project README](../README.md)
 - [`configuration` package](../configuration/README.md)
 - [`definition` package](../definition/README.md)
 - [`logger` package](../logger/README.md)
-
-This package is part of the [RKO-Go](https://github.com/RKO-solver/rko-go) library.

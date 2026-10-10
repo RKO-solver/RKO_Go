@@ -1,146 +1,192 @@
 # RKO-Go
 
-RKO-Go is a Go library for solving optimization problems with Random Key Optimization (RKO) and a set of metaheuristics. It is problem-agnostic: implement the [`definition.Environment`](definition/README.md) interface for your problem, and every metaheuristic in the library can solve it.
+RKO-Go is a Go library for combinatorial optimization with **Random Key Optimization (RKO)**. You describe your problem once, by implementing the [`definition.Environment`](definition/README.md) interface, and the library runs several metaheuristics on it in parallel, sharing their best solutions through a common pool.
 
-> **Reference:**
-> This library is based on the concepts and methods described in the article:
-> [Random Key Optimization: A Unified Framework for Metaheuristics](https://doi.org/10.48550/arXiv.2411.04293)
+Based on [A Random-Key optimizer for combinatorial optimization](https://doi.org/10.1007/s10732-025-09568-z).
 
 ## Features
 
-- **Metaheuristics implemented:**
-  - MultiStart
-  - Simulated Annealing (SA)
-  - Iterated Local Search (ILS)
-  - Variable Neighborhood Search (VNS)
-  - Genetic Algorithm (GA)
-  - Biased Random Key Genetic Algorithm (BRKGA)
-  - Large Neighborhood Search (LNS)
+- **Seven metaheuristics:** MultiStart, Simulated Annealing (SA), Iterated Local Search (ILS), Variable Neighbourhood Search (VNS), Genetic Algorithm (GA), Biased Random-Key Genetic Algorithm (BRKGA) and Large Neighbourhood Search (LNS).
+- **Problem-agnostic:** every metaheuristic works on any `Environment`.
+- **Parallel:** each selected metaheuristic runs in its own goroutine; they exchange solutions through a thread-safe pool.
+- **Stopping rules:** a time limit, an iteration limit and your own `context.Context`.
+- **Configurable** from Go or from a YAML file, with a terminal dashboard or plain-text logging.
 
-- **Problem-agnostic:** implement one interface and every metaheuristic works on your problem.
-- **Parallel by default:** the solver runs the selected metaheuristics concurrently, sharing solutions through a thread-safe pool.
-- **Context-driven:** a `context.Context` controls when the search stops.
-- **Configurable from YAML or Go**, with pluggable logging.
-
-## Getting Started
-
-### 1. Install
+## Install
 
 ```sh
 go get github.com/RKO-solver/rko-go
 ```
 
-### 2. Implement the Environment interface
+The root package is named `rko`. Requires Go 1.26 or later.
+
+## Quick start
+
+A solution is a vector of random keys in `[0, 1)`. You write how many keys your problem needs, what a vector costs (lower is better) and how to turn it into an answer. This program solves a five-city travelling salesman problem:
 
 ```go
-type Environment interface {
-    NumKeys() int
-    Cost(r RandomKey) int
-    Decode(r RandomKey) any
-    SwapSearch() [][2]int
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	rko "github.com/RKO-solver/rko-go"
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/logger/stdout"
+)
+
+// TSP is a travelling salesman problem: visit every city once and return to the start.
+type TSP struct {
+	Dist [][]int
+}
+
+// NumKeys returns one key per city.
+func (t TSP) NumKeys() int { return len(t.Dist) }
+
+// Cost returns the length of the tour encoded by r.
+func (t TSP) Cost(r definition.RandomKey) int {
+	tour := r.SortedIndex()
+	cost := 0
+	for i := range tour {
+		cost += t.Dist[tour[i]][tour[(i+1)%len(tour)]]
+	}
+	return cost
+}
+
+// Decode returns the tour: cities in ascending order of their keys.
+func (t TSP) Decode(r definition.RandomKey) any { return r.SortedIndex() }
+
+// SwapSearch lets the swap local search exchange any two keys.
+func (t TSP) SwapSearch() [][2]int { return [][2]int{{0, t.NumKeys()}} }
+
+func main() {
+	env := TSP{Dist: [][]int{
+		{0, 2, 9, 10, 7},
+		{2, 0, 6, 4, 3},
+		{9, 6, 0, 8, 5},
+		{10, 4, 8, 0, 6},
+		{7, 3, 5, 6, 0},
+	}}
+
+	log := stdout.DefaultLogger("tsp")
+	mh := []rko.MetaHeuristic{rko.ILS, rko.BRKGA}
+	solver := rko.CreateDefaultSolverTimeLimit(mh, 5*time.Second, env, log)
+
+	tour := solver.Solve(context.Background()).([]int)
+	cost := solver.GetSolutionPool().BestSolutionCost()
+	fmt.Println("tour:", tour, "cost:", cost)
 }
 ```
 
-- `NumKeys()` — number of keys (variables) in your problem.
-- `Cost(r)` — objective value of a solution. **The library minimizes this value.**
-- `Decode(r)` — converts random keys into your problem's representation.
-- `SwapSearch()` — `(start, end)` index pairs the swap local search may exchange.
+After five seconds of progress lines, it prints an optimal tour (its rotation or direction may vary):
 
-See the [`definition` package](definition/README.md) for a complete, compiling example.
-
-### 3. Create and run a solver
-
-```go
-import (
-    "context"
-    "fmt"
-
-    "github.com/RKO-solver/rko-go"
-    "github.com/RKO-solver/rko-go/logger/channel"
-)
-
-env := MyEnvironment{}                        // your implementation
-mh := []rko.MetaHeuristic{rko.GA, rko.SA}     // metaheuristics to run in parallel
-log := channel.DefaultLogger("MyProblem")
-
-solver := rko.CreateDefaultSolver(mh, env, log)
-
-result := solver.Solve(context.Background())
-fmt.Printf("Best solution: %+v\n", result)
+```text
+tour: [4 0 1 3 2] cost: 26
 ```
 
-`Solve` returns the best solution found, already decoded by `Environment.Decode`.
+`Solve` returns the best solution found, already passed through your `Decode`. The [`definition` package](definition/README.md) explains each `Environment` method and shows a non-permutation example.
 
-## Time limits and cancellation
+## Run from a YAML file
 
-The search stops when its time limit expires, when its iteration limit is reached, or when the context is cancelled — whichever comes first.
+The [`configuration` package](configuration/README.md) builds the same solver from a file, including each metaheuristic's local search and tuning parameters.
 
-An iteration is one outer-loop pass of a metaheuristic: one generation for GA and BRKGA, one temperature step for SA. `Solve` applies the time limit; every limit is optional.
+`config.yaml`:
 
-| Entry point | Time limit | Iteration limit |
+```yaml
+LogLevel: INFO
+LogType: PRINT
+TimeLimitSeconds: 60
+MaxIterations: 10000
+Metaheuristics:
+  - "ILS=Swap,Mirror"
+  - "BRKGA"
+Configuration:
+  BRKGA:
+    PopulationSize: 100
+```
+
+```go
+cfg, err := configuration.CreateSolverConfiguration("config.yaml")
+if err != nil {
+	log.Fatal(err)
+}
+
+solver, _ := configuration.CreateSolver("tsp", env, cfg)
+tour := solver.Solve(context.Background()).([]int)
+```
+
+See the [`configuration` package](configuration/README.md) for every key and its default.
+
+## Stopping rules
+
+`Solve(ctx)` stops at whichever comes first:
+
+- the **time limit** expires,
+- every metaheuristic has run **`MaxIterations`** iterations,
+- **`ctx`** is cancelled or reaches its deadline.
+
+| Constructor | Time limit | Iteration limit |
 |---|---|---|
-| `rko.CreateDefaultSolver(mh, env, log)` | 150 seconds | none |
-| `rko.CreateDefaultSolverTimeLimit(mh, limit, env, log)` | the limit you pass | none |
+| `rko.CreateDefaultSolver(mh, env, log)` | 150 s | none |
+| `rko.CreateDefaultSolverTimeLimit(mh, timeLimit, env, log)` | `timeLimit` | none |
 | `rko.CreateFullSolver(log, env, timeLimit, maxIterations, pool, solvers)` | `timeLimit` | `maxIterations` |
-| `configuration.CreateSolver(...)` | the `TimeLimitSeconds` key in the solver YAML | the `MaxIterations` key in the solver YAML |
+| `configuration.CreateSolver(name, env, cfg)` | `TimeLimitSeconds` in YAML (`cfg.TimeLimit`) | `MaxIterations` in YAML (`cfg.MaxIterations`) |
 
-A non-positive limit means not set. With neither limit, the solver runs until its context is cancelled.
+- A zero or negative value means no limit.
+- `MaxIterations` is one number for the whole run, counted by each metaheuristic separately: each one stops after that many iterations of its own outer loop (a generation for GA and BRKGA, a temperature step for SA). `Solve` returns once all of them have stopped.
+- With neither limit, the solver runs until `ctx` is cancelled. `configuration.CreateSolver` prints a warning in that case.
+- SA also ends on its own once its temperature reaches `TemperatureGoal`.
 
-To choose the limit explicitly:
-
-```go
-solver := rko.CreateDefaultSolverTimeLimit(mh, 30*time.Second, env, log)
-result := solver.Solve(context.Background())
-```
-
-To stop the search yourself — for example on a shutdown signal — pass your own context to `Solve`. Both limits still apply:
+To stop the search yourself, for example on a shutdown signal, pass your own context. The configured limits still apply:
 
 ```go
-ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-defer cancel()
+ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+defer stop()
 
 result := solver.Solve(ctx)
 ```
 
-## Selecting metaheuristics
+## Choosing metaheuristics
 
-`rko.CreateDefaultSolver` takes a slice of `rko.MetaHeuristic` constants: `MULTISTART`, `SA`, `GA`, `VNS`, `ILS`, `BRKGA`, `LNS`. Listing the same one twice runs two independent instances of it in parallel.
+`rko.CreateDefaultSolver` and `rko.CreateDefaultSolverTimeLimit` take a slice of `rko.MetaHeuristic` constants and use each one's default parameters and local search:
 
-For per-metaheuristic parameters and local search selection, use the [`configuration` package](configuration/README.md) instead, which builds the same solver from YAML files.
+| Constant | Metaheuristic |
+|---|---|
+| `rko.MULTISTART` | MultiStart |
+| `rko.SA` | Simulated Annealing |
+| `rko.GA` | Genetic Algorithm |
+| `rko.BRKGA` | Biased Random-Key Genetic Algorithm |
+| `rko.ILS` | Iterated Local Search |
+| `rko.VNS` | Variable Neighbourhood Search |
+| `rko.LNS` | Large Neighbourhood Search |
+
+Listing a constant twice runs two independent instances. `GRASP`, `VLNS`, `ALNS` and `IPR` are declared but not implemented; they are skipped with a `not implemented yet` message.
+
+To change parameters or local searches, use a [YAML file](configuration/README.md), or build each solver yourself and pass them to `rko.CreateFullSolver` (see the [`metaheuristc` package](metaheuristc/README.md)).
 
 ## Logging
 
-Track progress by passing any implementation of the [`logger.Logger`](logger/README.md) interface:
+Every constructor takes a [`logger.Logger`](logger/README.md). Two ship with the library:
 
-```go
-type Logger interface {
-    AddSolutionPool(cost int, time float64)
-    WorkerDone(message string)
-    GetLogger(name string) SolverLogger
-    GetLogLevel() Level
-    GetReportData() []SolverInformation
-    GetSolutionData() []SolutionData
-    Reset()
-}
-```
+| Logger | Constructor | Output |
+|---|---|---|
+| `logger/stdout` | `stdout.DefaultLogger(name)`, `stdout.NewLogger(name, level)` | Plain lines: a solver's progress when its best cost improves, otherwise at most every 500 ms (`SetPrintInterval`). Suits batch jobs and CI. |
+| `logger/channel` | `channel.DefaultLogger(name)`, `channel.NewLoggerLevel(name, level)` | A live dashboard in the terminal's alternate screen; the final frame stays in the scrollback. Suits interactive runs. |
 
-Two loggers ship with the library:
+Levels are `logger.SILENT`, `logger.INFO` (default) and `logger.VERBOSE`. `Solve` resets the logger at the start of every run, so `GetReportData` and `GetSolutionData` describe the last run. Both loggers can save the run to CSV. See the [`logger` package](logger/README.md).
 
-- [`logger/channel`](logger/README.md) — live-refreshing terminal dashboard, for interactive runs.
-- [`logger/stdout`](logger/README.md) — plain lines as they happen, for batch and CI runs.
+## Packages
 
-Both can export the run to CSV. See the [`logger` package](logger/README.md).
-
-## Documentation
-
-| Package | Contents |
+| Package | Use it to |
 |---|---|
-| [`definition`](definition/README.md) | The `Environment` interface you implement, plus `Solver`, `Result` and `RandomKey`. |
-| [`configuration`](configuration/README.md) | YAML and Go configuration, and the solver factories. |
-| [`logger`](logger/README.md) | Logging interfaces, the two built-in loggers, and CSV export. |
-| [`metaheuristc`](metaheuristc/README.md) | The metaheuristic implementations, their parameters, and local searches. |
-
-Root package entry points: `CreateDefaultSolver`, `CreateDefaultSolverTimeLimit` and `CreateFullSolver` in [`create.go`](create.go); `Solve` and `GetSolutionPool` in [`definition.go`](definition.go).
+| `rko` (root) | Create a `Solver` (`CreateDefaultSolver`, `CreateDefaultSolverTimeLimit`, `CreateFullSolver`) and run it (`Solve`, `GetSolutionPool`, `Print`). |
+| [`definition`](definition/README.md) | Implement `Environment` for your problem, or `Solver` for your own metaheuristic. |
+| [`configuration`](configuration/README.md) | Build a solver from a YAML file or a Go struct. |
+| [`logger`](logger/README.md) | Choose or implement a logger, and export results to CSV. |
+| [`metaheuristc`](metaheuristc/README.md) | Build metaheuristics, local searches and the solution pool by hand. |
+| `random` | Create random generators, seeded (`NewGeneratorSeed`) or not (`NewGenerator`). |
 
 ## Maintainers
 
@@ -148,4 +194,4 @@ Lucas Mendes - [GitHub](https://github.com/lucasmends)
 
 ## License
 
-This project is licensed under the Academic Free License v3.0. See [LICENSE](LICENSE)
+Licensed under the Academic Free License v3.0. See [LICENSE](LICENSE).
