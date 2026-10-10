@@ -119,14 +119,6 @@ func (p *Pool) GetSolution(index int) *metaheuristc.RandomKeyValue {
 	return p.solutions[index].Clone()
 }
 
-// SolutionsCount returns the number of solutions in the pool.
-func (p *Pool) SolutionsCount() int {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-
-	return len(p.solutions)
-}
-
 // BestSolutionCost returns the lowest cost, or math.MaxInt if empty.
 func (p *Pool) BestSolutionCost() int {
 	p.mu.RLock()
