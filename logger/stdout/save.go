@@ -2,28 +2,23 @@ package stdout
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/RKO-solver/rko-go/logger"
 )
 
-// SaveCsv writes a per-solver CSV and a pool CSV.
+// SaveCsv writes a per-solver CSV, streaming its history file, and a pool CSV.
 func (l *Log) SaveCsv(filename ...string) {
-	for _, report := range l.GetReportData() {
-		if len(filename) > 0 {
-			reportFilename := fmt.Sprintf("%s-%s-%d.csv", filename[0], report.Name, report.Id)
-			logger.SaveSolverCSV(report, l.problemName, reportFilename)
-		} else {
-			logger.SaveSolverCSV(report, l.problemName)
+	prefix := l.problemName
+	if len(filename) > 0 {
+		prefix = filename[0]
+	}
+
+	for _, s := range l.solversLogger {
+		if err := s.file.SaveCSV(fmt.Sprintf("%s-%s-%d.csv", prefix, s.name, s.id), s.history); err != nil {
+			log.Fatal(err)
 		}
 	}
 
-	var poolFilename string
-
-	if len(filename) > 0 {
-		poolFilename = fmt.Sprintf("%s-%s.csv", filename[0], "pool")
-	} else {
-		poolFilename = fmt.Sprintf("%s-%s.csv", l.problemName, "pool")
-	}
-
-	logger.SavePoolCsv(l.GetSolutionData(), l.problemName, poolFilename)
+	logger.SavePoolCsv(l.GetSolutionData(), l.problemName, fmt.Sprintf("%s-pool.csv", prefix))
 }

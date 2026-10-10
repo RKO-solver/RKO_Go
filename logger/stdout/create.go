@@ -14,6 +14,7 @@ func NewLogger(problemName string, logLevel logger.Level) *Log {
 	l := &Log{
 		LogLevel:      logLevel,
 		problemName:   problemName,
+		historyBytes:  defaultHistoryBytes,
 		pool:          make([]poolInfo, 0),
 		solversLogger: make([]*SolverLogger, 0),
 	}

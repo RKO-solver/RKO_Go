@@ -8,31 +8,13 @@ func (l *Log) GetReportData() []logger.SolverInformation {
 
 	report := make([]logger.SolverInformation, 0, len(l.data.solvers))
 
-	for _, solver := range l.data.solvers {
-		solverReport := logger.SolverInformation{
-			Name:        "",
-			Id:          -1,
-			Performance: make([]logger.Data, 0),
-		}
-
-		for _, info := range solver {
-			if solverReport.Name == "" {
-				solverReport.Name = info.name
-			}
-			if solverReport.Id < 0 {
-				solverReport.Id = info.id
-			}
-
-			solverReport.Performance = append(solverReport.Performance, logger.Data{
-				LocalCost: info.local,
-				BestCost:  info.localBest,
-				Time:      info.time,
-			})
-		}
-
-		report = append(report, solverReport)
+	for id, s := range l.data.solvers {
+		report = append(report, logger.SolverInformation{
+			Name:        s.name,
+			Id:          id,
+			Performance: s.file.All(s.records), // spilled records, then the in-memory tail
+		})
 	}
-
 	return report
 }
 

@@ -23,16 +23,17 @@ func NewLogger(problemName string, logLevel logger.Level, bufferSize int) *Log {
 		numLinesPool:       numLinesSolutionPool,
 		numVerboseMessages: lastNVerboses,
 		pool:               make([]poolInfo, 0, 100),
-		solvers:            make([][]solverInfo, 0),
+		solvers:            make([]*solverHistory, 0),
 		extraMessages:      make([][]extraInfo, 0),
 		workerMessages:     make([]string, 0),
 	}
 
 	return &Log{
-		bufferSize:  bufferSize,
-		data:        store,
-		LogLevel:    logLevel,
-		ticker:      defaultTickerMilliseconds * time.Millisecond,
-		problemName: problemName,
+		bufferSize:   bufferSize,
+		data:         store,
+		LogLevel:     logLevel,
+		ticker:       defaultTickerMilliseconds * time.Millisecond,
+		problemName:  problemName,
+		historyBytes: defaultHistoryBytes,
 	}
 }

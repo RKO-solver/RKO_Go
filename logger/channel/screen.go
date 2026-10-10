@@ -103,13 +103,12 @@ func (d *information) writeFrame(b *strings.Builder) {
 
 	solversLog := make([][]string, 0)
 
-	for id, solver := range d.solvers {
+	for id, s := range d.solvers {
 		solversLog = append(solversLog, []string{})
-		lastIdMessage := len(solver) - 1
-		if lastIdMessage >= 0 {
-			header = setFixedLength(fmt.Sprintf("(%d) %s: %s", solver[lastIdMessage].id, solver[lastIdMessage].name, solver[lastIdMessage].extra), solverBlockSize, false)
-			info = setFixedLength(fmt.Sprintf("    Local %d Best %d", solver[lastIdMessage].local, solver[lastIdMessage].localBest), solverBlockSize, false)
-			bottom = setFixedLength(fmt.Sprintf("    Time %.3fs", solver[lastIdMessage].time), solverBlockSize, false)
+		if s.hasLast { // read last, not records: records may have just been spilled and emptied
+			header = setFixedLength(fmt.Sprintf("(%d) %s: %s", id, s.name, s.last.extra), solverBlockSize, false)
+			info = setFixedLength(fmt.Sprintf("    Local %d Best %d", s.last.local, s.last.localBest), solverBlockSize, false)
+			bottom = setFixedLength(fmt.Sprintf("    Time %.3fs", s.last.time), solverBlockSize, false)
 
 			solversLog[id] = append(solversLog[id], header)
 			solversLog[id] = append(solversLog[id], info)
