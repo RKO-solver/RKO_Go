@@ -215,3 +215,29 @@ func TestDashboardShowsLastRecordAfterFlush(t *testing.T) {
 	require.Contains(t, out, "Local 7 Best 7")
 	require.Contains(t, out, "Time 0.400s")
 }
+
+func TestCloseDeletesFilesAndIsIdempotent(t *testing.T) {
+	l, sl, dir := spillLog(t, logger.SILENT)
+	var lg logger.Logger = l
+	runOnce(l, func() { register(sl, 5) }) // one flush of 4
+	require.Len(t, historyFiles(t, dir), 1)
+
+	require.NoError(t, lg.Close())
+	require.Empty(t, historyFiles(t, dir))
+	require.NoError(t, lg.Close()) // a second Close is a no-op
+}
+
+func TestRegisterAfterCloseCreatesNoFile(t *testing.T) {
+	l, sl, dir := spillLog(t, logger.SILENT)
+	var lg logger.Logger = l
+	var want []logger.Data
+	runOnce(l, func() {
+		require.NoError(t, lg.Close()) // mid-run, before any record
+		want = register(sl, 10)        // fills the 4-record buffer: kept in memory
+	})
+	require.Empty(t, historyFiles(t, dir))
+	require.Equal(t, want, lg.GetReportData()[0].Performance)
+
+	runOnce(l, func() { register(sl, 5) }) // Reset turns spilling back on
+	require.Len(t, historyFiles(t, dir), 1)
+}

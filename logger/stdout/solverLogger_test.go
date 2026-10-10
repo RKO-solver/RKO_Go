@@ -172,3 +172,29 @@ func TestHistoryBufferZeroKeepsEverythingInMemory(t *testing.T) {
 	require.Len(t, sl.history, 100)
 	require.Equal(t, want, l.GetReportData()[0].Performance)
 }
+
+func TestCloseDeletesFilesAndIsIdempotent(t *testing.T) {
+	l, sl, dir := spillLogger(t)
+	var lg logger.Logger = l
+	register(sl, 5) // one flush of 4
+	require.Len(t, historyFiles(t, dir), 1)
+
+	require.NoError(t, lg.Close())
+	require.Empty(t, historyFiles(t, dir))
+	require.NoError(t, lg.Close()) // a second Close is a no-op
+}
+
+func TestRegisterAfterCloseCreatesNoFile(t *testing.T) {
+	l, sl, dir := spillLogger(t)
+	var lg logger.Logger = l
+	register(sl, 5) // one flush of 4, one record left in memory
+	require.NoError(t, lg.Close())
+
+	register(sl, 10) // fills the buffer again: kept in memory
+	require.Empty(t, historyFiles(t, dir))
+	require.Len(t, sl.history, 11)
+
+	lg.Reset() // the next run spills again
+	register(sl, 5)
+	require.Len(t, historyFiles(t, dir), 1)
+}

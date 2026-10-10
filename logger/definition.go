@@ -32,6 +32,8 @@ type Logger interface {
 	GetReportData() []SolverInformation
 	GetSolutionData() []SolutionData
 	Reset()
+	// Close deletes the last run's history files; call it after reading the results.
+	Close() error
 }
 
 // SolverLogger records progress messages for a single running solver.
