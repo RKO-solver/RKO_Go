@@ -2,6 +2,9 @@ package rko
 
 import "strings"
 
+// NoLimitWarning is printed when a Solver is built with neither a time limit nor an iteration limit.
+const NoLimitWarning = "Warning: neither TimeLimitSeconds nor MaxIterations is set; the solver will run until its context is cancelled"
+
 type MetaHeuristic = int
 
 const (

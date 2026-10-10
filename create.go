@@ -2,6 +2,7 @@ package rko
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -72,6 +73,9 @@ func CreateDefaultSolverTimeLimit(mh []MetaHeuristic, timeLimit time.Duration, e
 
 // CreateFullSolver creates a Solver from already-built solvers and pool; a non-positive timeLimit or maxIterations means no limit.
 func CreateFullSolver(logger logger.Logger, env definition.Environment, timeLimit time.Duration, maxIterations int, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
+	if timeLimit <= 0 && maxIterations <= 0 {
+		fmt.Fprintln(os.Stdout, NoLimitWarning)
+	}
 	return &Solver{
 		l:             logger,
 		env:           env,

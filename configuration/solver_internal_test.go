@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	rko "github.com/RKO-solver/rko-go"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +27,7 @@ func TestWarnIfUnbounded(t *testing.T) {
 			var buf bytes.Buffer
 			warnIfUnbounded(&buf, &SolverConfiguration{TimeLimit: tt.timeLimit, MaxIterations: tt.maxIterations})
 			if tt.warn {
-				assert.Equal(t, noLimitWarning+"\n", buf.String())
+				assert.Equal(t, rko.NoLimitWarning+"\n", buf.String())
 			} else {
 				assert.Empty(t, buf.String())
 			}

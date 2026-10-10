@@ -20,13 +20,10 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// noLimitWarning is printed when a solver has neither a time limit nor an iteration limit.
-const noLimitWarning = "Warning: neither TimeLimitSeconds nor MaxIterations is set; the solver will run until its context is cancelled"
-
-// warnIfUnbounded writes noLimitWarning to w when neither TimeLimit nor MaxIterations is positive.
+// warnIfUnbounded writes rko.NoLimitWarning to w when neither TimeLimit nor MaxIterations is positive.
 func warnIfUnbounded(w io.Writer, solverConfig *SolverConfiguration) {
 	if solverConfig.TimeLimit <= 0 && solverConfig.MaxIterations <= 0 {
-		fmt.Fprintln(w, noLimitWarning)
+		fmt.Fprintln(w, rko.NoLimitWarning)
 	}
 }
 
