@@ -2,21 +2,25 @@
 package channel
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger/internal/spill"
 )
 
 // Log is the channel-based Logger.
 type Log struct {
-	updateChan  chan channelMessage
-	bufferSize  int
-	data        *information
-	LogLevel    logger.Level
-	ticker      time.Duration
-	problemName string
+	updateChan   chan channelMessage
+	bufferSize   int
+	data         *information
+	LogLevel     logger.Level
+	ticker       time.Duration
+	problemName  string
+	historyBytes int    // per-solver history buffer; 0 or less keeps everything in memory
+	historyDir   string // directory of the history files; "" means the system temp directory
 }
 
 func (l *Log) AddSolutionPool(cost int, time float64) {
@@ -33,9 +37,9 @@ func (l *Log) WorkerDone(message string) {
 	l.data.workerMessages = append(l.data.workerMessages, message)
 }
 
-// Reset empties the previous run's data and opens a fresh update channel.
+// Reset empties the previous run's data, deletes its history files and opens a fresh update channel.
 func (l *Log) Reset() {
-	l.data.reset()
+	l.data.reset(l.historyConfig())
 	l.updateChan = make(chan channelMessage, l.bufferSize)
 }
 
@@ -125,7 +129,8 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 	defer l.data.mu.Unlock()
 
 	id := len(l.data.solvers)
-	l.data.solvers = append(l.data.solvers, make([]solverInfo, 0))
+	l.data.solvers = append(l.data.solvers, &solverHistory{id: id, name: name})
+	l.data.solvers[id].reset(l.historyConfig()) // sizes the buffer; the file is created on the first spill
 	l.data.extraMessages = append(l.data.extraMessages, make([]extraInfo, 0))
 
 	return &SolverLoggerChannel{
@@ -134,6 +139,34 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 		logLevel: l.LogLevel,
 		log:      l,
 	}
+}
+
+// SetHistoryBuffer sets each solver's history buffer in bytes from the next Reset on; 0 or less keeps the whole history in memory.
+func (l *Log) SetHistoryBuffer(bytes int) {
+	l.historyBytes = bytes
+}
+
+// SetHistoryDir sets the directory of the history files from the next Reset on; "" means the system temp directory.
+func (l *Log) SetHistoryDir(dir string) {
+	l.historyDir = dir
+}
+
+// historyConfig returns the spill settings shared by every solver.
+func (l *Log) historyConfig() spill.Config {
+	return spill.Config{Dir: l.historyDir, Bytes: l.historyBytes, Problem: l.problemName}
+}
+
+// Close deletes the last run's history files; call it after reading the results.
+// Spilling stays off until the next Reset.
+func (l *Log) Close() error {
+	l.data.mu.Lock()
+	defer l.data.mu.Unlock()
+
+	var err error
+	for _, s := range l.data.solvers {
+		err = errors.Join(err, s.file.Remove())
+	}
+	return err
 }
 
 func (l *Log) GetLogLevel() logger.Level {

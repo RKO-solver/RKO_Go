@@ -3,6 +3,7 @@ package channel
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -124,4 +125,119 @@ func TestSilentRunWritesNothing(t *testing.T) {
 	})
 
 	require.Empty(t, out)
+}
+
+// spillLog returns a logger with one solver that flushes every 4 records into a temp dir, closed at test end.
+func spillLog(t *testing.T, level logger.Level) (*Log, logger.SolverLogger, string) {
+	t.Helper()
+	dir := t.TempDir()
+	l := NewLoggerLevel("test", level)
+	l.SetHistoryDir(dir)
+	t.Cleanup(func() { require.NoError(t, l.Close()) })
+	l.SetHistoryBuffer(4 * 24)
+	return l, l.GetLogger("solver"), dir
+}
+
+// runOnce does one Reset, Start, f, Shutdown cycle, as Solve does.
+func runOnce(l *Log, f func()) {
+	var wg sync.WaitGroup
+	l.Reset()
+	l.Start(&wg)
+	f()
+	l.Shutdown()
+	wg.Wait()
+}
+
+// historyFiles returns the history files in dir.
+func historyFiles(t *testing.T, dir string) []string {
+	t.Helper()
+	files, err := filepath.Glob(filepath.Join(dir, "rko-history-*.bin"))
+	require.NoError(t, err)
+	return files
+}
+
+// register sends n records (local i, best 100-i, time i/2) and returns them.
+func register(sl logger.SolverLogger, n int) []logger.Data {
+	want := make([]logger.Data, 0, n)
+	for i := range n {
+		d := logger.Data{LocalCost: i, BestCost: 100 - i, Time: float64(i) / 2}
+		sl.Register(d.LocalCost, d.BestCost, d.Time, "")
+		want = append(want, d)
+	}
+	return want
+}
+
+// csvLines returns the lines of the CSV file at path.
+func csvLines(t *testing.T, path string) []string {
+	t.Helper()
+	b, err := os.ReadFile(path)
+	require.NoError(t, err)
+	return strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
+}
+
+func TestHistorySpillsWhenBufferIsFull(t *testing.T) {
+	l, sl, dir := spillLog(t, logger.SILENT)
+	var want []logger.Data
+	runOnce(l, func() { want = register(sl, 10) }) // two flushes of 4, 2 records left in memory
+
+	require.Len(t, historyFiles(t, dir), 1)
+	require.Len(t, l.data.solvers[0].records, 2)
+	require.Equal(t, 4, cap(l.data.solvers[0].records)) // the buffer is reused, never grown
+	report := l.GetReportData()
+	require.Equal(t, "solver", report[0].Name)
+	require.Equal(t, 0, report[0].Id)
+	require.Equal(t, want, report[0].Performance)
+
+	out := filepath.Join(t.TempDir(), "out")
+	l.SaveCsv(out)
+	lines := csvLines(t, out+"-solver-0.csv")
+	require.Len(t, lines, 11)
+	require.Equal(t, "best,local,time", lines[0])
+	require.Equal(t, "100,0,0.00000000", lines[1])
+	require.Equal(t, "91,9,4.50000000", lines[10])
+
+	l.Reset()
+	require.Empty(t, historyFiles(t, dir))
+}
+
+func TestDashboardShowsLastRecordAfterFlush(t *testing.T) {
+	l, sl, _ := spillLog(t, logger.INFO)
+	runOnce(l, func() {
+		for range 3 {
+			sl.Register(10, 10, 0.1, "")
+		}
+		sl.Register(7, 7, 0.4, "last") // fourth record: fills the buffer and flushes it
+	})
+	require.Empty(t, l.data.solvers[0].records)
+
+	out := captureStdout(t, l.Finish)
+	require.Contains(t, out, "(0) solver: last")
+	require.Contains(t, out, "Local 7 Best 7")
+	require.Contains(t, out, "Time 0.400s")
+}
+
+func TestCloseDeletesFilesAndIsIdempotent(t *testing.T) {
+	l, sl, dir := spillLog(t, logger.SILENT)
+	var lg logger.Logger = l
+	runOnce(l, func() { register(sl, 5) }) // one flush of 4
+	require.Len(t, historyFiles(t, dir), 1)
+
+	require.NoError(t, lg.Close())
+	require.Empty(t, historyFiles(t, dir))
+	require.NoError(t, lg.Close()) // a second Close is a no-op
+}
+
+func TestRegisterAfterCloseCreatesNoFile(t *testing.T) {
+	l, sl, dir := spillLog(t, logger.SILENT)
+	var lg logger.Logger = l
+	var want []logger.Data
+	runOnce(l, func() {
+		require.NoError(t, lg.Close()) // mid-run, before any record
+		want = register(sl, 10)        // fills the 4-record buffer: kept in memory
+	})
+	require.Empty(t, historyFiles(t, dir))
+	require.Equal(t, want, lg.GetReportData()[0].Performance)
+
+	runOnce(l, func() { register(sl, 5) }) // Reset turns spilling back on
+	require.Len(t, historyFiles(t, dir), 1)
 }

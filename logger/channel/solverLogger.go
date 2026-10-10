@@ -14,8 +14,6 @@ func (sl *SolverLoggerChannel) Register(local int, localBest int, timeStamp floa
 		t:  infoMessage,
 		id: sl.id,
 		info: solverInfo{
-			id:        sl.id,
-			name:      sl.name,
 			localBest: localBest,
 			local:     local,
 			time:      timeStamp,

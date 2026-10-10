@@ -23,6 +23,7 @@ type Logger interface {
     GetReportData() []SolverInformation
     GetSolutionData() []SolutionData
     Reset()
+    Close() error
 }
 ```
 - `AddSolutionPool`: Report a new best solution found across all solvers.
@@ -32,6 +33,7 @@ type Logger interface {
 - `GetReportData`: Returns performance data for all solvers.
 - `GetSolutionData`: Returns the best solution data found.
 - `Reset`: Called by `Solve` at the start of every run; empties the previous run's data.
+- `Close`: Deletes the last run's history files; safe to call twice. `Solve` never calls it, so add `defer log.Close()` after creating the logger. Read or save the results before `Close`: afterwards history stays in memory, and spilling to disk resumes at the next `Solve`.
 
 **SolverLogger Interface** - Implement this for solver-specific logging:
 
@@ -84,6 +86,7 @@ const (
 |---|---|---|
 | Output | Live-refreshing terminal dashboard (redraws in place) | Plain lines; solver progress on improvement or once per print interval |
 | Best for | Interactive terminal runs | Batch jobs, CI, redirecting to a file |
+| History buffer per solver | 128 KB | 512 KB |
 
 `configuration.SolverConfiguration.LoggerType` (a `logger.LogType`, backed by the YAML `logType` key) picks between them:
 
@@ -110,9 +113,37 @@ The `stdout.Log` prints a solver's progress when its best cost improves, otherwi
 
 - `SetPrintInterval(timeMilliseconds int)` — minimum time between two prints of the same solver.
 
-With both loggers, each `Solve` empties the previous run's information, so `GetReportData` and `GetSolutionData` return the last run.
+With both loggers, each `Solve` empties the previous run's information and deletes its history files, so `GetReportData` and `GetSolutionData` return the last run.
 
-You can implement your own logger by satisfying the `Logger` interface.
+### Solver History on Disk
+
+Both loggers record every `Register` call. Each solver keeps its records in a memory buffer, 24 bytes per record (128 KB per solver for `channel`, 512 KB for `stdout`). When the buffer is full, the logger appends it to that solver's history file in one write and reuses the buffer. After its first flush, a solver also keeps an encoding buffer of the same size. The file is created on the first flush, so a run that never fills the buffer never touches the disk.
+
+`GetReportData` and `SaveCsv` return the whole history: the file's records first, then the ones still in memory. `SaveCsv` streams the file into the CSV; `GetReportData` returns the whole history in one slice.
+
+| Method | Effect |
+|---|---|
+| `SetHistoryBuffer(bytes int)` | Buffer size per solver. `0` keeps the whole history in memory. |
+| `SetHistoryDir(dir string)` | Directory of the history files. Default: the system temp directory (`os.TempDir()`). |
+| `Close() error` | Part of `Logger`. Deletes the last run's history files. Call it after reading the results. |
+
+Both setters take effect at the next `Solve`, so you can call them after creating the solver. Each `Solve` deletes the previous run's history files. If a solver's file cannot be created or written, that solver keeps the rest of its history in memory and the logger prints one warning to stderr.
+
+Each file is named `rko-history-<problem>-<solver>-<id>-*.bin`, with characters invalid in file names replaced by `_` and each name part cut to 32 bytes. It holds fixed 24-byte little-endian records: local cost (`int64`), best cost (`int64`), time in seconds (`float64`).
+
+The setters are not part of the `logger.Logger` interface. With the value returned by `configuration.CreateSolver`, type-assert to reach them:
+
+```go
+solver, log := configuration.CreateSolver(problemName, env, solverConfig)
+defer log.Close()
+if l, ok := log.(interface{ SetHistoryBuffer(bytes int) }); ok {
+    l.SetHistoryBuffer(1 << 20)
+}
+solver.Solve(context.Background())
+// read GetReportData or call SaveCsv here
+```
+
+You can implement your own logger by satisfying the `Logger` interface, including `Close() error`; return `nil` if there is nothing to release.
 
 ## Usage Example
 
@@ -130,6 +161,7 @@ env := MyEnvironment{}                        // your definition.Environment
 mh := []rko.MetaHeuristic{rko.GA, rko.SA}      // metaheuristics to run
 
 log := channel.NewLoggerLevel("MyOptimizationProblem", logger.VERBOSE)
+defer log.Close() // runs after the results below are read
 
 solver := rko.CreateDefaultSolver(mh, env, log)
 result := solver.Solve(context.Background())
@@ -164,7 +196,8 @@ fmt.Printf("%d solver(s), %d pooled solution(s)\n", len(reportData), len(solutio
 Both `*channel.Log` and `*stdout.Log` also have a concrete `SaveCsv(filename ...string)` method that combines the two above (one CSV per solver, plus one pool CSV). **`SaveCsv` is not part of the `logger.Logger` interface**, so if you only have a `logger.Logger` value (for example, the one returned by `configuration.CreateSolver`), you must type-assert to reach it:
 
 ```go
-solver, log := configuration.CreateSolver(problemName, env, solverConfig, mhConfig)
+solver, log := configuration.CreateSolver(problemName, env, solverConfig)
+defer log.Close()
 solver.Solve(context.Background())
 
 if saver, ok := log.(interface{ SaveCsv(filename ...string) }); ok {
@@ -172,13 +205,14 @@ if saver, ok := log.(interface{ SaveCsv(filename ...string) }); ok {
 }
 ```
 
-If you built the logger yourself with `channel.DefaultLogger` or `stdout.DefaultLogger`, you already hold the concrete type and can call `log.SaveCsv()` directly.
+If you built the logger yourself with `channel.DefaultLogger` or `stdout.DefaultLogger`, you already hold the concrete type and can call `log.SaveCsv()` directly. `SaveCsv` reads each solver's history file as it writes the CSV, so it never loads the whole history in memory.
 
 ## Files
 - `definition.go`: Contains the `Logger`, `SolverLogger` interfaces, data structures, and `LogType`.
 - `constants.go`: Contains `Level` type, log level constants, and `GetLogLevel`.
 - `read.go`: Contains `GetLevel` and `GetLevelString`.
 - `helpers.go`: CSV export helpers (`SaveCsvFile`, `SavePoolCsv`, `SaveSolverCSV`).
+- `internal/spill/`: Writes each solver's history to a temporary binary file and reads it back, for both built-in loggers.
 - `channel/`: Channel-based logger implementation for detailed, real-time logging.
 - `stdout/`: Stdout logger implementation for simple console output.
 

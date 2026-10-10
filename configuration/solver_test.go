@@ -57,6 +57,7 @@ func TestMaxIterationsStopsEveryMetaheuristic(t *testing.T) {
 		Configuration: mhConfig,
 	}
 	solver, log := configuration.CreateSolverSeed("test", testEnv{n: 30}, cfg, 42)
+	t.Cleanup(func() { require.NoError(t, log.Close()) })
 
 	solveWithin(t, solver, 30*time.Second)
 
@@ -75,6 +76,7 @@ func TestTimeLimitStopsBeforeMaxIterations(t *testing.T) {
 		MaxIterations: math.MaxInt,
 		Solvers:       []configuration.Solver{{MetaHeuristic: rko.MULTISTART, Search: []search.Type{search.Swap}}},
 	}
-	solver, _ := configuration.CreateSolverSeed("test", testEnv{n: 30}, cfg, 42)
+	solver, log := configuration.CreateSolverSeed("test", testEnv{n: 30}, cfg, 42)
+	t.Cleanup(func() { require.NoError(t, log.Close()) })
 	solveWithin(t, solver, 10*time.Second)
 }
