@@ -23,14 +23,8 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 	children := make([]*metaheuristc.RandomKeyValue, configuration.PopulationSize)
 	population := make([]*metaheuristc.RandomKeyValue, configuration.PopulationSize)
 	for i := range configuration.PopulationSize {
-		population[i] = &metaheuristc.RandomKeyValue{
-			RK:   make(definition.RandomKey, numKeys),
-			Cost: 0,
-		}
-		children[i] = &metaheuristc.RandomKeyValue{
-			RK:   make(definition.RandomKey, numKeys),
-			Cost: 0,
-		}
+		population[i] = metaheuristc.CreateEmptyRandomKeyValue(numKeys)
+		children[i] = metaheuristc.CreateEmptyRandomKeyValue(numKeys)
 	}
 
 	hasImproved := false

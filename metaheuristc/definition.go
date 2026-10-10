@@ -2,6 +2,7 @@
 package metaheuristc
 
 import (
+	"math"
 	"sort"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -22,6 +23,14 @@ func (rko *RandomKeyValue) Clone() *RandomKeyValue {
 	copy(sol.RK, rko.RK)
 
 	return sol
+}
+
+// CreateEmptyRandomKeyValue returns numKeys zero keys with an unevaluated (MaxInt) cost.
+func CreateEmptyRandomKeyValue(numKeys int) *RandomKeyValue {
+	return &RandomKeyValue{
+		RK:   make(definition.RandomKey, numKeys),
+		Cost: math.MaxInt,
+	}
 }
 
 // Sort sorts rkos by ascending cost.

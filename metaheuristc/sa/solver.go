@@ -32,10 +32,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 	start := definition.StartTime(ctx)
 
 	if localSolution == nil {
-		localSolution = &metaheuristc.RandomKeyValue{
-			RK:   make(definition.RandomKey, env.NumKeys()),
-			Cost: 0,
-		}
+		localSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
 		rk.Reset(localSolution.RK, rg)
 		localSolution.Cost = env.Cost(localSolution.RK)
 		solutionPool.AddSolution(localSolution, time.Since(start).Seconds())

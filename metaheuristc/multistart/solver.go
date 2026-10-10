@@ -20,10 +20,7 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 
 	local := m.search
 
-	localSolution := &metaheuristc.RandomKeyValue{
-		RK:   make(definition.RandomKey, m.env.NumKeys()),
-		Cost: 0,
-	}
+	localSolution := metaheuristc.CreateEmptyRandomKeyValue(m.env.NumKeys())
 
 	bestSolutionCost := math.MaxInt
 	start := definition.StartTime(ctx)

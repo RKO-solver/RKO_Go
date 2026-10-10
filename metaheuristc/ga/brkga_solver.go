@@ -25,14 +25,8 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 	population := make([]*metaheuristc.RandomKeyValue, populationSize)
 	populationIntermediary := make([]*metaheuristc.RandomKeyValue, populationSize)
 	for i := range populationSize {
-		population[i] = &metaheuristc.RandomKeyValue{
-			RK:   make(definition.RandomKey, numKeys),
-			Cost: 0,
-		}
-		populationIntermediary[i] = &metaheuristc.RandomKeyValue{
-			RK:   make(definition.RandomKey, numKeys),
-			Cost: 0,
-		}
+		population[i] = metaheuristc.CreateEmptyRandomKeyValue(numKeys)
+		populationIntermediary[i] = metaheuristc.CreateEmptyRandomKeyValue(numKeys)
 	}
 
 	generationNoImprovement := 0
