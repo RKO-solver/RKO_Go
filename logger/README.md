@@ -1,18 +1,163 @@
 # `logger` Package
 
-This package provides logging interfaces and implementations for tracking the progress and results of metaheuristic optimization in the RKO-Go library.
+The loggers RKO-Go solvers report to. A logger prints progress, records each solver's history and every solution-pool improvement, and saves them to CSV. Two ship with the library; implement `Logger` to write your own.
 
-## Overview
+## Quick start
 
-Logging is essential for monitoring the optimization process, debugging, and saving results. The `logger` package defines flexible interfaces and includes built-in loggers for different use cases.
+```go
+log := channel.NewLoggerLevel("MyProblem", logger.VERBOSE)
+defer log.Close() // deletes the history files once the results below are read
 
-## Main Components
+solver := rko.CreateDefaultSolver([]rko.MetaHeuristic{rko.GA, rko.SA}, env, log)
+result := solver.Solve(context.Background())
+fmt.Printf("Best solution: %+v\n", result)
 
-### Interfaces
+report := log.GetReportData()  // each solver's history
+pool := log.GetSolutionData()  // every pool improvement
+fmt.Printf("%d solver(s), %d pool improvement(s)\n", len(report), len(pool))
 
-The core of this package consists of two interfaces:
+log.SaveCsv() // MyProblem-<solver>-<id>.csv and MyProblem-pool.csv
+```
 
-**Logger Interface** - Implement this to create custom loggers:
+`Solve` resets the logger at the start of every run, so the results describe the last run. `Solve` never calls `Close`: defer it yourself, and read or save the results before it runs.
+
+## Built-in loggers
+
+| | `logger/stdout` | `logger/channel` |
+|---|---|---|
+| Output | Plain lines: a solver's progress when its best cost improves, otherwise at most once per print interval | A live dashboard, redrawn in place |
+| Suits | Batch jobs, CI, output redirected to a file | Interactive terminal runs |
+| History buffer per solver | 512 KB | 128 KB |
+
+| Constructor | Level |
+|---|---|
+| `stdout.DefaultLogger(problemName)` | `logger.DefaultLogLevel` (`INFO`) |
+| `stdout.NewLogger(problemName, level)` | `level` |
+| `channel.DefaultLogger(problemName)` | `logger.DefaultLogLevel` (`INFO`) |
+| `channel.NewLoggerLevel(problemName, level)` | `level` |
+| `channel.NewLogger(problemName, level, bufferSize)` | `level`, with `bufferSize` slots in the update channel (default 15) |
+
+All return the concrete type (`*stdout.Log`, `*channel.Log`), which has the setters below. The [`configuration` package](../configuration/README.md) picks one from the YAML `LogType` key (`PRINT` or `CHANNEL`) and returns it as a `logger.Logger`; type-assert to reach the setters (see [Saving to CSV](#saving-to-csv)).
+
+### `stdout`
+
+- Prints a solver's progress when its best cost improves, otherwise at most every 500 ms. Verbose messages are always printed.
+- `SetPrintInterval(timeMilliseconds int)`: minimum time between two prints of the same solver.
+
+### `channel`
+
+- Draws the dashboard in the terminal's alternate screen. When the run ends, it leaves the alternate screen and prints the final frame, then each solver's done message, so the result stays in the scrollback.
+- `SetTicker(timeMilliseconds int)`: dashboard refresh interval (default 500 ms); values below 300 ms are ignored.
+- `SetNumPoolMessages(num int)`: how many recent pool entries the dashboard shows.
+- `SetNumVerboseMessages(num int)`: how many recent verbose messages per solver the dashboard shows.
+- `Start`, `Shutdown`, `Print`, `Finish`, `WorkersPrint` and `GetTicker` are called by `Solve`; you don't call them.
+
+## Levels
+
+| Level | Prints |
+|---|---|
+| `logger.SILENT` | Nothing. |
+| `logger.INFO` | Progress (default, `logger.DefaultLogLevel`). |
+| `logger.VERBOSE` | Progress and `Verbose` events, such as population restarts. |
+
+| Function | Does |
+|---|---|
+| `GetLogLevel(name) Level` | Parses `"SILENT"`, `"INFO"` or `"VERBOSE"`, case-insensitive; unknown values give `INFO`. Used for the YAML `LogLevel` key. |
+| `GetLevel(level) (Level, error)` | The same, but unknown values give `SILENT` and an error. |
+| `GetLevelString(level) string` | `"Silent"`, `"Info"` or `"Verbose"`. |
+| `GetLogType(label) LogType` | Parses `"PRINT"` or `"CHANNEL"` into `logger.PRINT` or `logger.CHANNEL`; unknown values give `PRINT`. |
+
+## Results
+
+| Method | Returns |
+|---|---|
+| `GetReportData() []SolverInformation` | Each solver's name, id and history: one `Data` per `Register` call. |
+| `GetSolutionData() []SolutionData` | Every solution added to the pool, in order. |
+
+```go
+type SolverInformation struct {
+    Name        string
+    Id          int
+    Performance []Data
+}
+
+type Data struct {
+    LocalCost int
+    BestCost  int
+    Time      float64 // seconds since the run started
+}
+
+type SolutionData struct {
+    Cost int
+    Time float64
+}
+```
+
+## Saving to CSV
+
+`*stdout.Log` and `*channel.Log` have `SaveCsv(filename ...string)`. It writes `<prefix>-<solver>-<id>.csv` (header `best,local,time`) per solver and `<prefix>-pool.csv` (header `cost,time`), where the prefix is the argument, or the problem name without one. It streams each solver's history file into its CSV, so it never loads the whole history in memory. It calls `log.Fatal` on an I/O error.
+
+`SaveCsv` is not part of the `Logger` interface. With the `logger.Logger` returned by `configuration.CreateSolver`, type-assert to reach it:
+
+```go
+solver, rkoLog := configuration.CreateSolver("MyProblem", env, cfg)
+defer rkoLog.Close()
+
+solver.Solve(context.Background())
+
+if saver, ok := rkoLog.(interface{ SaveCsv(filename ...string) }); ok {
+    saver.SaveCsv()
+}
+```
+
+The package also has plain CSV writers:
+
+| Function | Writes |
+|---|---|
+| `SaveCsvFile(filename, rows)` | `rows` as CSV; calls `log.Fatal` on an I/O error. |
+| `SavePoolCsv(poolData, problemName, filename...)` | Header `cost,time`; default file `<problemName>-pool.csv`. |
+| `SaveSolverCSV(solverInfo, problemName, filename...)` | Header `best,local,time`; default file `<problemName>-<Name>-<Id>.csv`. |
+
+## History files
+
+Both loggers keep each solver's history in a memory buffer of 24 bytes per record. When the buffer is full, they append it to that solver's history file in one write and reuse the buffer, so a long run doesn't hold its whole history in memory.
+
+- The file is created on the first flush; a run that never fills the buffer never touches the disk. After its first flush, a solver also keeps an encoding buffer of the same size.
+- `GetReportData` and `SaveCsv` read the file, then the records still in memory. `GetReportData` returns the whole history in one slice.
+- Files are named `rko-history-<problem>-<solver>-<id>-*.bin`, in the system temp directory (`os.TempDir()`). Characters invalid in file names become `_`, and each name part is cut to 32 bytes.
+- Each record is 24 bytes, little-endian: local cost (`int64`), best cost (`int64`), time in seconds (`float64`).
+- If a solver's file cannot be created or written, that solver keeps the rest of its history in memory and the logger prints one warning to stderr.
+
+| Method | Does |
+|---|---|
+| `SetHistoryBuffer(bytes int)` | Sets the buffer size per solver. `0` keeps the whole history in memory. |
+| `SetHistoryDir(dir string)` | Sets the directory of the history files. `""` means the system temp directory. |
+| `Close() error` | Deletes the last run's history files. |
+
+The setters are methods of `*stdout.Log` and `*channel.Log`, not of the `Logger` interface. They take effect at the next `Solve`, so you can call them after creating the solver:
+
+```go
+solver, rkoLog := configuration.CreateSolver("MyProblem", env, cfg)
+defer rkoLog.Close()
+
+if l, ok := rkoLog.(interface{ SetHistoryBuffer(bytes int) }); ok {
+    l.SetHistoryBuffer(1 << 20) // 1 MB per solver
+}
+
+solver.Solve(context.Background())
+// read GetReportData or call SaveCsv here, before Close
+```
+
+### Close
+
+- Each `Solve` deletes the previous run's files; `Close` deletes the last run's. `Solve` and `configuration.CreateSolver` never call it.
+- Call it once you have read or saved the results; `defer` right after creating the logger does that.
+- It is safe to call twice. Afterwards the history stays in memory, and spilling resumes at the next `Solve`.
+- Call `Close` on a `stdout` logger only after `Solve` returns.
+
+## Writing your own logger
+
+Implement both interfaces and pass your `Logger` to any solver constructor.
 
 ```go
 type Logger interface {
@@ -25,200 +170,30 @@ type Logger interface {
     Reset()
     Close() error
 }
-```
-- `AddSolutionPool`: Report a new best solution found across all solvers.
-- `WorkerDone`: Called when a solver finishes execution.
-- `GetLogger`: Returns a `SolverLogger` for a specific solver by name.
-- `GetLogLevel`: Returns the current logging level (`SILENT`, `INFO`, or `VERBOSE`).
-- `GetReportData`: Returns performance data for all solvers.
-- `GetSolutionData`: Returns the best solution data found.
-- `Reset`: Called by `Solve` at the start of every run; empties the previous run's data.
-- `Close`: Deletes the last run's history files; safe to call twice. `Solve` never calls it, so add `defer log.Close()` after creating the logger. Read or save the results before `Close`: afterwards history stays in memory, and spilling to disk resumes at the next `Solve`.
 
-**SolverLogger Interface** - Implement this for solver-specific logging:
-
-```go
 type SolverLogger interface {
     Register(local int, localBest int, time float64, extra string)
     Verbose(message string, timeStamp float64)
 }
 ```
-- `Register`: Record progress from a solver (local cost, best cost, elapsed time, and optional extra data).
-- `Verbose`: Log an event, such as a population restart, with its timestamp. Per-iteration progress goes in `Register`'s `extra`.
 
-### Data Structures
-
-- `SolverInformation`: Contains solver name, ID, and performance data.
-- `Data`: Represents a single performance record (local cost, best cost, elapsed time).
-- `SolutionData`: Stores best solution cost and time found.
-
-### Built-in Loggers
-
-- **Channel Logger** (`channel/`): Provides detailed logging with communication channels for real-time progress tracking. Use `channel.DefaultLogger(problemName)` or `channel.NewLoggerLevel(problemName, level)` to instantiate.
-- **Stdout Logger** (`stdout/`): Prints progress and messages directly to the standard output. Use `stdout.DefaultLogger(problemName)` or `stdout.NewLogger(problemName, level)` to instantiate.
-
-### Log Levels
-
-The logger supports three logging levels:
-
-```go
-type Level uint8
-
-const (
-    SILENT   Level = iota  // No output
-    INFO                    // Basic progress information (default)
-    VERBOSE                 // Detailed progress information
-)
-```
-
-`DefaultLogLevel` is `INFO`. Two helpers parse a level from a string, with different behavior for unrecognized input:
-
-| Function | On unrecognized input | Where it's used |
-|---|---|---|
-| `GetLogLevel(name string) Level` | returns `INFO` | `configuration` package, YAML `logLevel` key |
-| `GetLevel(level string) (Level, error)` | returns `SILENT` and an error | manual parsing where you want to reject bad input |
-
-`GetLevelString(level Level) string` does the reverse, returning `"Silent"`, `"Info"`, or `"Verbose"`.
-
-### Choosing a Built-in Logger
-
-| | `channel` | `stdout` |
-|---|---|---|
-| Output | Live-refreshing terminal dashboard (redraws in place) | Plain lines; solver progress on improvement or once per print interval |
-| Best for | Interactive terminal runs | Batch jobs, CI, redirecting to a file |
-| History buffer per solver | 128 KB | 512 KB |
-
-`configuration.SolverConfiguration.LoggerType` (a `logger.LogType`, backed by the YAML `logType` key) picks between them:
-
-```go
-type LogType = uint8
-
-const (
-    CHANNEL LogType = iota // use logger/channel
-    PRINT                   // use logger/stdout
-)
-
-func GetLogType(label string) LogType // "CHANNEL" or "PRINT", unknown -> PRINT
-```
-
-The `channel` dashboard draws in the terminal's alternate screen. When the run ends, it leaves the alternate screen and prints the final frame, followed by each solver's done message, to the normal terminal, so the result stays in the scrollback.
-
-The `channel.Log` lifecycle methods (`Start`, `Shutdown`, `Print`, `Finish`, `WorkersPrint`, `GetTicker`) are driven by the solver itself — you don't call them directly. The knobs you do set yourself, before passing the logger to a solver:
-
-- `SetTicker(timeMilliseconds int)` — dashboard refresh interval; values below 300ms are silently ignored.
-- `SetNumPoolMessages(num int)` — how many recent pool entries the dashboard shows.
-- `SetNumVerboseMessages(num int)` — how many recent verbose messages per solver the dashboard shows.
-
-The `stdout.Log` prints a solver's progress when its best cost improves, otherwise at most once per print interval (default 500 ms). Verbose messages are always printed.
-
-- `SetPrintInterval(timeMilliseconds int)` — minimum time between two prints of the same solver.
-
-With both loggers, each `Solve` empties the previous run's information and deletes its history files, so `GetReportData` and `GetSolutionData` return the last run.
-
-### Solver History on Disk
-
-Both loggers record every `Register` call. Each solver keeps its records in a memory buffer, 24 bytes per record (128 KB per solver for `channel`, 512 KB for `stdout`). When the buffer is full, the logger appends it to that solver's history file in one write and reuses the buffer. After its first flush, a solver also keeps an encoding buffer of the same size. The file is created on the first flush, so a run that never fills the buffer never touches the disk.
-
-`GetReportData` and `SaveCsv` return the whole history: the file's records first, then the ones still in memory. `SaveCsv` streams the file into the CSV; `GetReportData` returns the whole history in one slice.
-
-| Method | Effect |
+| Method | Called |
 |---|---|
-| `SetHistoryBuffer(bytes int)` | Buffer size per solver. `0` keeps the whole history in memory. |
-| `SetHistoryDir(dir string)` | Directory of the history files. Default: the system temp directory (`os.TempDir()`). |
-| `Close() error` | Part of `Logger`. Deletes the last run's history files. Call it after reading the results. |
+| `AddSolutionPool` | When the pool accepts a new best solution. |
+| `WorkerDone` | When a metaheuristic finishes, with its final message. |
+| `GetLogger` | Once per metaheuristic, at creation, to get its `SolverLogger`. |
+| `GetLogLevel` | By `Solve`, to decide what to print. |
+| `GetReportData`, `GetSolutionData` | By you, after `Solve`. |
+| `Reset` | By `Solve` at the start of every run; empty the previous run's data. |
+| `Close` | By you, after reading the results; release files or connections. Return `nil` if there is nothing to release. |
+| `Register` | By a metaheuristic, once per iteration: current cost, its best cost, elapsed seconds and optional extra text. |
+| `Verbose` | By a metaheuristic, for occasional events such as a population restart. |
 
-Both setters take effect at the next `Solve`, so you can call them after creating the solver. Each `Solve` deletes the previous run's history files. If a solver's file cannot be created or written, that solver keeps the rest of its history in memory and the logger prints one warning to stderr.
+Each metaheuristic runs in its own goroutine, so `WorkerDone` and different `SolverLogger`s can be called at the same time.
 
-Each file is named `rko-history-<problem>-<solver>-<id>-*.bin`, with characters invalid in file names replaced by `_` and each name part cut to 32 bytes. It holds fixed 24-byte little-endian records: local cost (`int64`), best cost (`int64`), time in seconds (`float64`).
+## See also
 
-The setters are not part of the `logger.Logger` interface. With the value returned by `configuration.CreateSolver`, type-assert to reach them:
-
-```go
-solver, log := configuration.CreateSolver(problemName, env, solverConfig)
-defer log.Close()
-if l, ok := log.(interface{ SetHistoryBuffer(bytes int) }); ok {
-    l.SetHistoryBuffer(1 << 20)
-}
-solver.Solve(context.Background())
-// read GetReportData or call SaveCsv here
-```
-
-You can implement your own logger by satisfying the `Logger` interface, including `Close() error`; return `nil` if there is nothing to release.
-
-## Usage Example
-
-```go
-import (
-    "context"
-    "fmt"
-
-    rko "github.com/RKO-solver/rko-go"
-    "github.com/RKO-solver/rko-go/logger"
-    "github.com/RKO-solver/rko-go/logger/channel"
-)
-
-env := MyEnvironment{}                        // your definition.Environment
-mh := []rko.MetaHeuristic{rko.GA, rko.SA}      // metaheuristics to run
-
-log := channel.NewLoggerLevel("MyOptimizationProblem", logger.VERBOSE)
-defer log.Close() // runs after the results below are read
-
-solver := rko.CreateDefaultSolver(mh, env, log)
-result := solver.Solve(context.Background())
-fmt.Printf("Best solution: %+v\n", result)
-
-// Retrieve and use the logged data.
-reportData := log.GetReportData()
-solutionData := log.GetSolutionData()
-fmt.Printf("%d solver(s), %d pooled solution(s)\n", len(reportData), len(solutionData))
-```
-
-`channel.DefaultLogger("MyOptimizationProblem")` is equivalent, using `logger.DefaultLogLevel` (`INFO`) instead.
-
-### Constructors
-
-| Package | Function | Level | Buffer size |
-|---|---|---|---|
-| `channel` | `DefaultLogger(problemName string)` | `logger.DefaultLogLevel` | default |
-| `channel` | `NewLoggerLevel(problemName string, level logger.Level)` | given | default |
-| `channel` | `NewLogger(problemName string, logLevel logger.Level, bufferSize int)` | given | given |
-| `stdout` | `DefaultLogger(problemName string)` | `logger.DefaultLogLevel` | n/a |
-| `stdout` | `NewLogger(problemName string, logLevel logger.Level)` | given | n/a |
-
-## Exporting Results to CSV
-
-`helpers.go` provides plain CSV writers, all under package `logger`:
-
-- `SaveCsvFile(filename string, data [][]string)` — writes rows as CSV; calls `log.Fatal` on I/O error.
-- `SavePoolCsv(poolData []SolutionData, problemName string, filename ...string)` — header `cost,time`; default filename `<problemName>-pool.csv`.
-- `SaveSolverCSV(solverInfo SolverInformation, problemName string, filename ...string)` — header `best,local,time`; default filename `<problemName>-<solverInfo.Name>-<solverInfo.Id>.csv`.
-
-Both `*channel.Log` and `*stdout.Log` also have a concrete `SaveCsv(filename ...string)` method that combines the two above (one CSV per solver, plus one pool CSV). **`SaveCsv` is not part of the `logger.Logger` interface**, so if you only have a `logger.Logger` value (for example, the one returned by `configuration.CreateSolver`), you must type-assert to reach it:
-
-```go
-solver, log := configuration.CreateSolver(problemName, env, solverConfig)
-defer log.Close()
-solver.Solve(context.Background())
-
-if saver, ok := log.(interface{ SaveCsv(filename ...string) }); ok {
-    saver.SaveCsv()
-}
-```
-
-If you built the logger yourself with `channel.DefaultLogger` or `stdout.DefaultLogger`, you already hold the concrete type and can call `log.SaveCsv()` directly. `SaveCsv` reads each solver's history file as it writes the CSV, so it never loads the whole history in memory.
-
-## Files
-- `definition.go`: Contains the `Logger`, `SolverLogger` interfaces, data structures, and `LogType`.
-- `constants.go`: Contains `Level` type, log level constants, and `GetLogLevel`.
-- `read.go`: Contains `GetLevel` and `GetLevelString`.
-- `helpers.go`: CSV export helpers (`SaveCsvFile`, `SavePoolCsv`, `SaveSolverCSV`).
-- `internal/spill/`: Writes each solver's history to a temporary binary file and reads it back, for both built-in loggers.
-- `channel/`: Channel-based logger implementation for detailed, real-time logging.
-- `stdout/`: Stdout logger implementation for simple console output.
-
-## See Also
 - [Project README](../README.md)
-- [definition package](../definition/README.md)
-
----
-This package is part of the [RKO-Go](https://github.com/RKO-solver/rko-go) library.
+- [`configuration` package](../configuration/README.md)
+- [`definition` package](../definition/README.md)
+- [`metaheuristc` package](../metaheuristc/README.md)

@@ -45,6 +45,7 @@ Create one pool, then each metaheuristic with its configuration and local search
 ```go
 rg := random.NewGeneratorSeed(42)
 log := stdout.DefaultLogger("knapsack")
+defer log.Close()
 pool := solution.NewDefaultPool(env, rg, log)
 
 ilsConfig := ils.DefaultConfigurationILS()

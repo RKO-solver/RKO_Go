@@ -71,6 +71,8 @@ func main() {
 	}}
 
 	log := stdout.DefaultLogger("tsp")
+	defer log.Close()
+
 	mh := []rko.MetaHeuristic{rko.ILS, rko.BRKGA}
 	solver := rko.CreateDefaultSolverTimeLimit(mh, 5*time.Second, env, log)
 
@@ -113,7 +115,9 @@ if err != nil {
 	log.Fatal(err)
 }
 
-solver, _ := configuration.CreateSolver("tsp", env, cfg)
+solver, rkoLog := configuration.CreateSolver("tsp", env, cfg)
+defer rkoLog.Close()
+
 tour := solver.Solve(context.Background()).([]int)
 ```
 
@@ -175,7 +179,7 @@ Every constructor takes a [`logger.Logger`](logger/README.md). Two ship with the
 | `logger/stdout` | `stdout.DefaultLogger(name)`, `stdout.NewLogger(name, level)` | Plain lines: a solver's progress when its best cost improves, otherwise at most every 500 ms (`SetPrintInterval`). Suits batch jobs and CI. |
 | `logger/channel` | `channel.DefaultLogger(name)`, `channel.NewLoggerLevel(name, level)` | A live dashboard in the terminal's alternate screen; the final frame stays in the scrollback. Suits interactive runs. |
 
-Levels are `logger.SILENT`, `logger.INFO` (default) and `logger.VERBOSE`. `Solve` resets the logger at the start of every run, so `GetReportData` and `GetSolutionData` describe the last run. Both loggers can save the run to CSV. See the [`logger` package](logger/README.md).
+Levels are `logger.SILENT`, `logger.INFO` (default) and `logger.VERBOSE`. `Solve` resets the logger at the start of every run, so `GetReportData` and `GetSolutionData` describe the last run. Both loggers can save the run to CSV, and spill each solver's history to [temporary files](logger/README.md#history-files) on long runs. `Solve` never calls the logger's `Close`, which deletes those files: `defer` it after creating the logger. See the [`logger` package](logger/README.md).
 
 ## Packages
 

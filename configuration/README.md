@@ -35,7 +35,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	solver, _ := configuration.CreateSolver("MyProblem", MyEnvironment{}, cfg) // MyEnvironment implements definition.Environment
+	solver, rkoLog := configuration.CreateSolver("MyProblem", MyEnvironment{}, cfg) // MyEnvironment implements definition.Environment
+	defer rkoLog.Close()
 
 	result := solver.Solve(context.Background())
 	fmt.Printf("Best solution: %+v\n", result)
@@ -168,7 +169,7 @@ A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r`
 | `CreateSolverSeed(problemName string, env definition.Environment, solverConfig *SolverConfiguration, seed uint64)` | The same, with a random generator seeded with `seed`. |
 | `DefaultConfiguration()` | `*MetaheuristicsConfiguration` with every metaheuristic at its defaults. |
 
-`problemName` names the logger. The returned `logger.Logger` is the one the solver writes to: read the run's data with `GetReportData` and `GetSolutionData`, or save it to CSV (see the [`logger` package](../logger/README.md)). All metaheuristics share one solution pool and one logger; each gets its own random generator, split from the main one. Because they exchange solutions through the pool while running, a seeded run with several metaheuristics or a time limit can still vary.
+`problemName` names the logger. The returned `logger.Logger` is the one the solver writes to: read the run's data with `GetReportData` and `GetSolutionData`, or save it to CSV (see the [`logger` package](../logger/README.md)). Neither `CreateSolver` nor `Solve` closes it: `defer` its `Close` to delete the history files once you have read the results. All metaheuristics share one solution pool and one logger; each gets its own random generator, split from the main one. Because they exchange solutions through the pool while running, a seeded run with several metaheuristics or a time limit can still vary.
 
 ### Types
 
@@ -217,7 +218,8 @@ cfg := &configuration.SolverConfiguration{
 	Configuration: mhConfig,
 }
 
-solver, log := configuration.CreateSolver("MyProblem", MyEnvironment{}, cfg)
+solver, rkoLog := configuration.CreateSolver("MyProblem", MyEnvironment{}, cfg)
+defer rkoLog.Close()
 ```
 
 A Go-built configuration skips the YAML parsing, so:
