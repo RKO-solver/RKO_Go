@@ -8,7 +8,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// CreateDefaultMultiStart creates a MultiStart that uses the default RVND local search.
+// CreateDefaultMultiStart creates a MultiStart with the default local search.
 func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart {
 	local := search.CreateDefault(env, solutionPool, rg)
 
@@ -21,7 +21,7 @@ func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, s
 	}
 }
 
-// CreateMultiStart creates a MultiStart that uses the local search se.
+// CreateMultiStart creates a MultiStart with the local search se.
 func CreateMultiStart(env definition.Environment, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart {
 	return &MultiStart{
 		env:          env,

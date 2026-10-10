@@ -18,7 +18,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// CreateDefaultSolver creates a Solver running the given metaheuristics with default parameters.
+// CreateDefaultSolver creates a Solver that runs the metaheuristics in mh with default parameters.
 func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger logger.Logger) *Solver {
 	rg := random.NewGenerator()
 	solutionPool := solution.NewDefaultPool(env, rg, logger)
@@ -71,7 +71,7 @@ func CreateDefaultSolverTimeLimit(mh []MetaHeuristic, timeLimit time.Duration, e
 	return solver
 }
 
-// CreateFullSolver creates a Solver from already-built solvers and pool; a non-positive timeLimit or maxIterations means no limit.
+// CreateFullSolver creates a Solver from already-built solvers and pool; non-positive limits mean no limit.
 func CreateFullSolver(logger logger.Logger, env definition.Environment, timeLimit time.Duration, maxIterations int, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
 	if timeLimit <= 0 && maxIterations <= 0 {
 		fmt.Fprintln(os.Stdout, NoLimitWarning)

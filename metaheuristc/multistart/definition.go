@@ -1,3 +1,4 @@
+// Package multistart implements a multi-start local search.
 package multistart
 
 import (
@@ -8,10 +9,9 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// name is the solver name used in logs.
 const name = "MultiStart"
 
-// MultiStart repeatedly resets to a random key and improves it with a local search.
+// MultiStart is a multi-start local search solver.
 type MultiStart struct {
 	env          definition.Environment
 	logger       logger.SolverLogger
@@ -20,7 +20,6 @@ type MultiStart struct {
 	solutionPool *solution.Pool
 }
 
-// Print prints the solver name and its local search.
 func (m *MultiStart) Print() {
 	search.PrintSolver(name, m.search)
 }

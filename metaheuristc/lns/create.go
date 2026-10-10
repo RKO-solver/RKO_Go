@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// DefaultConfigurationLNS returns the default LNS parameters.
 func DefaultConfigurationLNS() *Configuration {
 	return &Configuration{
 		BetaMin: constants.DefaultShakeMin,
@@ -16,6 +17,7 @@ func DefaultConfigurationLNS() *Configuration {
 	}
 }
 
+// CreateDefaultLNS creates an LNS with the default configuration and local search.
 func CreateDefaultLNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS {
 	local := search.CreateDefault(env, solutionPool, rg)
 
@@ -29,6 +31,7 @@ func CreateDefaultLNS(env definition.Environment, rg *random.Generator, solution
 	}
 }
 
+// CreateLNS creates an LNS with the local search of searchType.
 func CreateLNS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS {
 	local := search.Create(searchType, env, solutionPool, rg)
 
@@ -42,6 +45,7 @@ func CreateLNS(env definition.Environment, configuration *Configuration, searchT
 	}
 }
 
+// CreateLNSComplete creates an LNS with the local search se.
 func CreateLNSComplete(env definition.Environment, configuration *Configuration, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS {
 	return &LNS{
 		env:           env,

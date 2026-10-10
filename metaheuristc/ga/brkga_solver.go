@@ -62,7 +62,6 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 		population, populationIntermediary = populationIntermediary, population
 
-		// apply local search in random element
 		k := rg.IntN(populationSize)
 		local.Search(ctx, population[k])
 

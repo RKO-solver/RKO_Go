@@ -10,6 +10,7 @@ import (
 
 const nameBRKGA = "BRKGA"
 
+// ConfigurationBRKGA holds the BRKGA parameters.
 type ConfigurationBRKGA struct {
 	PopulationSize             int     `yaml:"PopulationSize"`
 	EliteRatio                 float64 `yaml:"EliteRatio"`
@@ -19,6 +20,7 @@ type ConfigurationBRKGA struct {
 	MaxGenerationNoImprovement int     `yaml:"MaxGenerationNoImprovement"`
 }
 
+// BRKGA is a Biased Random-Key Genetic Algorithm solver.
 type BRKGA struct {
 	env           definition.Environment
 	configuration *ConfigurationBRKGA

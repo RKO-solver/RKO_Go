@@ -9,12 +9,14 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// DefaultConfigurationVNS returns the default VNS parameters.
 func DefaultConfigurationVNS() *Configuration {
 	return &Configuration{
 		Rate: constants.DefaultRate,
 	}
 }
 
+// CreateDefaultVNS creates a VNS with the default configuration and local search.
 func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
 	local := search.CreateDefault(env, solutionPool, rg)
 
@@ -28,6 +30,7 @@ func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solution
 	}
 }
 
+// CreateVNS creates a VNS with the local search of searchType.
 func CreateVNS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
 	local := search.Create(searchType, env, solutionPool, rg)
 
@@ -41,6 +44,7 @@ func CreateVNS(env definition.Environment, configuration *Configuration, searchT
 	}
 }
 
+// CreateVNSComplete creates a VNS with the local search se.
 func CreateVNSComplete(env definition.Environment, configuration *Configuration, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
 	return &VNS{
 		env:           env,

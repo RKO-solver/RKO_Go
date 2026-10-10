@@ -1,3 +1,4 @@
+// Package sa implements Simulated Annealing (SA).
 package sa
 
 import (
@@ -10,6 +11,7 @@ import (
 
 const name = "SA"
 
+// Configuration holds the SA parameters.
 type Configuration struct {
 	Alpha              float64 `yaml:"Alpha"`
 	TemperatureInitial float64 `yaml:"TemperatureInitial"`
@@ -21,6 +23,7 @@ type Configuration struct {
 	Iterations         int     `yaml:"Iterations"`
 }
 
+// SimulatedAnnealing is a Simulated Annealing solver.
 type SimulatedAnnealing struct {
 	env           definition.Environment
 	configuration *Configuration

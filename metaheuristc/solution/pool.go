@@ -16,7 +16,7 @@ import (
 
 const defaultMaxSize = 10
 
-// Pool is a thread-safe, size-bounded collection of ranked solutions.
+// Pool is a thread-safe set of solutions sorted by ascending cost.
 type Pool struct {
 	mu        sync.RWMutex
 	solutions []*metaheuristc.RandomKeyValue
@@ -30,7 +30,7 @@ var (
 	once     sync.Once
 )
 
-// GetGlobalInstance returns the singleton Pool, created on the first call.
+// GetGlobalInstance returns the process-wide default Pool.
 func GetGlobalInstance(env definition.Environment, logger logger.Logger, rg *random.Generator) *Pool {
 	once.Do(func() {
 		instance = NewDefaultPool(env, rg, logger)
@@ -39,7 +39,7 @@ func GetGlobalInstance(env definition.Environment, logger logger.Logger, rg *ran
 	return instance
 }
 
-// NewPool creates a Pool seeded with initialSize random solutions.
+// NewPool creates a Pool of initialSize random solutions capped at maxSize.
 func NewPool(maxSize int, initialSize int, env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
 	pool := &Pool{
 		maxSize:   maxSize,
@@ -66,17 +66,17 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 	return pool
 }
 
-// NewDefaultPool creates a Pool capped at 10 random solutions.
+// NewDefaultPool creates a Pool of 10 random solutions capped at 10.
 func NewDefaultPool(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
 	return NewPool(defaultMaxSize, defaultMaxSize, env, rg, logger)
 }
 
-// NewDefaultPoolUnlimited creates an unbounded Pool with 10 random solutions.
+// NewDefaultPoolUnlimited creates an uncapped Pool of 10 random solutions.
 func NewDefaultPoolUnlimited(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
 	return NewPool(-1, defaultMaxSize, env, rg, logger)
 }
 
-// AddSolution inserts solution into the pool if it is not the worst.
+// AddSolution adds a copy of solution if it beats the pool's best.
 func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, time float64) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -111,7 +111,7 @@ func (p *Pool) BestSolution() *metaheuristc.RandomKeyValue {
 	return p.solutions[0].Clone()
 }
 
-// GetSolution returns a clone of the solution at index, panics if out of range.
+// GetSolution returns a clone of the solution at index (0 is the best).
 func (p *Pool) GetSolution(index int) *metaheuristc.RandomKeyValue {
 	p.mu.RLock()
 	defer p.mu.RUnlock()

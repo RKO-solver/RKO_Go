@@ -63,7 +63,6 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 			solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
 		}
-		// apply local search in random element
 		k := rg.IntN(configuration.PopulationSize)
 		local.Search(ctx, children[k])
 

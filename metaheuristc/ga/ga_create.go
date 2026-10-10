@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// DefaultConfigurationGA returns the default GA parameters.
 func DefaultConfigurationGA() *ConfigurationGA {
 	return &ConfigurationGA{
 		PopulationSize:             constants.DefaultPopulationSize,
@@ -18,6 +19,7 @@ func DefaultConfigurationGA() *ConfigurationGA {
 	}
 }
 
+// CreateDefaultGA creates a GA with the default configuration and local search.
 func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
 	local := search.CreateDefault(env, solutionPool, rg)
 
@@ -31,6 +33,7 @@ func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionP
 	}
 }
 
+// CreateGA creates a GA with the local search of searchType.
 func CreateGA(env definition.Environment, configuration *ConfigurationGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
 	local := search.Create(searchType, env, solutionPool, rg)
 	return &GA{
@@ -43,6 +46,7 @@ func CreateGA(env definition.Environment, configuration *ConfigurationGA, search
 	}
 }
 
+// CreateGAComplete creates a GA with the local search se.
 func CreateGAComplete(env definition.Environment, config *ConfigurationGA, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *GA {
 	return &GA{
 		env:           env,

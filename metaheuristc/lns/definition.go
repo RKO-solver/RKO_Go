@@ -1,3 +1,4 @@
+// Package lns implements Large Neighbourhood Search (LNS).
 package lns
 
 import (
@@ -10,11 +11,13 @@ import (
 
 const name = "LNS"
 
+// Configuration holds the LNS parameters.
 type Configuration struct {
 	BetaMin float64 `yaml:"BetaMin"`
 	BetaMax float64 `yaml:"BetaMax"`
 }
 
+// LNS is a Large Neighbourhood Search solver.
 type LNS struct {
 	env           definition.Environment
 	configuration *Configuration

@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// DefaultConfigurationSA returns the default SA parameters.
 func DefaultConfigurationSA() *Configuration {
 	return &Configuration{
 		Alpha:              constants.DefaultAlphaSimulationAnnealing,
@@ -22,6 +23,7 @@ func DefaultConfigurationSA() *Configuration {
 	}
 }
 
+// CreateDefaultSA creates a SimulatedAnnealing with the default configuration and local search.
 func CreateDefaultSA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *SimulatedAnnealing {
 	local := search.CreateDefault(env, solutionPool, rg)
 
@@ -35,6 +37,7 @@ func CreateDefaultSA(env definition.Environment, rg *random.Generator, solutionP
 	}
 }
 
+// CreateSA creates a SimulatedAnnealing with the local search of searchType.
 func CreateSA(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *SimulatedAnnealing {
 	local := search.Create(searchType, env, solutionPool, rg)
 	return &SimulatedAnnealing{
@@ -47,6 +50,7 @@ func CreateSA(env definition.Environment, configuration *Configuration, searchTy
 	}
 }
 
+// CreateSAComplete creates a SimulatedAnnealing with the local search se.
 func CreateSAComplete(env definition.Environment, config *Configuration, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) definition.Solver {
 	return &SimulatedAnnealing{
 		env:           env,

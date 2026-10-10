@@ -5,8 +5,10 @@ import "strings"
 // NoLimitWarning is printed when a Solver is built with neither a time limit nor an iteration limit.
 const NoLimitWarning = "Warning: neither TimeLimitSeconds nor MaxIterations is set; the solver will run until its context is cancelled"
 
+// MetaHeuristic identifies a metaheuristic.
 type MetaHeuristic = int
 
+// MetaHeuristic values; GRASP, VLNS, ALNS and IPR are not implemented yet.
 const (
 	MULTISTART MetaHeuristic = iota
 	SA
@@ -21,6 +23,7 @@ const (
 	IPR
 )
 
+// GetMetaHeuristic returns the MetaHeuristic named by label (case-insensitive), or -1 if unknown.
 func GetMetaHeuristic(label string) MetaHeuristic {
 	label = strings.ToUpper(label)
 	switch label {
@@ -51,6 +54,7 @@ func GetMetaHeuristic(label string) MetaHeuristic {
 	}
 }
 
+// GetMetaHeuristicString returns the full name of metaHeuristic, or "" if unknown.
 func GetMetaHeuristicString(metaHeuristic MetaHeuristic) string {
 	switch metaHeuristic {
 	case MULTISTART:
@@ -80,6 +84,7 @@ func GetMetaHeuristicString(metaHeuristic MetaHeuristic) string {
 	}
 }
 
+// GetMetaHeuristicShort returns the abbreviation of metaHeuristic, or "" if unknown.
 func GetMetaHeuristicShort(metaHeuristic MetaHeuristic) string {
 	switch metaHeuristic {
 	case MULTISTART:

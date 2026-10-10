@@ -30,17 +30,16 @@ type Solver struct {
 	Search        []search.Type
 }
 
-// SolverConfiguration holds the logger, time and iteration limits, metaheuristics and tuning parameters of a solver.
+// SolverConfiguration holds the settings used to build a Solver.
 type SolverConfiguration struct {
 	LoggerLevel   logger.Level
 	LoggerType    logger.LogType
 	TimeLimit     time.Duration // 0 or negative means no limit
-	MaxIterations int           // iterations (generations for GA/BRKGA) per metaheuristic; 0 or negative means no limit
+	MaxIterations int           // 0 or negative means no limit
 	Solvers       []Solver
-	Configuration *MetaheuristicsConfiguration
+	Configuration *MetaheuristicsConfiguration // nil means DefaultConfiguration()
 }
 
-// solverYamlConfiguration mirrors the top level of the YAML file.
 type solverYamlConfiguration struct {
 	LogLevel         string              `yaml:"LogLevel"`
 	LogType          string              `yaml:"LogType"`
@@ -50,7 +49,6 @@ type solverYamlConfiguration struct {
 	Configuration    mhYamlConfiguration `yaml:"Configuration"`
 }
 
-// mhYamlConfiguration mirrors the Configuration section of the YAML file.
 type mhYamlConfiguration struct {
 	BRKGA *ga.ConfigurationBRKGA `yaml:"BRKGA"`
 	GA    *ga.ConfigurationGA    `yaml:"GA"`

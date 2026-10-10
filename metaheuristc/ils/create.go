@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// DefaultConfigurationILS returns the default ILS parameters.
 func DefaultConfigurationILS() *Configuration {
 	return &Configuration{
 		ShakeMin:            constants.DefaultShakeMin,
@@ -17,6 +18,7 @@ func DefaultConfigurationILS() *Configuration {
 	}
 }
 
+// CreateDefaultILS creates an ILS with the default configuration and local search.
 func CreateDefaultILS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *ILS {
 	local := search.CreateDefault(env, solutionPool, rg)
 
@@ -30,6 +32,7 @@ func CreateDefaultILS(env definition.Environment, rg *random.Generator, solution
 	}
 }
 
+// CreateILS creates an ILS with the local search of searchType.
 func CreateILS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *ILS {
 	local := search.Create(searchType, env, solutionPool, rg)
 	return &ILS{
@@ -42,6 +45,7 @@ func CreateILS(env definition.Environment, configuration *Configuration, searchT
 	}
 }
 
+// CreateILSComplete creates an ILS with the local search se.
 func CreateILSComplete(env definition.Environment, config *Configuration, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *ILS {
 	return &ILS{
 		env:           env,

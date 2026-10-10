@@ -46,10 +46,8 @@ func fareySearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environm
 			rko.RK[i] = value
 			cost := environment.Cost(rko.RK)
 			if cost < rko.Cost {
-				// mantain best solution
 				rko.Cost = cost
 			} else {
-				// return to the best solution
 				rko.RK[i] = oldValue
 			}
 		}
@@ -74,11 +72,9 @@ func (s *fareyLocalSearch) SetRG(rg *random.Generator) {
 	s.rg = rg
 }
 
+// CreateFareyLocalSearch returns the Farey local search.
 func CreateFareyLocalSearch(environment definition.Environment, rg *random.Generator) Local {
 	return &fareyLocalSearch{environment, rg}
 }
 
-// --- The Compile-Time Check ---
-// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
-// If it doesn't, the code will not compile.
 var _ Local = (*fareyLocalSearch)(nil)

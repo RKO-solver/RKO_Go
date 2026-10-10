@@ -1,3 +1,4 @@
+// Package ils implements Iterated Local Search (ILS).
 package ils
 
 import (
@@ -10,12 +11,14 @@ import (
 
 const name = "ILS"
 
+// Configuration holds the ILS parameters.
 type Configuration struct {
 	ShakeMin            float64 `yaml:"ShakeMin"`
 	ShakeMax            float64 `yaml:"ShakeMax"`
 	MetropolisCriterion bool    `yaml:"MetropolisCriterion"`
 }
 
+// ILS is an Iterated Local Search solver.
 type ILS struct {
 	env           definition.Environment
 	configuration *Configuration

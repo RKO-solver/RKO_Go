@@ -29,7 +29,6 @@ func DefaultConfiguration() *MetaheuristicsConfiguration {
 	}
 }
 
-// createMHConfiguration applies opts on top of the default configuration.
 func createMHConfiguration(opts ...Option) *MetaheuristicsConfiguration {
 	config := DefaultConfiguration()
 
@@ -40,7 +39,6 @@ func createMHConfiguration(opts ...Option) *MetaheuristicsConfiguration {
 	return config
 }
 
-// processMetaheuristics parses "NAME[=search,...]" entries, dropping unknown names, unknown searches and RVND.
 func processMetaheuristics(metaheuristics []string) []Solver {
 	mhs := make([]Solver, 0)
 
@@ -75,7 +73,7 @@ func processMetaheuristics(metaheuristics []string) []Solver {
 	return mhs
 }
 
-// CreateSolverConfiguration loads the YAML file at filePath, keeping defaults for unset or non-positive parameters.
+// CreateSolverConfiguration loads a SolverConfiguration from the YAML file at filePath.
 func CreateSolverConfiguration(filePath string) (*SolverConfiguration, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {

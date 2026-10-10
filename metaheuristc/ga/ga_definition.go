@@ -1,3 +1,4 @@
+// Package ga implements the Genetic Algorithm (GA) and the Biased Random-Key Genetic Algorithm (BRKGA).
 package ga
 
 import (
@@ -10,6 +11,7 @@ import (
 
 const nameGA = "GA"
 
+// ConfigurationGA holds the GA parameters.
 type ConfigurationGA struct {
 	PopulationSize             int     `yaml:"PopulationSize"`
 	CrossoverAlpha             float64 `yaml:"CrossoverAlpha"`
@@ -17,6 +19,7 @@ type ConfigurationGA struct {
 	MaxGenerationNoImprovement int     `yaml:"MaxGenerationNoImprovement"`
 }
 
+// GA is a Genetic Algorithm solver.
 type GA struct {
 	env           definition.Environment
 	configuration *ConfigurationGA

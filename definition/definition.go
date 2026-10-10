@@ -1,5 +1,4 @@
-// Package definition provides core interfaces and types for optimization problems.
-// Implement Environment for your problem to use this library's metaheuristics.
+// Package definition defines the problem Environment, the Solver interface and random keys.
 package definition
 
 import (
@@ -10,48 +9,46 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// RandomKey represents a solution as a slice of float64 values (random keys).
+// RandomKey is a solution encoded as keys in [0, 1).
 type RandomKey []float64
 
-// Solver is the interface that wraps the basic methods required for a metaheuristic solver.
+// Solver is a metaheuristic that can be run by rko.Solver.
 type Solver interface {
-	// Solve executes the metaheuristic and returns a Result.
+	// Solve runs the metaheuristic until it finishes or ctx is done and returns its Result.
 	Solve(ctx context.Context) Result
-	// Name returns the name of the solver.
+	// Name returns the solver name.
 	Name() string
-	// SetRG sets the random number generator for the solver.
+	// SetRG sets the random generator of the solver.
 	SetRG(rg *random.Generator)
-	// Print its configuration
+	// Print prints the solver configuration.
 	Print()
 }
 
-// Environment is the interface that must be implemented for a specific optimization problem.
-// It defines how solutions are represented, evaluated, and decoded.
+// Environment describes the problem to optimize; the user implements it.
 type Environment interface {
-	// NumKeys returns the number of keys (variables) in the problem.
+	// NumKeys returns the number of keys in a solution.
 	NumKeys() int
-	// Cost evaluates the cost (objective function) for a given solution.
+	// Cost returns the objective value of r; lower is better.
 	Cost(r RandomKey) int
-	// Decode converts a solution from random keys to the problem's representation.
+	// Decode converts r into the problem's own representation.
 	Decode(r RandomKey) any
-	// SwapSearch Gets the pair start and end to perform multiple swaps
+	// SwapSearch returns [start, end) key ranges; the Swap local search swaps keys within each range.
 	SwapSearch() [][2]int
 }
 
-// Result holds the output of a solver, including the decoded solution, its cost, and the time spent.
+// Result is the outcome of one Solver.Solve call.
 type Result struct {
-	Solution        any     // Decoded solution in the problem's representation
-	Cost            int     // Cost (objective value) of the solution
-	TimeSpentSecond float64 // Time spent to obtain the solution (in seconds)
+	Solution        any     // Solution decoded by Environment.Decode
+	Cost            int     // Cost of the solution
+	TimeSpentSecond float64 // Seconds from the start of the run until Solve returned
 }
 
-// SortedIndex returns the indices that would sort the RandomKey in ascending order to be used by the user for decoding the problem (https://doi.org/10.48550/arXiv.2411.04293).
+// SortedIndex returns the indices that sort keys in ascending order (https://doi.org/10.48550/arXiv.2411.04293).
 func (keys RandomKey) SortedIndex() []int {
 	indices := make([]int, len(keys))
 	for i := range indices {
 		indices[i] = i
 	}
-	// Sort the indices based on the values in keys
 	sort.Slice(indices, func(i, j int) bool {
 		return keys[indices[i]] < keys[indices[j]]
 	})
@@ -70,8 +67,7 @@ func (keys RandomKey) Clone() RandomKey {
 	return copyKeys
 }
 
-// Equals checks if two RandomKey slices are equal.
-// Note: Be mindful of float precision if strict equality is not desired.
+// Equals reports whether keys and other hold exactly the same values.
 func (keys RandomKey) Equals(other RandomKey) bool {
 	if keys == nil && other == nil {
 		return true
@@ -87,7 +83,7 @@ func (keys RandomKey) Equals(other RandomKey) bool {
 	return true
 }
 
-// Similarity Use Cosine Similarity
+// Similarity returns the cosine similarity of keys and key.
 func (keys RandomKey) Similarity(key RandomKey) float64 {
 	return dotMultiplier(keys, key) / (sizeVector(keys) * sizeVector(key))
 }

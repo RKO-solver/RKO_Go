@@ -35,12 +35,9 @@ func rvnd(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment def
 		case Nelder:
 			nelderMeadSearch(ctx, rko, maxIterations, environment, s, r)
 		}
-		// there was improvement
 		if rko.Cost < localSolutionCost {
 			localSolutionCost = rko.Cost
 		} else {
-			// there wasn't improvement
-			// remove neighborhood
 			neighbourhood = slices.Delete(neighbourhood, neighbourhoodId, neighbourhoodId+1)
 
 		}
@@ -75,25 +72,19 @@ func (s *rvndSearch) SetRG(rg *random.Generator) {
 	s.rg = rg
 }
 
+// CreateRVND returns an RVND local search over neighbourhood.
 func CreateRVND(environment definition.Environment, s *solution.Pool, rg *random.Generator, neighbourhood []Type) Local {
 	n := 0
 	for _, neighbour := range neighbourhood {
-		// Filter, Keep only
 		if neighbour != RVND {
-			// Move the kept element to the front of the slice.
 			neighbourhood[n] = neighbour
 			n++
 		}
 	}
 
-	// Truncate the slice. This is the crucial step.
-	// It updates the slice's length to only include the elements we kept.
 	neighbourhood = neighbourhood[:n]
 
 	return &rvndSearch{environment, rg, s, neighbourhood}
 }
 
-// --- The Compile-Time Check ---
-// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
-// If it doesn't, the code will not compile.
 var _ Local = (*rvndSearch)(nil)

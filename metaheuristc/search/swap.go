@@ -21,10 +21,8 @@ func swapSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environme
 				rko.RK[i], rko.RK[j] = rko.RK[j], rko.RK[i]
 				cost := environment.Cost(rko.RK)
 				if cost < rko.Cost {
-					// maintain best solution
 					rko.Cost = cost
 				} else {
-					// return to the best solution
 					rko.RK[i], rko.RK[j] = rko.RK[j], rko.RK[i]
 				}
 			}
@@ -47,11 +45,9 @@ func (s swapLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKey
 
 func (s swapLocalSearch) SetRG(rg *random.Generator) {}
 
+// CreateSwapLocalSearch returns the Swap local search.
 func CreateSwapLocalSearch(environment definition.Environment) Local {
 	return swapLocalSearch{environment}
 }
 
-// --- The Compile-Time Check ---
-// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
-// If it doesn't, the code will not compile.
 var _ Local = (*swapLocalSearch)(nil)

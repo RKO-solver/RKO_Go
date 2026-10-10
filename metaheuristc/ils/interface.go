@@ -26,7 +26,4 @@ func (ils *ILS) Solve(ctx context.Context) definition.Result {
 	}
 }
 
-// --- The Compile-Time Check ---
-// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
-// If it doesn't, the code will not compile.
 var _ definition.Solver = (*ILS)(nil)

@@ -81,7 +81,6 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 					localSolution.Cost = neighbour.Cost
 					copy(localSolution.RK, neighbour.RK)
 				}
-				// Get the best solution for local solution
 			}
 
 		}

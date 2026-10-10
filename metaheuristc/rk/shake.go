@@ -8,6 +8,7 @@ import (
 
 type shakeType = int
 
+// ShakeMax is the number of Shake moves.
 const ShakeMax = swapNeighbour + 1
 
 const (
@@ -17,6 +18,7 @@ const (
 	swapNeighbour
 )
 
+// Shake applies random moves to solution and recomputes its cost.
 func Shake(solution *metaheuristc.RandomKeyValue, min float64, max float64, rg *random.Generator, env definition.Environment) {
 	n := solution.RK.Len()
 	var intensity int

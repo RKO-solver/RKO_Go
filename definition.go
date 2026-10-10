@@ -1,3 +1,4 @@
+// Package rko runs several random-key metaheuristics in parallel over a shared solution pool.
 package rko
 
 import (
@@ -16,14 +17,14 @@ import (
 // Solver runs several metaheuristics in parallel over a shared solution pool.
 type Solver struct {
 	l             logger.Logger
-	env           definition.Environment // Problem environment (user implementation)
-	solutionPool  *solution.Pool         // Shared pool of solutions among solvers
-	solvers       []definition.Solver    // List of metaheuristic solvers to run
+	env           definition.Environment
+	solutionPool  *solution.Pool
+	solvers       []definition.Solver
 	timeLimit     time.Duration
-	maxIterations int // iteration limit of each metaheuristic; 0 or negative means no limit
+	maxIterations int
 }
 
-// Solve runs every metaheuristic until the time limit, the iteration limit or ctx stops it, and returns the best solution decoded.
+// Solve runs the metaheuristics and returns the pool's best solution, decoded.
 func (s *Solver) Solve(ctx context.Context) any {
 	logLevel := s.l.GetLogLevel()
 	var loggerWg sync.WaitGroup
@@ -41,8 +42,8 @@ func (s *Solver) Solve(ctx context.Context) any {
 		ctx_, cancel := context.WithTimeout(ctx, s.timeLimit)
 		ctx = ctx_
 		defer cancel()
-
 	}
+
 	ctxStartTime := definition.WithStartTime(ctx, time.Now())
 	for i, sv := range s.solvers {
 		if logLevel > logger.SILENT {

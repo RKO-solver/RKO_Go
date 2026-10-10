@@ -6,6 +6,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// Create returns the local search of typeSearch.
 func Create(typeSearch Type, environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {
 	switch typeSearch {
 	case Swap:
@@ -27,6 +28,7 @@ func Create(typeSearch Type, environment definition.Environment, solutionPool *s
 	}
 }
 
+// CreateDefault returns an RVND over Swap, Mirror, Farey and Nelder-Mead.
 func CreateDefault(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {
 	neighbourhood := make([]Type, 4)
 	neighbourhood[0] = Swap

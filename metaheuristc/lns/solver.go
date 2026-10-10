@@ -91,7 +91,6 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 				}
 			}
 
-			// Keep the best found key
 			localSolution.Cost = currentBest
 			localSolution.RK[pos] = rkBest
 		}

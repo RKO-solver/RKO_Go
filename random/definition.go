@@ -45,6 +45,7 @@ func NewGeneratorSeed(seed uint64) *Generator {
 	}
 }
 
+// Split returns a new Generator seeded with two values drawn from g.
 func (g *Generator) Split() *Generator {
 	return &Generator{rand: rand.New(rand.NewPCG(g.rand.Uint64(), g.rand.Uint64()))}
 }

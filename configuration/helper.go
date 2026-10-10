@@ -7,7 +7,6 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// getSearch returns the single listed search, an RVND over several, or the default RVND when none is valid; RVND entries are skipped.
 func getSearch(sea []search.Type, environment definition.Environment, s *solution.Pool, rg *random.Generator) search.Local {
 	if len(sea) == 1 {
 		switch sea[0] {

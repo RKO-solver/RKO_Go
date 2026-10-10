@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// contextKey is the type of the keys this package stores in a context.
 type contextKey int
 
 const (
@@ -16,7 +15,7 @@ const (
 // IterationCounter counts a metaheuristic's iterations and cancels its context at the limit.
 type IterationCounter struct {
 	iteration, max int
-	cancel         context.CancelFunc // nil when there is no limit
+	cancel         context.CancelFunc
 }
 
 // Iteration returns the number of completed iterations.
@@ -57,7 +56,6 @@ func WithMaxIterations(ctx context.Context, n int) context.Context {
 	return context.WithValue(ctx, maxIterationsKey, n)
 }
 
-// maxIterations returns the limit stored in ctx and whether it is positive.
 func maxIterations(ctx context.Context) (int, bool) {
 	if n, ok := ctx.Value(maxIterationsKey).(int); ok && n > 0 {
 		return n, true
@@ -65,7 +63,7 @@ func maxIterations(ctx context.Context) (int, bool) {
 	return -1, false
 }
 
-// GetMHContext returns a context for one metaheuristic and its IterationCounter, which cancels that context at the limit set by WithMaxIterations.
+// GetMHContext returns a context for one metaheuristic and its IterationCounter.
 func GetMHContext(ctx context.Context) (context.Context, *IterationCounter) {
 	maxIteration, hasLimit := maxIterations(ctx)
 	if !hasLimit {

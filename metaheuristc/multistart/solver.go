@@ -12,7 +12,6 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-// solve restarts from random keys, adding improvements to the pool, and returns the last local solution and the elapsed seconds.
 func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
 	ctx, ctxAction := definition.GetMHContext(ctx)
 	defer ctxAction.Stop()

@@ -1,3 +1,4 @@
+// Package vns implements Variable Neighbourhood Search (VNS).
 package vns
 
 import (
@@ -10,10 +11,12 @@ import (
 
 const name = "VNS"
 
+// Configuration holds the VNS parameters.
 type Configuration struct {
 	Rate float64 `yaml:"Rate"`
 }
 
+// VNS is a Variable Neighbourhood Search solver.
 type VNS struct {
 	env           definition.Environment
 	configuration *Configuration

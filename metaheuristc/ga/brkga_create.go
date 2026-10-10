@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// DefaultConfigurationBRKGA returns the default BRKGA parameters.
 func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
 	return &ConfigurationBRKGA{
 		PopulationSize:             constants.DefaultPopulationSize,
@@ -20,6 +21,7 @@ func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
 	}
 }
 
+// CreateDefaultBRKGA creates a BRKGA with the default configuration and local search.
 func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA {
 	local := search.CreateDefault(env, solutionPool, rg)
 
@@ -33,6 +35,7 @@ func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, soluti
 	}
 }
 
+// CreateBRKGA creates a BRKGA with the local search of searchType.
 func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA {
 	local := search.Create(searchType, env, solutionPool, rg)
 	return &BRKGA{
@@ -45,6 +48,7 @@ func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, 
 	}
 }
 
+// CreateBRKGAComplete creates a BRKGA with the local search se.
 func CreateBRKGAComplete(env definition.Environment, config *ConfigurationBRKGA, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *BRKGA {
 	return &BRKGA{
 		env:           env,

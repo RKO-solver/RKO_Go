@@ -74,6 +74,7 @@ func (n nelderMeadLocalSearch) Search(ctx context.Context, rko *metaheuristc.Ran
 	nelderMeadSearch(ctx, rko, n.maxIterations, n.environment, n.solutionPool, n.rg)
 }
 
+// CreateNelderMeadLocalSearch returns the Nelder-Mead local search.
 func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {
 	maxIterations := int(float64(environment.NumKeys()) * math.Exp(-2))
 	return &nelderMeadLocalSearch{environment, solutionPool, rg, maxIterations}
@@ -142,7 +143,4 @@ func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, max
 	rko.Cost = x1.Cost
 }
 
-// --- The Compile-Time Check ---
-// This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
-// If it doesn't, the code will not compile.
 var _ Local = (*nelderMeadLocalSearch)(nil)
