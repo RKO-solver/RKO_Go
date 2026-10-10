@@ -34,6 +34,8 @@ type Environment interface {
 	Decode(r RandomKey) any
 	// SwapSearch returns [start, end) key ranges; the Swap local search swaps keys within each range.
 	SwapSearch() [][2]int
+	// ProblemName returns the problem name used to label the logger and its output files.
+	ProblemName() string
 }
 
 // Result is the outcome of one Solver.Solve call.

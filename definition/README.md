@@ -14,6 +14,7 @@ type Environment interface {
     Cost(r RandomKey) int
     Decode(r RandomKey) any
     SwapSearch() [][2]int
+    ProblemName() string
 }
 ```
 
@@ -23,6 +24,7 @@ type Environment interface {
 | `Cost(r)` | The objective value of `r`. **Every metaheuristic minimizes it**; negate it to maximize. |
 | `Decode(r)` | `r` in your problem's representation. `Solve` returns `Decode` of the best solution. |
 | `SwapSearch()` | `{start, end}` ranges for the swap local search, which tries swapping keys `i` and `j` for every `start <= i < j < end`. Return `[][2]int{{0, NumKeys()}}` to allow any pair, or `nil` to disable it. |
+| `ProblemName()` | The problem name. It labels the logger and its output files, such as the CSV and history files, so keep it short and safe in file names. |
 
 The metaheuristics run in parallel and call `Cost` and `Decode` concurrently, so these methods must not modify shared state.
 
@@ -70,6 +72,9 @@ func (k Knapsack) Cost(r definition.RandomKey) int {
 
 // SwapSearch disables the swap local search.
 func (k Knapsack) SwapSearch() [][2]int { return nil }
+
+// ProblemName returns the name that labels the logger and its output files.
+func (k Knapsack) ProblemName() string { return "knapsack" }
 ```
 
 ## RandomKey

@@ -61,6 +61,9 @@ func (t TSP) Decode(r definition.RandomKey) any { return r.SortedIndex() }
 // SwapSearch lets the swap local search exchange any two keys.
 func (t TSP) SwapSearch() [][2]int { return [][2]int{{0, t.NumKeys()}} }
 
+// ProblemName returns the name that labels the logger and its output files.
+func (t TSP) ProblemName() string { return "tsp" }
+
 func main() {
 	env := TSP{Dist: [][]int{
 		{0, 2, 9, 10, 7},
@@ -115,7 +118,7 @@ if err != nil {
 	log.Fatal(err)
 }
 
-solver, rkoLog := configuration.CreateSolver("tsp", env, cfg)
+solver, rkoLog := configuration.CreateSolver(env, cfg)
 defer rkoLog.Close()
 
 tour := solver.Solve(context.Background()).([]int)
@@ -136,7 +139,7 @@ See the [`configuration` package](configuration/README.md) for every key and its
 | `rko.CreateDefaultSolver(mh, env, log)` | 150 s | none |
 | `rko.CreateDefaultSolverTimeLimit(mh, timeLimit, env, log)` | `timeLimit` | none |
 | `rko.CreateFullSolver(log, env, timeLimit, maxIterations, pool, solvers)` | `timeLimit` | `maxIterations` |
-| `configuration.CreateSolver(name, env, cfg)` | `TimeLimitSeconds` in YAML (`cfg.TimeLimit`) | `MaxIterations` in YAML (`cfg.MaxIterations`) |
+| `configuration.CreateSolver(env, cfg)` | `TimeLimitSeconds` in YAML (`cfg.TimeLimit`) | `MaxIterations` in YAML (`cfg.MaxIterations`) |
 
 - A zero or negative value means no limit.
 - `MaxIterations` is one number for the whole run, counted by each metaheuristic separately: each one stops after that many iterations of its own outer loop (a generation for GA and BRKGA, a temperature step for SA). `Solve` returns once all of them have stopped.

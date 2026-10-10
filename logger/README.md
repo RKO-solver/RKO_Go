@@ -100,7 +100,7 @@ type SolutionData struct {
 `SaveCsv` is not part of the `Logger` interface. With the `logger.Logger` returned by `configuration.CreateSolver`, type-assert to reach it:
 
 ```go
-solver, rkoLog := configuration.CreateSolver("MyProblem", env, cfg)
+solver, rkoLog := configuration.CreateSolver(env, cfg) // the logger is named from env.ProblemName()
 defer rkoLog.Close()
 
 solver.Solve(context.Background())
@@ -137,7 +137,7 @@ Both loggers keep each solver's history in a memory buffer of 24 bytes per recor
 The setters are methods of `*stdout.Log` and `*channel.Log`, not of the `Logger` interface. They take effect at the next `Solve`, so you can call them after creating the solver:
 
 ```go
-solver, rkoLog := configuration.CreateSolver("MyProblem", env, cfg)
+solver, rkoLog := configuration.CreateSolver(env, cfg)
 defer rkoLog.Close()
 
 if l, ok := rkoLog.(interface{ SetHistoryBuffer(bytes int) }); ok {
