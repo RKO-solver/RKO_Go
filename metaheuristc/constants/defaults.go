@@ -22,4 +22,4 @@ const DefaultMutationAlpha = 0.005
 const DefaultMaxGenerationNoImprovement = 100
 
 const DefaultEliteRatio = 0.2
-const DefaultMutantRation = 0.05
+const DefaultMutantRatio = 0.05

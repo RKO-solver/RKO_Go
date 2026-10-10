@@ -92,7 +92,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 		ga.logger.Register(population[0].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d, without improvement %d", ctxAction.Iteration(), generationNoImprovement))
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
-			ga.logger.Verbose("Limit Generations without improvement exceeded. Resiting population", time.Since(start).Seconds())
+			ga.logger.Verbose("Limit Generations without improvement exceeded. Resetting population", time.Since(start).Seconds())
 			restartBest := initialPopulation(population, env, true, rg)
 			if restartBest.Cost < bestPerson.Cost {
 				bestPerson = restartBest

@@ -56,13 +56,13 @@ func GetMetaHeuristicString(metaHeuristic MetaHeuristic) string {
 	case MULTISTART:
 		return "MultiStart"
 	case SA:
-		return "Simulation Annealing"
+		return "Simulated Annealing"
 	case GA:
 		return "Genetic Algorithm"
 	case VNS:
 		return "Variable Neighborhood Search"
 	case ILS:
-		return "Iterated Search"
+		return "Iterated Local Search"
 	case BRKGA:
 		return "Biased Random Key Genetic Algorithm"
 	case GRASP:

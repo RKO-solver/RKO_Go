@@ -13,7 +13,7 @@ func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
 	return &ConfigurationBRKGA{
 		PopulationSize:             constants.DefaultPopulationSize,
 		EliteRatio:                 constants.DefaultEliteRatio,
-		MutantRatio:                constants.DefaultMutantRation,
+		MutantRatio:                constants.DefaultMutantRatio,
 		CrossoverAlpha:             constants.DefaultCrossoverAlpha,
 		MutationAlpha:              constants.DefaultMutationAlpha,
 		MaxGenerationNoImprovement: constants.DefaultMaxGenerationNoImprovement,

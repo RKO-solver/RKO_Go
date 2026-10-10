@@ -47,14 +47,14 @@ func rvnd(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment def
 	}
 }
 
-type rvndseach struct {
+type rvndSearch struct {
 	environment   definition.Environment
 	rg            *random.Generator
 	s             *solution.Pool
 	neighbourhood []Type
 }
 
-func (s rvndseach) String() string {
+func (s rvndSearch) String() string {
 	composition := GetSearchString(RVND) + ": "
 	for i, neighbour := range s.neighbourhood {
 		composition += GetSearchString(neighbour)
@@ -65,23 +65,23 @@ func (s rvndseach) String() string {
 	return composition
 }
 
-func (s rvndseach) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
+func (s rvndSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
 	neighbourhood := make([]Type, len(s.neighbourhood))
 	copy(neighbourhood, s.neighbourhood)
 	rvnd(ctx, rko, s.environment, s.s, s.rg, neighbourhood)
 }
 
-func (s *rvndseach) SetRG(rg *random.Generator) {
+func (s *rvndSearch) SetRG(rg *random.Generator) {
 	s.rg = rg
 }
 
 func CreateRVND(environment definition.Environment, s *solution.Pool, rg *random.Generator, neighbourhood []Type) Local {
 	n := 0
-	for _, neighboor := range neighbourhood {
+	for _, neighbour := range neighbourhood {
 		// Filter, Keep only
-		if neighboor != RVND {
+		if neighbour != RVND {
 			// Move the kept element to the front of the slice.
-			neighbourhood[n] = neighboor
+			neighbourhood[n] = neighbour
 			n++
 		}
 	}
@@ -90,10 +90,10 @@ func CreateRVND(environment definition.Environment, s *solution.Pool, rg *random
 	// It updates the slice's length to only include the elements we kept.
 	neighbourhood = neighbourhood[:n]
 
-	return &rvndseach{environment, rg, s, neighbourhood}
+	return &rvndSearch{environment, rg, s, neighbourhood}
 }
 
 // --- The Compile-Time Check ---
 // This line "tells" the compiler to verify that *MyProcessor implements DataProcessor.
 // If it doesn't, the code will not compile.
-var _ Local = (*rvndseach)(nil)
+var _ Local = (*rvndSearch)(nil)
