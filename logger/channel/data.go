@@ -77,7 +77,7 @@ func (d *information) reset(c spill.Config) {
 		s.reset(c)
 		d.extraMessages[id] = make([]extraInfo, 0)
 	}
-	d.pool = make([]poolInfo, 0)
+	d.pool = make([]poolInfo, 0, 50)
 	d.workerMessages = make([]string, 0)
 	d.altScreen = false
 }

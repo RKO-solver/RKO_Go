@@ -51,7 +51,7 @@ func (l *Log) GetLogger(name string) logger.SolverLogger {
 
 // Reset empties the pool and every solver's history, files and print state, keeping the registered solvers.
 func (l *Log) Reset() {
-	l.pool = make([]poolInfo, 0)
+	l.pool = make([]poolInfo, 0, 50)
 	for _, solverLogger := range l.solversLogger {
 		solverLogger.reset(l.historyConfig())
 	}
