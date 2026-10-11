@@ -55,8 +55,8 @@ func writeTempFile(t *testing.T, content string) string {
 
 func defaultDecoded() config.Config {
 	return config.Config{
-		LogLevel:   logger.INFO,
-		LogType:    logger.PRINT,
+		LogLevel:   logger.LevelInfo,
+		LogType:    logger.TypePrint,
 		SeedPool:   config.SeedPool{MaxSize: solution.DefaultSize, InitialSize: solution.DefaultSize},
 		Parameters: config.DefaultParameters(),
 	}
@@ -71,7 +71,7 @@ func mustDecode(t *testing.T, src string, strict bool) config.Config {
 
 func TestDecodeFull(t *testing.T) {
 	src := `LogLevel: VERBOSE
-LogType: CHANNEL
+LogType: DASHBOARD
 TimeLimitSeconds: 60
 MaxIterations: 500
 SeedPool:
@@ -116,8 +116,8 @@ Parameters:
 	for _, strict := range []bool{false, true} {
 		cfg := mustDecode(t, src, strict)
 
-		assert.Equal(t, logger.VERBOSE, cfg.LogLevel)
-		assert.Equal(t, logger.CHANNEL, cfg.LogType)
+		assert.Equal(t, logger.LevelVerbose, cfg.LogLevel)
+		assert.Equal(t, logger.TypeDashboard, cfg.LogType)
 		assert.Equal(t, 60*time.Second, cfg.TimeLimit)
 		assert.Equal(t, 500, cfg.MaxIterations)
 		assert.Equal(t, config.SeedPool{MaxSize: 50, InitialSize: 20}, cfg.SeedPool)
@@ -286,8 +286,8 @@ func TestDecodeNullDocumentGivesDefaults(t *testing.T) {
 	for _, src := range []string{"---\n", "~\n", "{}\n"} {
 		t.Run(strings.TrimSpace(src), func(t *testing.T) {
 			c := config.Config{
-				LogLevel:       logger.VERBOSE,
-				LogType:        logger.CHANNEL,
+				LogLevel:       logger.LevelVerbose,
+				LogType:        logger.TypeDashboard,
 				TimeLimit:      time.Hour,
 				MaxIterations:  9,
 				SeedPool:       config.SeedPool{MaxSize: 1, InitialSize: 1},
@@ -307,8 +307,8 @@ func TestDecodeMultipleDocuments(t *testing.T) {
 	var a, b, c config.Config
 	require.NoError(t, d.Decode(&a))
 	require.NoError(t, d.Decode(&b))
-	assert.Equal(t, logger.SILENT, a.LogLevel)
-	assert.Equal(t, logger.VERBOSE, b.LogLevel)
+	assert.Equal(t, logger.LevelSilent, a.LogLevel)
+	assert.Equal(t, logger.LevelVerbose, b.LogLevel)
 
 	assert.Equal(t, io.EOF, d.Decode(&c))
 	assert.Equal(t, io.EOF, d.Decode(&c))
@@ -320,7 +320,7 @@ func TestDecodeLenientIgnoresUnknown(t *testing.T) {
 		"top-level GA":            "GA:\n  PopulationSize: 123\n",
 		"old Configuration key":   "Configuration:\n  GA:\n    PopulationSize: 123\n",
 		"old SeedPoolMaxSize":     "SeedPoolMaxSize: 3\n",
-		"lowercase keys":          "loglevel: SILENT\nlogtype: CHANNEL\ntimelimitseconds: 10\nmaxiterations: 10\n",
+		"lowercase keys":          "loglevel: SILENT\nlogtype: DASHBOARD\ntimelimitseconds: 10\nmaxiterations: 10\n",
 		"MaxIterations in ILS":    "Parameters:\n  ILS:\n    MaxIterations: 88\n",
 		"misspelled nested key":   "SeedPool:\n  Max: 4\n",
 		"unknown section":         "Parameters:\n  TABU:\n    Size: 3\n",
@@ -341,14 +341,14 @@ func TestDecodeLogLevel(t *testing.T) {
 		value    string
 		expected logger.Level
 	}{
-		{"SILENT", logger.SILENT},
-		{"silent", logger.SILENT},
-		{"INFO", logger.INFO},
-		{"Info", logger.INFO},
-		{"VERBOSE", logger.VERBOSE},
-		{"verbose", logger.VERBOSE},
-		{"DEBUG", logger.INFO},
-		{`""`, logger.INFO},
+		{"SILENT", logger.LevelSilent},
+		{"silent", logger.LevelSilent},
+		{"INFO", logger.LevelInfo},
+		{"Info", logger.LevelInfo},
+		{"VERBOSE", logger.LevelVerbose},
+		{"verbose", logger.LevelVerbose},
+		{"DEBUG", logger.LevelInfo},
+		{`""`, logger.LevelInfo},
 	}
 
 	for _, tt := range tests {
@@ -361,14 +361,15 @@ func TestDecodeLogLevel(t *testing.T) {
 func TestDecodeLogType(t *testing.T) {
 	tests := []struct {
 		value    string
-		expected logger.LogType
+		expected logger.Type
 	}{
-		{"CHANNEL", logger.CHANNEL},
-		{"channel", logger.CHANNEL},
-		{"PRINT", logger.PRINT},
-		{"Print", logger.PRINT},
-		{"FILE", logger.PRINT},
-		{`""`, logger.PRINT},
+		{"DASHBOARD", logger.TypeDashboard},
+		{"dashboard", logger.TypeDashboard},
+		{"PRINT", logger.TypePrint},
+		{"Print", logger.TypePrint},
+		{"FILE", logger.TypePrint},
+		{"CHANNEL", logger.TypePrint},
+		{`""`, logger.TypePrint},
 	}
 
 	for _, tt := range tests {
@@ -523,6 +524,7 @@ func TestDecodeStrictUnknownValue(t *testing.T) {
 	}{
 		{"LogLevel", "LogLevel: DEBUG\n", `config: LogLevel: unknown value "DEBUG"`, true},
 		{"LogType", "LogType: FILE\n", `config: LogType: unknown value "FILE"`, true},
+		{"LogType CHANNEL", "LogType: CHANNEL\n", `config: LogType: unknown value "CHANNEL"`, true},
 		{"metaheuristic", "Metaheuristics:\n  - \"TABU=Swap\"\n", `config: Metaheuristics[0]: unknown value "TABU"`, true},
 		{"search", "Metaheuristics:\n  - GA\n  - \"SA=Swap, Bogus\"\n", `config: Metaheuristics[1]: unknown value "Bogus"`, true},
 		{"empty entry", "Metaheuristics:\n  - \"\"\n", `config: Metaheuristics[0]: unknown value ""`, true},
@@ -555,7 +557,7 @@ func TestDecodeStrictAcceptsMissingAndDefaults(t *testing.T) {
 		{"empty mapping", "{}\n", nil},
 		{"empty LogLevel", `LogLevel: ""` + "\n", nil},
 		{"null LogLevel", "LogLevel:\n", nil},
-		{"lowercase values", "LogLevel: info\nLogType: channel\n", nil},
+		{"lowercase values", "LogLevel: info\nLogType: dashboard\n", nil},
 		{"empty searches", "Metaheuristics:\n  - \"VNS=\"\n", []config.Metaheuristic{{Type: rko.VNS}}},
 		{"RVND is accepted and skipped", "Metaheuristics:\n  - \"SA=Swap, RVND\"\n", []config.Metaheuristic{{Type: rko.SA, Searches: []search.Type{search.Swap}}}},
 	}
@@ -638,7 +640,7 @@ func TestDecodeNilConfig(t *testing.T) {
 
 	var c config.Config
 	require.NoError(t, d.Decode(&c))
-	assert.Equal(t, logger.SILENT, c.LogLevel)
+	assert.Equal(t, logger.LevelSilent, c.LogLevel)
 }
 
 func TestReadFile(t *testing.T) {
@@ -647,9 +649,9 @@ func TestReadFile(t *testing.T) {
 	cfgs, err := config.ReadFile(path)
 	require.NoError(t, err)
 	require.Len(t, cfgs, 2)
-	assert.Equal(t, logger.SILENT, cfgs[0].LogLevel)
+	assert.Equal(t, logger.LevelSilent, cfgs[0].LogLevel)
 	assert.Equal(t, 1, cfgs[0].MaxIterations)
-	assert.Equal(t, logger.VERBOSE, cfgs[1].LogLevel)
+	assert.Equal(t, logger.LevelVerbose, cfgs[1].LogLevel)
 	assert.Equal(t, 2, cfgs[1].MaxIterations)
 }
 

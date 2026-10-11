@@ -78,14 +78,22 @@ func typeErrors(te *yaml.TypeError) []error {
 func convert(y *yamlConfig) (Config, []error) {
 	var errs []error
 
-	level := logger.GetLogLevel(y.LogLevel)
-	if !validLogLevel(y.LogLevel) {
-		errs = append(errs, fmt.Errorf("config: LogLevel: %w %q", ErrUnknownValue, y.LogLevel))
+	level := logger.DefaultLevel
+	if y.LogLevel != "" {
+		if v, err := logger.ParseLevel(y.LogLevel); err != nil {
+			errs = append(errs, fmt.Errorf("config: LogLevel: %w %q", ErrUnknownValue, y.LogLevel))
+		} else {
+			level = v
+		}
 	}
 
-	logType := logger.GetLogType(y.LogType)
-	if !validLogType(y.LogType) {
-		errs = append(errs, fmt.Errorf("config: LogType: %w %q", ErrUnknownValue, y.LogType))
+	logType := logger.TypePrint
+	if y.LogType != "" {
+		if v, err := logger.ParseType(y.LogType); err != nil {
+			errs = append(errs, fmt.Errorf("config: LogType: %w %q", ErrUnknownValue, y.LogType))
+		} else {
+			logType = v
+		}
 	}
 
 	maxSize, initialSize := seedPoolSizes(y.SeedPool.MaxSize, y.SeedPool.InitialSize)
@@ -114,22 +122,6 @@ func convert(y *yamlConfig) (Config, []error) {
 		Metaheuristics: mhs,
 		Parameters:     params,
 	}, errs
-}
-
-func validLogLevel(s string) bool {
-	switch strings.ToUpper(s) {
-	case "", "SILENT", "INFO", "VERBOSE":
-		return true
-	}
-	return false
-}
-
-func validLogType(s string) bool {
-	switch strings.ToUpper(s) {
-	case "", "PRINT", "CHANNEL":
-		return true
-	}
-	return false
 }
 
 func parseMetaheuristics(entries []string) ([]Metaheuristic, []error) {

@@ -2,7 +2,7 @@ package vns
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -11,7 +11,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
 	ctx, ctxAction := definition.GetMHContext(ctx)
 	defer ctxAction.Stop()
 
@@ -27,7 +27,7 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	bestSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
-	solutionPool.AddSolution(bestSolution, time.Since(start).Seconds())
+	solutionPool.AddSolution(bestSolution, time.Since(start))
 
 	localSolution = bestSolution.Clone()
 
@@ -53,21 +53,20 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 				copy(bestSolution.RK, localSolution.RK)
 				bestSolution.Cost = localSolution.Cost
 
-				solutionPool.AddSolution(bestSolution, time.Since(start).Seconds())
+				solutionPool.AddSolution(bestSolution, time.Since(start))
 
 				k = 1
 
-				elapsedTime := time.Since(start).Seconds()
+				elapsedTime := time.Since(start)
 
-				message := fmt.Sprintf("Iteration: %d, best solution: %d, local solution %d", ctxAction.Iteration(), bestSolution.Cost, localSolution.Cost)
-				vns.logger.Verbose(message, elapsedTime)
+				vns.logger.Event(slog.Attr{Key: "improved", Value: slog.GroupValue(slog.Int("iteration", ctxAction.Iteration()), slog.Int("local", localSolution.Cost))}, elapsedTime)
 			} else {
 				k++
 			}
 		}
 
-		vns.logger.Register(localSolution.Cost, bestSolution.Cost, time.Since(start).Seconds(), fmt.Sprintf("Iteration: %d", ctxAction.Iteration()))
+		vns.logger.Register(localSolution.Cost, bestSolution.Cost, ctxAction.Iteration(), time.Since(start))
 	}
 
-	return bestSolution, time.Since(start).Seconds()
+	return bestSolution, time.Since(start)
 }

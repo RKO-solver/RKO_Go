@@ -6,6 +6,7 @@ import (
 	"slices"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
@@ -80,13 +81,13 @@ func NewDefaultPoolUnlimited(env definition.Environment, rg *random.Generator, l
 }
 
 // AddSolution adds a copy of solution if it beats the pool's best.
-func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, time float64) {
+func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, elapsed time.Duration) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
 	if len(p.solutions) == 0 {
 		p.solutions = append(p.solutions, solution.Clone())
-		p.logger.AddSolutionPool(solution.Cost, time)
+		p.logger.AddSolutionPool(solution.Cost, elapsed)
 		return
 	}
 
@@ -105,7 +106,7 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, time float64) 
 	//}
 
 	p.solutions = slices.Insert(p.solutions, 0, solution.Clone())
-	p.logger.AddSolutionPool(solution.Cost, time)
+	p.logger.AddSolutionPool(solution.Cost, elapsed)
 	if p.limited && len(p.solutions) >= p.maxSize {
 		p.solutions = p.solutions[:p.maxSize]
 	}

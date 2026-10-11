@@ -66,9 +66,9 @@ func TestNewSolverValidateOrder(t *testing.T) {
 }
 
 func TestNewSolverValidateValid(t *testing.T) {
-	cfg := &Config{LogType: logger.CHANNEL, Parameters: DefaultParameters()}
+	cfg := &Config{LogType: logger.TypeDashboard, Parameters: DefaultParameters()}
 	assert.NoError(t, cfg.validate())
-	cfg.LogType = logger.PRINT
+	cfg.LogType = logger.TypePrint
 	cfg.Parameters = nil
 	assert.NoError(t, cfg.validate())
 }

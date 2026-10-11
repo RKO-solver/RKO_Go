@@ -33,7 +33,7 @@ var fareySequence = []float64{
 	1.0,
 }
 
-func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
 	ctx, ctxAction := definition.GetMHContext(ctx)
 	defer ctxAction.Stop()
 
@@ -49,7 +49,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	bestSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
-	solutionPool.AddSolution(bestSolution, time.Since(start).Seconds())
+	solutionPool.AddSolution(bestSolution, time.Since(start))
 
 	localSolution = &metaheuristc.RandomKeyValue{
 		RK:   make(definition.RandomKey, env.NumKeys()),
@@ -74,7 +74,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 			for j := 0; j < len(fareySequence)-1; j++ {
 				if ctx.Err() != nil {
-					return bestSolution, time.Since(start).Seconds()
+					return bestSolution, time.Since(start)
 
 				}
 
@@ -100,12 +100,12 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 			bestSolutionCost := solutionPool.BestSolutionCost()
 			if bestSolution.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
+				solutionPool.AddSolution(bestSolution.Clone(), time.Since(start))
 			}
 		}
 
-		lns.logger.Register(localSolution.Cost, bestSolution.Cost, time.Since(start).Seconds(), "")
+		lns.logger.Register(localSolution.Cost, bestSolution.Cost, ctxAction.Iteration(), time.Since(start))
 	}
 
-	return bestSolution, time.Since(start).Seconds()
+	return bestSolution, time.Since(start)
 }

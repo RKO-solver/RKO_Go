@@ -1,33 +1,10 @@
-package channel
+package dashboard
 
 import (
 	"fmt"
+	"io"
 	"strings"
 )
-
-const maxHorizontalSize = 300
-
-const maxScreenVerticalLines = 15
-
-const numLinesSolutionPool = 3
-
-const freeTopLines = 1
-
-const numMaxColumns = 3
-
-const solverBlockSize = 100
-
-const lastNVerboses = 3
-
-const cleanLineCode = "\033[K"
-
-const enterAltScreenCode = "\033[?1049h"
-
-const leaveAltScreenCode = "\033[?1049l"
-
-const cursorHomeCode = "\033[H"
-
-const clearToEndCode = "\033[J"
 
 func setFixedLength(s string, length int, pad bool) string {
 	if len(s) > length {
@@ -43,7 +20,7 @@ func setFixedLength(s string, length int, pad bool) string {
 }
 
 // printShell redraws the dashboard in the alternate screen, entering it on the first frame.
-func (d *information) printShell() {
+func (d *information) printShell(w io.Writer) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -55,11 +32,11 @@ func (d *information) printShell() {
 	b.WriteString(cursorHomeCode)
 	d.writeFrame(&b)
 	b.WriteString(clearToEndCode)
-	fmt.Print(b.String())
+	io.WriteString(w, b.String())
 }
 
-// printFinal leaves the alternate screen, if entered, and prints the frame once on the normal screen.
-func (d *information) printFinal() {
+// printFinal leaves the alternate screen, if entered, and prints the frame and the done lines once on the normal screen.
+func (d *information) printFinal(w io.Writer) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -69,7 +46,10 @@ func (d *information) printFinal() {
 		b.WriteString(leaveAltScreenCode)
 	}
 	d.writeFrame(&b)
-	fmt.Print(b.String())
+	for _, r := range d.workers {
+		fmt.Fprintf(&b, "(%d) %s done cost=%d time=%.3fs\n", r.ID, r.Name, r.Cost, r.Elapsed.Seconds())
+	}
+	io.WriteString(w, b.String())
 }
 
 // writeFrame appends the dashboard lines to b, one per line; the caller must hold d.mu.
@@ -77,7 +57,7 @@ func (d *information) writeFrame(b *strings.Builder) {
 	lines := make([]string, 0)
 
 	// Top Text
-	for _ = range freeTopLines {
+	for range freeTopLines {
 		lines = append(lines, cleanLineCode)
 	}
 
@@ -87,9 +67,9 @@ func (d *information) writeFrame(b *strings.Builder) {
 		idx = 0
 	}
 
-	for _ = range d.numLinesPool {
+	for range d.numLinesPool {
 		if idx < len(d.pool) {
-			text := setFixedLength(fmt.Sprintf("Adding to pool %d at %.3fs", d.pool[idx].cost, d.pool[idx].time), maxHorizontalSize, false)
+			text := setFixedLength(fmt.Sprintf("pool cost=%d time=%.3fs", d.pool[idx].Cost, d.pool[idx].Elapsed.Seconds()), maxHorizontalSize, false)
 			lines = append(lines, text)
 			idx++
 		} else {
@@ -106,27 +86,17 @@ func (d *information) writeFrame(b *strings.Builder) {
 	for id, s := range d.solvers {
 		solversLog = append(solversLog, []string{})
 		if s.hasLast { // read last, not records: records may have just been spilled and emptied
-			header = setFixedLength(fmt.Sprintf("(%d) %s: %s", id, s.name, s.last.extra), solverBlockSize, false)
-			info = setFixedLength(fmt.Sprintf("    Local %d Best %d", s.last.local, s.last.localBest), solverBlockSize, false)
-			bottom = setFixedLength(fmt.Sprintf("    Time %.3fs", s.last.time), solverBlockSize, false)
+			header = setFixedLength(fmt.Sprintf("(%d) %s: iteration %d", id, s.name, s.last.iteration), solverBlockSize, false)
+			info = setFixedLength(fmt.Sprintf("    Local %d Best %d", s.last.local, s.last.best), solverBlockSize, false)
+			bottom = setFixedLength(fmt.Sprintf("    Time %.3fs", s.last.elapsed.Seconds()), solverBlockSize, false)
 
 			solversLog[id] = append(solversLog[id], header)
 			solversLog[id] = append(solversLog[id], info)
 			solversLog[id] = append(solversLog[id], bottom)
 
-			numVerbose := len(d.extraMessages[id])
-
-			if numVerbose > 0 {
-
-				start := numVerbose - d.numVerboseMessages // lastNVerboses
-				if start < 0 {
-					start = 0
-				}
-
-				for i := start; i < numVerbose; i++ {
-					message := setFixedLength(fmt.Sprintf("Verbose: %s Time %.3fs", d.extraMessages[id][i].message, d.extraMessages[id][i].timeStamp), solverBlockSize, false)
-					solversLog[id] = append(solversLog[id], message)
-				}
+			for _, e := range s.events {
+				message := setFixedLength(fmt.Sprintf("    %s time=%.3fs", e.attr, e.elapsed.Seconds()), solverBlockSize, false)
+				solversLog[id] = append(solversLog[id], message)
 			}
 		}
 	}

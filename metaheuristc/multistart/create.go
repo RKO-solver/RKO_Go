@@ -14,7 +14,7 @@ func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, s
 
 	return &MultiStart{
 		env:          env,
-		logger:       logger.GetLogger(name),
+		logger:       logger.SolverLogger(name),
 		search:       local,
 		solutionPool: solutionPool,
 		RG:           rg,
@@ -25,7 +25,7 @@ func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, s
 func CreateMultiStart(env definition.Environment, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart {
 	return &MultiStart{
 		env:          env,
-		logger:       logger.GetLogger(name),
+		logger:       logger.SolverLogger(name),
 		search:       se,
 		solutionPool: solutionPool,
 		RG:           rg,

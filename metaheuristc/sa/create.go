@@ -30,7 +30,7 @@ func CreateDefaultSA(env definition.Environment, rg *random.Generator, solutionP
 	return &SimulatedAnnealing{
 		env:           env,
 		configuration: DefaultConfigurationSA(),
-		logger:        logger.GetLogger(name),
+		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
 		RG:            rg,
@@ -43,7 +43,7 @@ func CreateSA(env definition.Environment, configuration *Configuration, searchTy
 	return &SimulatedAnnealing{
 		env:           env,
 		configuration: configuration,
-		logger:        logger.GetLogger(name),
+		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
 		RG:            rg,
@@ -55,7 +55,7 @@ func CreateSAComplete(env definition.Environment, config *Configuration, se sear
 	return &SimulatedAnnealing{
 		env:           env,
 		configuration: config,
-		logger:        l.GetLogger(name),
+		logger:        l.SolverLogger(name),
 		search:        se,
 		solutionPool:  pool,
 		RG:            rg,

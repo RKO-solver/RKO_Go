@@ -3,12 +3,13 @@ package config
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/logger/channel"
-	"github.com/RKO-solver/rko-go/logger/stdout"
+	"github.com/RKO-solver/rko-go/logger/dashboard"
+	"github.com/RKO-solver/rko-go/logger/printer"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
 	"github.com/RKO-solver/rko-go/metaheuristc/lns"
@@ -21,7 +22,7 @@ import (
 )
 
 // NewSolver builds a solver and its logger from cfg; the caller closes the logger.
-func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.Solver, logger.Logger, error) {
+func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.Solver, logger.Recorder, error) {
 	if err := cfg.validate(); err != nil {
 		return nil, nil, err
 	}
@@ -38,12 +39,12 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 
 	maxSize, initialSize := seedPoolSizes(cfg.SeedPool.MaxSize, cfg.SeedPool.InitialSize)
 
-	var log logger.Logger
+	var log logger.Recorder
 	switch cfg.LogType {
-	case logger.CHANNEL:
-		log = channel.NewLoggerLevel(env.ProblemName(), cfg.LogLevel)
+	case logger.TypeDashboard:
+		log = dashboard.New(env.ProblemName(), &dashboard.Options{Level: cfg.LogLevel})
 	default:
-		log = stdout.NewLogger(env.ProblemName(), cfg.LogLevel)
+		log = printer.New(os.Stdout, env.ProblemName(), &printer.Options{Level: cfg.LogLevel})
 	}
 
 	rg := o.generator()
@@ -92,10 +93,10 @@ func newMetaheuristic(t rko.MetaHeuristic, p *Parameters, env definition.Environ
 
 func (cfg *Config) validate() error {
 	var errs []error
-	if cfg.LogLevel != logger.SILENT && cfg.LogLevel != logger.INFO && cfg.LogLevel != logger.VERBOSE {
+	if cfg.LogLevel < logger.LevelSilent || cfg.LogLevel > logger.LevelVerbose {
 		errs = append(errs, fmt.Errorf("config: LogLevel: %w %d", ErrUnknownValue, cfg.LogLevel))
 	}
-	if cfg.LogType != logger.PRINT && cfg.LogType != logger.CHANNEL {
+	if cfg.LogType > logger.TypeDashboard {
 		errs = append(errs, fmt.Errorf("config: LogType: %w %d", ErrUnknownValue, cfg.LogType))
 	}
 	for i, m := range cfg.Metaheuristics {

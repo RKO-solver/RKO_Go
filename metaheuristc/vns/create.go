@@ -23,7 +23,7 @@ func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solution
 	return &VNS{
 		env:           env,
 		configuration: DefaultConfigurationVNS(),
-		logger:        logger.GetLogger(name),
+		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
 		RG:            rg,
@@ -37,7 +37,7 @@ func CreateVNS(env definition.Environment, configuration *Configuration, searchT
 	return &VNS{
 		env:           env,
 		configuration: configuration,
-		logger:        logger.GetLogger(name),
+		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
 		RG:            rg,
@@ -49,7 +49,7 @@ func CreateVNSComplete(env definition.Environment, configuration *Configuration,
 	return &VNS{
 		env:           env,
 		configuration: configuration,
-		logger:        logger.GetLogger(name),
+		logger:        logger.SolverLogger(name),
 		search:        se,
 		solutionPool:  solutionPool,
 		RG:            rg,

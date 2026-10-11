@@ -46,7 +46,7 @@ func solveWithin(t *testing.T, solver *rko.Solver, d time.Duration) {
 }
 
 func silentConfig() *config.Config {
-	return &config.Config{LogLevel: logger.SILENT, LogType: logger.PRINT, MaxIterations: 3}
+	return &config.Config{LogLevel: logger.LevelSilent, LogType: logger.TypePrint, MaxIterations: 3}
 }
 
 func cloneConfig(cfg *config.Config) config.Config {
@@ -100,7 +100,7 @@ func mhConfigs(t *testing.T, s *rko.Solver) []reflect.Value {
 	return out
 }
 
-func newSolver(t *testing.T, cfg *config.Config, opts ...config.Option) (*rko.Solver, logger.Logger) {
+func newSolver(t *testing.T, cfg *config.Config, opts ...config.Option) (*rko.Solver, logger.Recorder) {
 	t.Helper()
 	solver, log, err := cfg.NewSolver(testEnv{n: 30}, opts...)
 	require.NoError(t, err)
@@ -128,10 +128,10 @@ func TestNewSolverMaxIterationsStopsEveryMetaheuristic(t *testing.T) {
 	solver, log := newSolver(t, cfg, config.WithSeed(42))
 	solveWithin(t, solver, 30*time.Second)
 
-	report := log.GetReportData()
+	report := log.Report()
 	require.Len(t, report, len(cfg.Metaheuristics))
 	for _, info := range report {
-		assert.Len(t, info.Performance, maxIterations, info.Name)
+		assert.Len(t, info.Samples, maxIterations, info.Name)
 	}
 }
 
@@ -338,7 +338,7 @@ func TestNewSolverConcurrent(t *testing.T) {
 
 			const n = 4
 			solvers := make([]*rko.Solver, 2*n)
-			logs := make([]logger.Logger, 2*n)
+			logs := make([]logger.Recorder, 2*n)
 			errs := make([]error, 2*n)
 			var wg sync.WaitGroup
 			for i := range solvers {
@@ -395,5 +395,5 @@ func TestNewSolverNoOptions(t *testing.T) {
 	cfg.Metaheuristics = allMetaheuristics()
 	solver, log := newSolver(t, cfg)
 	solveWithin(t, solver, 30*time.Second)
-	assert.Len(t, log.GetReportData(), len(cfg.Metaheuristics))
+	assert.Len(t, log.Report(), len(cfg.Metaheuristics))
 }

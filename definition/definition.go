@@ -5,6 +5,7 @@ import (
 	"context"
 	"math"
 	"sort"
+	"time"
 
 	"github.com/RKO-solver/rko-go/random"
 )
@@ -40,9 +41,9 @@ type Environment interface {
 
 // Result is the outcome of one Solver.Solve call.
 type Result struct {
-	Solution        any     // Solution decoded by Environment.Decode
-	Cost            int     // Cost of the solution
-	TimeSpentSecond float64 // Seconds from the start of the run until Solve returned
+	Solution any           // Solution decoded by Environment.Decode
+	Cost     int           // Cost of the solution
+	Elapsed  time.Duration // from the start of the run until Solve returned
 }
 
 // SortedIndex returns the indices that sort keys in ascending order (https://doi.org/10.48550/arXiv.2411.04293).

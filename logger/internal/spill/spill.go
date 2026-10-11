@@ -1,6 +1,6 @@
 // Package spill appends a solver's history records to a temporary binary file.
 // The loggers fill a fixed-capacity slice and hand it to Write when full; the file
-// is created on the first Write and kept open. All and SaveCSV read the file back,
+// is created on the first Write and kept open. All and WriteCSV read the file back,
 // then the in-memory tail. Reset deletes the previous run's file; Remove deletes the current one
 // and turns spilling off until the next Reset.
 package spill
@@ -11,18 +11,18 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/RKO-solver/rko-go/logger"
 )
 
-// recordSize is the size of one record: local int64, best int64, time float64, little-endian.
+// recordSize is the size of one record: local int64, best int64, elapsed int64 nanoseconds, little-endian.
 const recordSize = 24
 
 // maxNamePart caps the bytes kept from each file name part.
@@ -69,7 +69,7 @@ func pattern(c Config) string {
 	var b strings.Builder
 	b.WriteString("rko-history-")
 	for _, s := range [...]string{c.Problem, c.Solver} {
-		if s = namePart(s); s != "" {
+		if s = NamePart(s); s != "" {
 			b.WriteString(s)
 			b.WriteByte('-')
 		}
@@ -79,8 +79,8 @@ func pattern(c Config) string {
 	return b.String()
 }
 
-// namePart replaces path separators, characters some file systems reject and control characters with '_', and cuts s to maxNamePart bytes.
-func namePart(s string) string {
+// NamePart replaces path separators, characters some file systems reject and control characters with '_', and cuts s to maxNamePart bytes.
+func NamePart(s string) string {
 	s = strings.Map(func(r rune) rune {
 		if unicode.IsControl(r) || strings.ContainsRune(`/\:*?"<>|`, r) {
 			return '_'
@@ -99,7 +99,7 @@ func namePart(s string) string {
 
 // Write appends recs to the file in one write, creating the file first if needed, and reports success.
 // On false the caller keeps recs in memory; after a failed create or write, or Remove, Write returns false until the next Reset.
-func (h *File) Write(recs []logger.Data) bool {
+func (h *File) Write(recs []logger.Sample) bool {
 	if h.off {
 		return false
 	}
@@ -114,9 +114,9 @@ func (h *File) Write(recs []logger.Data) bool {
 	h.buf = slices.Grow(h.buf[:0], len(recs)*recordSize) // reuse the encoding buffer across flushes
 	for _, r := range recs {
 		// The uint64 conversions keep the two's-complement bits, so negative costs round-trip.
-		h.buf = binary.LittleEndian.AppendUint64(h.buf, uint64(r.LocalCost))
-		h.buf = binary.LittleEndian.AppendUint64(h.buf, uint64(r.BestCost))
-		h.buf = binary.LittleEndian.AppendUint64(h.buf, math.Float64bits(r.Time))
+		h.buf = binary.LittleEndian.AppendUint64(h.buf, uint64(r.Local))
+		h.buf = binary.LittleEndian.AppendUint64(h.buf, uint64(r.Best))
+		h.buf = binary.LittleEndian.AppendUint64(h.buf, uint64(int64(r.Elapsed)))
 	}
 	if _, err := h.f.Write(h.buf); err != nil {
 		h.fail(err) // bytes of a partial write lie past records and are never read
@@ -133,7 +133,7 @@ func (h *File) fail(err error) {
 }
 
 // forEach calls fn for every record in the file, in write order.
-func (h *File) forEach(fn func(logger.Data)) error {
+func (h *File) forEach(fn func(logger.Sample)) error {
 	if h.records == 0 {
 		return nil
 	}
@@ -144,48 +144,44 @@ func (h *File) forEach(fn func(logger.Data)) error {
 		if _, err := io.ReadFull(r, rec[:]); err != nil {
 			return err
 		}
-		fn(logger.Data{
-			LocalCost: int(int64(binary.LittleEndian.Uint64(rec[0:8]))),
-			BestCost:  int(int64(binary.LittleEndian.Uint64(rec[8:16]))),
-			Time:      math.Float64frombits(binary.LittleEndian.Uint64(rec[16:24])),
+		fn(logger.Sample{
+			Local:   int(int64(binary.LittleEndian.Uint64(rec[0:8]))),
+			Best:    int(int64(binary.LittleEndian.Uint64(rec[8:16]))),
+			Elapsed: time.Duration(int64(binary.LittleEndian.Uint64(rec[16:24]))),
 		})
 	}
 	return nil
 }
 
 // All returns the file's records followed by memory, in a new slice.
-func (h *File) All(memory []logger.Data) []logger.Data {
-	all := make([]logger.Data, 0, h.records+len(memory))
-	if err := h.forEach(func(d logger.Data) { all = append(all, d) }); err != nil {
+func (h *File) All(memory []logger.Sample) []logger.Sample {
+	all := make([]logger.Sample, 0, h.records+len(memory))
+	if err := h.forEach(func(d logger.Sample) { all = append(all, d) }); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: cannot read solver history file: %v\n", err)
 	}
 	return append(all, memory...)
 }
 
-// SaveCSV streams the header best,local,time, the file's records and then memory to filename.
-func (h *File) SaveCSV(filename string, memory []logger.Data) error {
-	out, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
+// WriteCSV streams the header best,local,time, the file's records and then memory to w.
+func (h *File) WriteCSV(w io.Writer, memory []logger.Sample) error {
 	// bufio.Writer keeps its first error and returns it from Flush, so per-call errors are not checked.
-	w := bufio.NewWriterSize(out, 64<<10)
-	w.WriteString("best,local,time\n")
+	bw := bufio.NewWriterSize(w, 64<<10)
+	bw.WriteString("best,local,time\n")
 	var line []byte
-	row := func(d logger.Data) {
-		line = strconv.AppendInt(line[:0], int64(d.BestCost), 10)
+	row := func(d logger.Sample) {
+		line = strconv.AppendInt(line[:0], int64(d.Best), 10)
 		line = append(line, ',')
-		line = strconv.AppendInt(line, int64(d.LocalCost), 10)
+		line = strconv.AppendInt(line, int64(d.Local), 10)
 		line = append(line, ',')
-		line = strconv.AppendFloat(line, d.Time, 'f', 8, 64)
+		line = strconv.AppendFloat(line, d.Elapsed.Seconds(), 'f', 8, 64)
 		line = append(line, '\n')
-		w.Write(line)
+		bw.Write(line)
 	}
-	err = h.forEach(row)
+	err := h.forEach(row)
 	for _, d := range memory {
 		row(d)
 	}
-	return errors.Join(err, w.Flush(), out.Close())
+	return errors.Join(err, bw.Flush())
 }
 
 // Remove closes and deletes the file, if any, and turns spilling off until the next Reset.

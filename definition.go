@@ -9,7 +9,6 @@ import (
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/logger/channel"
 	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
@@ -26,13 +25,7 @@ type Solver struct {
 
 // Solve runs the metaheuristics and returns the pool's best solution, decoded.
 func (s *Solver) Solve(ctx context.Context) any {
-	logLevel := s.l.GetLogLevel()
-	var loggerWg sync.WaitGroup
-
 	s.l.Reset()
-	if l, ok := s.l.(*channel.Log); ok {
-		l.Start(&loggerWg)
-	}
 
 	var wg sync.WaitGroup
 	if s.maxIterations > 0 {
@@ -44,48 +37,19 @@ func (s *Solver) Solve(ctx context.Context) any {
 		defer cancel()
 	}
 
+	stop := func() {}
+	if r, ok := s.l.(logger.Runner); ok {
+		stop = r.Start()
+	}
+
 	ctxStartTime := definition.WithStartTime(ctx, time.Now())
 	for i, sv := range s.solvers {
-		if logLevel > logger.SILENT {
-			fmt.Printf("Running solver %s (%d)\n", sv.Name(), i)
-		}
 		wg.Add(1)
 		go metaheuristc.Worker(ctxStartTime, sv, &metaheuristc.Configuration{Id: i}, s.l, &wg)
 	}
 
-	if l, ok := s.l.(*channel.Log); ok {
-		if logLevel > logger.SILENT {
-			ticker := time.NewTicker(l.GetTicker())
-			defer ticker.Stop()
-
-			workersDone := make(chan bool)
-			go func() {
-				wg.Wait()
-				close(workersDone)
-			}()
-
-			displaying := true
-			for displaying {
-				select {
-				case <-ticker.C:
-					l.Print()
-				case <-workersDone:
-					displaying = false
-				}
-			}
-		} else {
-			wg.Wait()
-		}
-
-		l.Shutdown()
-		loggerWg.Wait()
-		if logLevel > logger.SILENT {
-			l.Finish()
-			l.WorkersPrint()
-		}
-	} else {
-		wg.Wait()
-	}
+	wg.Wait()
+	stop()
 
 	rk := s.solutionPool.BestSolution()
 	return s.env.Decode(rk.RK)

@@ -2,7 +2,7 @@ package sa
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"math"
 	"time"
 
@@ -12,7 +12,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
 	ctx, ctxAction := definition.GetMHContext(ctx)
 	defer ctxAction.Stop()
 
@@ -35,7 +35,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 		localSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
 		rk.Reset(localSolution.RK, rg)
 		localSolution.Cost = env.Cost(localSolution.RK)
-		solutionPool.AddSolution(localSolution, time.Since(start).Seconds())
+		solutionPool.AddSolution(localSolution, time.Since(start))
 	}
 
 	neighbour = &metaheuristc.RandomKeyValue{
@@ -62,7 +62,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 					bestSolutionCost = localSolution.Cost
 				}
 
-				solutionPool.AddSolution(localSolution, time.Since(start).Seconds())
+				solutionPool.AddSolution(localSolution, time.Since(start))
 			} else {
 				prob := math.Exp(-(float64(delta) + 0.00001) / temperatureLocal)
 				if rg.Float64() < prob {
@@ -72,20 +72,21 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 			}
 		}
 
-		elapsedTime := time.Since(start).Seconds()
+		elapsedTime := time.Since(start)
 
 		if heatedLeft > 0 && temperatureLocal < configuration.TemperatureReheat {
 			heatedLeft--
-			sa.logger.Verbose(fmt.Sprintf("Re-heat %d", timesReHeat), time.Since(start).Seconds())
+			sa.logger.Event(slog.Int("reheat", timesReHeat), time.Since(start))
 			temperatureLocal = configuration.TemperatureInitial / math.Pow(2.0, float64(timesReHeat))
 			timesReHeat++
 		} else {
 			temperatureLocal = temperatureLocal * alpha
 		}
 
-		sa.logger.Register(localSolution.Cost, bestSolutionCost, elapsedTime, fmt.Sprintf("Temperature %.4f", temperatureLocal))
+		sa.logger.Register(localSolution.Cost, bestSolutionCost, ctxAction.Iteration(), elapsedTime)
+		sa.logger.Event(slog.Float64("temperature", temperatureLocal), elapsedTime)
 
 	}
 
-	return localSolution, time.Since(start).Seconds()
+	return localSolution, time.Since(start)
 }

@@ -20,9 +20,9 @@ func (ga *GA) Solve(ctx context.Context) definition.Result {
 	rko, elapsed := ga.solve(ctx, ga.solutionPool)
 
 	return definition.Result{
-		Solution:        ga.env.Decode(rko.RK),
-		Cost:            rko.Cost,
-		TimeSpentSecond: elapsed,
+		Solution: ga.env.Decode(rko.RK),
+		Cost:     rko.Cost,
+		Elapsed:  elapsed,
 	}
 }
 

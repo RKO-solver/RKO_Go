@@ -23,8 +23,8 @@ var (
 
 // Config describes one solver: logging, limits, seed pool and metaheuristics.
 type Config struct {
-	LogLevel       logger.Level
-	LogType        logger.LogType
+	LogLevel       logger.Level  // zero value is logger.LevelInfo
+	LogType        logger.Type   // zero value is logger.TypePrint
 	TimeLimit      time.Duration // 0 or negative means no limit
 	MaxIterations  int           // 0 or negative means no limit
 	SeedPool       SeedPool

@@ -2,7 +2,6 @@ package ils
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"time"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
 	ctx, ctxAction := definition.GetMHContext(ctx)
 	defer ctxAction.Stop()
 
@@ -38,7 +37,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	bestSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
-	solutionPool.AddSolution(bestSolution, time.Since(start).Seconds())
+	solutionPool.AddSolution(bestSolution, time.Since(start))
 
 	localSolution = bestSolution.Clone()
 
@@ -65,7 +64,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 			bestSolutionCost := solutionPool.BestSolutionCost()
 			if bestSolution.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestSolution.Clone(), time.Since(start).Seconds())
+				solutionPool.AddSolution(bestSolution.Clone(), time.Since(start))
 			}
 		} else {
 			historyInformation.timesNoImprovement++
@@ -82,10 +81,10 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 		}
 
-		elapsedTime := time.Since(start).Seconds()
+		elapsedTime := time.Since(start)
 
-		ils.logger.Register(localSolution.Cost, bestSolution.Cost, elapsedTime, fmt.Sprintf("Iteration: %d", ctxAction.Iteration()))
+		ils.logger.Register(localSolution.Cost, bestSolution.Cost, ctxAction.Iteration(), elapsedTime)
 	}
 
-	return bestSolution, time.Since(start).Seconds()
+	return bestSolution, time.Since(start)
 }

@@ -20,9 +20,9 @@ func (sa *SimulatedAnnealing) Solve(ctx context.Context) definition.Result {
 	rko, elapsed := sa.solve(ctx, sa.solutionPool)
 
 	return definition.Result{
-		Solution:        sa.env.Decode(rko.RK),
-		Cost:            rko.Cost,
-		TimeSpentSecond: elapsed,
+		Solution: sa.env.Decode(rko.RK),
+		Cost:     rko.Cost,
+		Elapsed:  elapsed,
 	}
 }
 

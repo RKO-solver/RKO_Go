@@ -20,9 +20,9 @@ func (m *MultiStart) Solve(ctx context.Context) definition.Result {
 	rko, elapsed := m.solve(ctx, m.solutionPool)
 
 	return definition.Result{
-		Solution:        m.env.Decode(rko.RK),
-		Cost:            rko.Cost,
-		TimeSpentSecond: elapsed,
+		Solution: m.env.Decode(rko.RK),
+		Cost:     rko.Cost,
+		Elapsed:  elapsed,
 	}
 }
 

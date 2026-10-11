@@ -3,6 +3,7 @@ package config
 import (
 	"testing"
 
+	"github.com/RKO-solver/rko-go/logger"
 	"github.com/stretchr/testify/assert"
 	"go.yaml.in/yaml/v3"
 )
@@ -21,17 +22,14 @@ func TestDecodeTypeErrorsTranslation(t *testing.T) {
 	assert.Equal(t, "config: line 2: cannot unmarshal !!str `abc` into int64", errs[1].Error())
 }
 
-func TestDecodeValidLogLevelAndType(t *testing.T) {
-	for _, s := range []string{"", "silent", "INFO", "Verbose"} {
-		assert.True(t, validLogLevel(s), s)
-	}
-	for _, s := range []string{"DEBUG", " ", "FILE"} {
-		assert.False(t, validLogLevel(s), s)
-	}
-	for _, s := range []string{"", "print", "CHANNEL"} {
-		assert.True(t, validLogType(s), s)
-	}
-	for _, s := range []string{"FILE", " ", "INFO"} {
-		assert.False(t, validLogType(s), s)
-	}
+func TestDecodeConvertLogLevelAndType(t *testing.T) {
+	cfg, errs := convert(&yamlConfig{LogLevel: "silent", LogType: "dashboard"})
+	assert.Empty(t, errs)
+	assert.Equal(t, logger.LevelSilent, cfg.LogLevel)
+	assert.Equal(t, logger.TypeDashboard, cfg.LogType)
+
+	cfg, errs = convert(&yamlConfig{LogLevel: " ", LogType: "CHANNEL"})
+	assert.Len(t, errs, 2)
+	assert.Equal(t, logger.LevelInfo, cfg.LogLevel)
+	assert.Equal(t, logger.TypePrint, cfg.LogType)
 }

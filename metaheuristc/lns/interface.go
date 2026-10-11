@@ -20,9 +20,9 @@ func (lns *LNS) Solve(ctx context.Context) definition.Result {
 	rko, elapsed := lns.solve(ctx, lns.solutionPool)
 
 	return definition.Result{
-		Solution:        lns.env.Decode(rko.RK),
-		Cost:            rko.Cost,
-		TimeSpentSecond: elapsed,
+		Solution: lns.env.Decode(rko.RK),
+		Cost:     rko.Cost,
+		Elapsed:  elapsed,
 	}
 }
 

@@ -2,7 +2,6 @@ package metaheuristc
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -19,6 +18,7 @@ func Worker(ctx context.Context, solver definition.Solver, configuration *Config
 	defer wg.Done()
 	id := configuration.Id
 
+	log.WorkerStarted(id, solver.Name())
 	result := solver.Solve(ctx)
-	log.WorkerDone(fmt.Sprintf("(%d) %s\n\tBest Local Solution Cost: %d\n\tTime spent: %.2fs\n", id, solver.Name(), result.Cost, result.TimeSpentSecond))
+	log.WorkerDone(logger.WorkerResult{ID: id, Name: solver.Name(), Cost: result.Cost, Elapsed: result.Elapsed})
 }

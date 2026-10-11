@@ -20,9 +20,9 @@ func (ils *ILS) Solve(ctx context.Context) definition.Result {
 	rko, elapsed := ils.solve(ctx, ils.solutionPool)
 
 	return definition.Result{
-		Solution:        ils.env.Decode(rko.RK),
-		Cost:            rko.Cost,
-		TimeSpentSecond: elapsed,
+		Solution: ils.env.Decode(rko.RK),
+		Cost:     rko.Cost,
+		Elapsed:  elapsed,
 	}
 }
 

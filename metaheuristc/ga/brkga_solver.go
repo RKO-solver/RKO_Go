@@ -2,7 +2,7 @@ package ga
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -11,7 +11,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
-func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, float64) {
+func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
 	ctx, ctxAction := definition.GetMHContext(ctx)
 	defer ctxAction.Stop()
 
@@ -33,7 +33,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 	start := definition.StartTime(ctx)
 	bestPerson := initialPopulation(population, env, true, rg)
-	solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
+	solutionPool.AddSolution(bestPerson, time.Since(start))
 
 	eliteSize := int(configuration.EliteRatio * float64(populationSize))
 	mutantSize := int(configuration.MutantRatio * float64(populationSize))
@@ -66,37 +66,36 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 				bestPerson = population[0].Clone()
 			}
 
-			solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
+			solutionPool.AddSolution(bestPerson, time.Since(start))
 
 			break
 		}
 
+		elapsed := time.Since(start)
 		if population[0].Cost < bestPerson.Cost {
 			bestPerson = population[0].Clone()
 			generationNoImprovement = 0
 		} else {
 			generationNoImprovement++
+			ga.logger.Event(slog.Attr{Key: "stalled", Value: slog.GroupValue(slog.Int("generation", ctxAction.Iteration()), slog.Int("no-improvement", generationNoImprovement))}, elapsed)
+
 		}
-
-		solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
-
-		elapsed := time.Since(start).Seconds()
-
-		ga.logger.Register(population[0].Cost, bestPerson.Cost, elapsed, fmt.Sprintf("Generation %d, without improvement %d", ctxAction.Iteration(), generationNoImprovement))
+		solutionPool.AddSolution(bestPerson, time.Since(start))
+		ga.logger.Register(population[0].Cost, bestPerson.Cost, ctxAction.Iteration(), elapsed)
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
-			ga.logger.Verbose("Limit Generations without improvement exceeded. Resetting population", time.Since(start).Seconds())
+			ga.logger.Event(slog.String("restart", "limit generations without improvement"), time.Since(start))
 			restartBest := initialPopulation(population, env, true, rg)
 			if restartBest.Cost < bestPerson.Cost {
 				bestPerson = restartBest
 
 			}
-			solutionPool.AddSolution(bestPerson, time.Since(start).Seconds())
+			solutionPool.AddSolution(bestPerson, time.Since(start))
 
 			generationNoImprovement = 0
 		}
 
 	}
 
-	return bestPerson, time.Since(start).Seconds()
+	return bestPerson, time.Since(start)
 }
