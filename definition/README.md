@@ -104,9 +104,9 @@ type Solver interface {
 }
 
 type Result struct {
-    Solution        any     // Decode of the solver's solution
-    Cost            int     // its cost
-    TimeSpentSecond float64 // seconds since the run started
+    Solution any           // Decode of the solver's solution
+    Cost     int           // its cost
+    Elapsed  time.Duration // from the start of the run until Solve returned
 }
 ```
 
@@ -163,7 +163,7 @@ type RandomSearch struct {
 	env  definition.Environment
 	pool *solution.Pool
 	rg   *random.Generator
-	log  logger.SolverLogger // from Logger.GetLogger("RandomSearch")
+	log  logger.SolverLogger // from Logger.SolverLogger("RandomSearch")
 }
 
 func (s *RandomSearch) Name() string               { return "RandomSearch" }
@@ -182,24 +182,24 @@ func (s *RandomSearch) Solve(ctx context.Context) definition.Result {
 		key := rk.Generate(s.env, s.rg)
 		if cost := s.env.Cost(key); cost < best.Cost {
 			best = &metaheuristc.RandomKeyValue{RK: key, Cost: cost}
-			s.pool.AddSolution(best, time.Since(start).Seconds())
+			s.pool.AddSolution(best, time.Since(start))
 		}
-		s.log.Register(best.Cost, best.Cost, time.Since(start).Seconds(), "")
+		s.log.Register(best.Cost, best.Cost, counter.Iteration(), time.Since(start))
 	}
 
 	return definition.Result{
-		Solution:        s.env.Decode(best.RK),
-		Cost:            best.Cost,
-		TimeSpentSecond: time.Since(start).Seconds(),
+		Solution: s.env.Decode(best.RK),
+		Cost:     best.Cost,
+		Elapsed:  time.Since(start),
 	}
 }
 ```
 
-Pass it to `rko.CreateFullSolver` with the other solvers; the [`metaheuristc` package](../metaheuristc/README.md#building-a-solver-by-hand) shows how. Report progress once per iteration with `Register` and occasional events with `Verbose`; see the [`logger` package](../logger/README.md).
+Pass it to `rko.CreateFullSolver` with the other solvers; the [`metaheuristc` package](../metaheuristc/README.md#building-a-solver-by-hand) shows how. Report progress once per iteration with `Register` and occasional events with `Event`; see the [`logger` package](../logger/README.md).
 
 ## See also
 
 - [Project README](../README.md)
-- [`configuration` package](../configuration/README.md)
+- [`config` package](../config/README.md)
 - [`metaheuristc` package](../metaheuristc/README.md)
 - [`logger` package](../logger/README.md)

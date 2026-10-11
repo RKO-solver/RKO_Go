@@ -2,7 +2,7 @@
 
 The metaheuristic implementations and the pieces they share: local searches, the solution pool and random-key helpers.
 
-Most programs never import these packages: [`rko.CreateDefaultSolver`](../README.md#quick-start) and the [`configuration` package](../configuration/README.md) build everything for you. Come here to build solvers by hand, combine local searches yourself, or add your own metaheuristic next to the built-in ones.
+Most programs never import these packages: [`rko.CreateDefaultSolver`](../README.md#quick-start) and the [`config` package](../config/README.md) build everything for you. Come here to build solvers by hand, combine local searches yourself, or add your own metaheuristic next to the built-in ones.
 
 | Package | Contents |
 |---|---|
@@ -36,7 +36,21 @@ The iteration limit counts these iterations (see [Stopping](#stopping)). Every m
 - **VNS** shakes with a growing intensity: neighbourhood `k` shakes with `r` drawn from `[k × Rate, (k+1) × Rate)` (a shake applies `int(NumKeys × r) + 1` random moves), then runs the local search.
 - **LNS** picks some keys of the best solution at random and, for each one, tries a random value in each interval of a Farey sequence and keeps the best; then it runs the local search.
 
-Parameters, their meaning and their defaults are in the [`configuration` package](../configuration/README.md#configuration-section).
+### Logged events
+
+Every metaheuristic calls `Register` once per iteration (see the [`logger` package](../logger/README.md#writing-a-metaheuristic)). These also call `Event`, which is shown only at `LevelVerbose`:
+
+| Metaheuristic | Event key | Value | Fires |
+|---|---|---|---|
+| GA, BRKGA | `stalled` | group: `generation` (int), `no-improvement` (int) | After each generation that did not improve the best solution. `no-improvement` counts consecutive such generations. |
+| GA, BRKGA | `restart` | string `limit generations without improvement` | When the population restarts. |
+| SA | `temperature` | float | After every temperature step, with the new temperature. |
+| SA | `reheat` | int | At each reheat, with the number of earlier reheats (`0` for the first). |
+| VNS | `improved` | group: `iteration` (int), `local` (int) | When a neighbour beats the best solution. |
+
+MultiStart, ILS and LNS emit no events. A group prints as `stalled=[generation=152 no-improvement=3]`.
+
+Parameters, their meaning and their defaults are in the [`config` package](../config/README.md#parameters-section).
 
 ## Building a solver by hand
 
@@ -44,7 +58,7 @@ Create one pool, then each metaheuristic with its configuration and local search
 
 ```go
 rg := random.NewGeneratorSeed(42)
-log := stdout.DefaultLogger("knapsack")
+log := printer.Default("knapsack")
 defer log.Close()
 pool := solution.NewDefaultPool(env, rg, log)
 
@@ -99,7 +113,7 @@ CreateXComplete(env, config, localSearch, rg, pool, log) // your configuration, 
 
 ### Configuration structs
 
-The configuration structs have exactly the fields of the YAML sections, with the same names and types; `DefaultConfigurationX()` returns them at their defaults. See the [`configuration` package](../configuration/README.md#configuration-section) for each field. Fields are used as is: change them on a default configuration rather than starting from a zero struct.
+The configuration structs have exactly the fields of the YAML sections, with the same names and types; `DefaultConfigurationX()` returns them at their defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Fields are used as is: change them on a default configuration rather than starting from a zero struct.
 
 ## Local searches
 
@@ -148,7 +162,7 @@ type Local interface {
 
 | Method | Does |
 |---|---|
-| `AddSolution(s, time)` | Adds a copy of `s` only if its cost is strictly lower than the pool's best, and reports it to `log.AddSolutionPool`. |
+| `AddSolution(s, elapsed)` | Adds a copy of `s` only if its cost is strictly lower than the pool's best, and reports it to `log.AddSolutionPool`. |
 | `BestSolution()` | Returns a copy of the best solution, or nil if the pool is empty. |
 | `BestSolutionCost()` | Returns the best cost, or `math.MaxInt` if the pool is empty. |
 | `GetSolution(i)` | Returns a copy of the `i`-th best solution (`0` is the best). |
@@ -156,11 +170,11 @@ type Local interface {
 
 ## Stopping
 
-Each metaheuristic calls `definition.GetMHContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.CreateFullSolver` or the [`configuration` package](../configuration/README.md#stopping). See the [`definition` package](../definition/README.md#context-helpers) for the helpers.
+Each metaheuristic calls `definition.GetMHContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.CreateFullSolver` or the [`config` package](../config/README.md#stopping). See the [`definition` package](../definition/README.md#context-helpers) for the helpers.
 
 ## See also
 
 - [Project README](../README.md)
-- [`configuration` package](../configuration/README.md)
+- [`config` package](../config/README.md)
 - [`definition` package](../definition/README.md)
 - [`logger` package](../logger/README.md)

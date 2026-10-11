@@ -139,7 +139,7 @@ Keys are PascalCase and case-sensitive; values are case-insensitive. Missing key
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `LogLevel` | string | `INFO` | `SILENT`, `INFO` or `VERBOSE`. |
-| `LogType` | string | `PRINT` | `PRINT` (plain lines, `logger/stdout`) or `CHANNEL` (live dashboard, `logger/channel`). |
+| `LogType` | string | `PRINT` | `PRINT` (plain lines, `logger/printer`) or `DASHBOARD` (live dashboard, `logger/dashboard`). |
 | `TimeLimitSeconds` | int | `0` | Time limit of the whole run, in seconds. `0` or negative means no limit. |
 | `MaxIterations` | int | `0` | Iteration limit of each metaheuristic. `0` or negative means no limit. |
 | `SeedPool` | map | see below | `MaxSize` and `InitialSize` of the seed solution pool. |
@@ -241,7 +241,7 @@ A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r`
 ## Building a solver
 
 ```go
-func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.Solver, logger.Logger, error)
+func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.Solver, logger.Recorder, error)
 ```
 
 - Returns an error, before creating anything, for an invalid `LogLevel` or `LogType`, an invalid or unimplemented metaheuristic `Type`, or a nil section inside a non-nil `Parameters`. All problems are joined; test them with `errors.Is`.
@@ -261,8 +261,8 @@ params := config.DefaultParameters()
 params.GA.PopulationSize = 100
 
 cfg := config.Config{
-	LogLevel:      logger.INFO,
-	LogType:       logger.PRINT,
+	LogLevel:      logger.LevelInfo,
+	LogType:       logger.TypePrint,
 	TimeLimit:     30 * time.Second,
 	MaxIterations: 1000,
 	Metaheuristics: []config.Metaheuristic{
@@ -284,8 +284,8 @@ solver, rkoLog, err := cfg.NewSolver(env)
 
 A `Config` you build yourself skips the YAML defaults:
 
-- The zero `LogType` is `logger.CHANNEL` (live dashboard) and the zero `LogLevel` is `logger.SILENT`. The YAML defaults are `PRINT` and `INFO`, so set both.
-- `LogType` must be `logger.PRINT` or `logger.CHANNEL`.
+- The zero `LogType` is `logger.TypePrint` and the zero `LogLevel` is `logger.LevelInfo`, the same as the YAML defaults.
+- `LogType` must be `logger.TypePrint` or `logger.TypeDashboard`, and `LogLevel` between `logger.LevelSilent` and `logger.LevelVerbose`.
 - `Parameters` is used as is, without the greater-than-zero rule. Start from `DefaultParameters()`: a zero field stays zero, and a nil section is an error.
 
 ## See also

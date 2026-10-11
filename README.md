@@ -34,7 +34,7 @@ import (
 
 	rko "github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/definition"
-	"github.com/RKO-solver/rko-go/logger/stdout"
+	"github.com/RKO-solver/rko-go/logger/printer"
 )
 
 // TSP is a travelling salesman problem: visit every city once and return to the start.
@@ -73,7 +73,7 @@ func main() {
 		{7, 3, 5, 6, 0},
 	}}
 
-	log := stdout.DefaultLogger("tsp")
+	log := printer.Default("tsp")
 	defer log.Close()
 
 	mh := []rko.MetaHeuristic{rko.ILS, rko.BRKGA}
@@ -95,7 +95,7 @@ tour: [4 0 1 3 2] cost: 26
 
 ## Run from a YAML file
 
-The [`configuration` package](configuration/README.md) builds the same solver from a file, including each metaheuristic's local search and tuning parameters.
+The [`config` package](config/README.md) builds the same solver from a file, including each metaheuristic's local search and tuning parameters.
 
 `config.yaml`:
 
@@ -107,24 +107,27 @@ MaxIterations: 10000
 Metaheuristics:
   - "ILS=Swap,Mirror"
   - "BRKGA"
-Configuration:
+Parameters:
   BRKGA:
     PopulationSize: 100
 ```
 
 ```go
-cfg, err := configuration.CreateSolverConfiguration("config.yaml")
+cfgs, err := config.ReadFile("config.yaml")
 if err != nil {
 	log.Fatal(err)
 }
 
-solver, rkoLog := configuration.CreateSolver(env, cfg)
+solver, rkoLog, err := cfgs[0].NewSolver(env)
+if err != nil {
+	log.Fatal(err)
+}
 defer rkoLog.Close()
 
 tour := solver.Solve(context.Background()).([]int)
 ```
 
-See the [`configuration` package](configuration/README.md) for every key and its default.
+See the [`config` package](config/README.md) for every key and its default.
 
 ## Stopping rules
 
@@ -139,11 +142,11 @@ See the [`configuration` package](configuration/README.md) for every key and its
 | `rko.CreateDefaultSolver(mh, env, log)` | 150 s | none |
 | `rko.CreateDefaultSolverTimeLimit(mh, timeLimit, env, log)` | `timeLimit` | none |
 | `rko.CreateFullSolver(log, env, timeLimit, maxIterations, pool, solvers)` | `timeLimit` | `maxIterations` |
-| `configuration.CreateSolver(env, cfg)` | `TimeLimitSeconds` in YAML (`cfg.TimeLimit`) | `MaxIterations` in YAML (`cfg.MaxIterations`) |
+| `cfg.NewSolver(env)` ([`config`](config/README.md)) | `TimeLimitSeconds` in YAML (`cfg.TimeLimit`) | `MaxIterations` in YAML (`cfg.MaxIterations`) |
 
 - A zero or negative value means no limit.
 - `MaxIterations` is one number for the whole run, counted by each metaheuristic separately: each one stops after that many iterations of its own outer loop (a generation for GA and BRKGA, a temperature step for SA). `Solve` returns once all of them have stopped.
-- With neither limit, the solver runs until `ctx` is cancelled. `configuration.CreateSolver` prints a warning in that case.
+- With neither limit, the solver runs until `ctx` is cancelled. `rko.CreateFullSolver`, and so `cfg.NewSolver`, prints a warning in that case.
 - SA also ends on its own once its temperature reaches `TemperatureGoal`.
 
 To stop the search yourself, for example on a shutdown signal, pass your own context. The configured limits still apply:
@@ -171,7 +174,7 @@ result := solver.Solve(ctx)
 
 Listing a constant twice runs two independent instances. `GRASP`, `VLNS`, `ALNS` and `IPR` are declared but not implemented; they are skipped with a `not implemented yet` message.
 
-To change parameters or local searches, use a [YAML file](configuration/README.md), or build each solver yourself and pass them to `rko.CreateFullSolver` (see the [`metaheuristc` package](metaheuristc/README.md)).
+To change parameters or local searches, use a [YAML file](config/README.md), or build each solver yourself and pass them to `rko.CreateFullSolver` (see the [`metaheuristc` package](metaheuristc/README.md)).
 
 ## Logging
 
@@ -179,10 +182,10 @@ Every constructor takes a [`logger.Logger`](logger/README.md). Two ship with the
 
 | Logger | Constructor | Output |
 |---|---|---|
-| `logger/stdout` | `stdout.DefaultLogger(name)`, `stdout.NewLogger(name, level)` | Plain lines: a solver's progress when its best cost improves, otherwise at most every 500 ms (`SetPrintInterval`). Suits batch jobs and CI. |
-| `logger/channel` | `channel.DefaultLogger(name)`, `channel.NewLoggerLevel(name, level)` | A live dashboard in the terminal's alternate screen; the final frame stays in the scrollback. Suits interactive runs. |
+| `logger/printer` | `printer.Default(name)`, `printer.New(w, name, opts)` | Plain lines: a solver's progress when its best cost improves, otherwise at most every 500 ms (`Options.PrintInterval`). Suits batch jobs and CI. |
+| `logger/dashboard` | `dashboard.New(name, opts)` | A live dashboard in the terminal's alternate screen; the final frame stays in the scrollback. Suits interactive runs. |
 
-Levels are `logger.SILENT`, `logger.INFO` (default) and `logger.VERBOSE`. `Solve` resets the logger at the start of every run, so `GetReportData` and `GetSolutionData` describe the last run. Both loggers can save the run to CSV, and spill each solver's history to [temporary files](logger/README.md#history-files) on long runs. `Solve` never calls the logger's `Close`, which deletes those files: `defer` it after creating the logger. See the [`logger` package](logger/README.md).
+Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelVerbose`. `Solve` resets the logger at the start of every run, so `Report` and `Pool` describe the last run. Both loggers can save the run to CSV (`SaveCSV`), and spill each solver's history to [temporary files](logger/README.md#history-files) on long runs. `Solve` never calls the logger's `Close`, which deletes those files: `defer` it after creating the logger. See the [`logger` package](logger/README.md).
 
 ## Packages
 
@@ -190,7 +193,7 @@ Levels are `logger.SILENT`, `logger.INFO` (default) and `logger.VERBOSE`. `Solve
 |---|---|
 | `rko` (root) | Create a `Solver` (`CreateDefaultSolver`, `CreateDefaultSolverTimeLimit`, `CreateFullSolver`) and run it (`Solve`, `GetSolutionPool`, `Print`). |
 | [`definition`](definition/README.md) | Implement `Environment` for your problem, or `Solver` for your own metaheuristic. |
-| [`configuration`](configuration/README.md) | Build a solver from a YAML file or a Go struct. |
+| [`config`](config/README.md) | Build a solver from a YAML file or a Go struct. |
 | [`logger`](logger/README.md) | Choose or implement a logger, and export results to CSV. |
 | [`metaheuristc`](metaheuristc/README.md) | Build metaheuristics, local searches and the solution pool by hand. |
 | `random` | Create random generators, seeded (`NewGeneratorSeed`) or not (`NewGenerator`). |
