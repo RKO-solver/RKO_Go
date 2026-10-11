@@ -1,4 +1,4 @@
-package configuration
+package config
 
 import (
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
@@ -8,8 +8,32 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc/vns"
 )
 
-func withBRKGA(cfg *ga.ConfigurationBRKGA) Option {
-	return func(c *MetaheuristicsConfiguration) {
+// Parameters holds the tuning parameters of each metaheuristic.
+type Parameters struct {
+	BRKGA *ga.ConfigurationBRKGA
+	GA    *ga.ConfigurationGA
+	ILS   *ils.Configuration
+	SA    *sa.Configuration
+	VNS   *vns.Configuration
+	LNS   *lns.Configuration
+}
+
+// DefaultParameters returns every metaheuristic's default parameters.
+func DefaultParameters() *Parameters {
+	return &Parameters{
+		BRKGA: ga.DefaultConfigurationBRKGA(),
+		GA:    ga.DefaultConfigurationGA(),
+		ILS:   ils.DefaultConfigurationILS(),
+		SA:    sa.DefaultConfigurationSA(),
+		VNS:   vns.DefaultConfigurationVNS(),
+		LNS:   lns.DefaultConfigurationLNS(),
+	}
+}
+
+type parameterOption func(*Parameters)
+
+func withBRKGA(cfg *ga.ConfigurationBRKGA) parameterOption {
+	return func(c *Parameters) {
 		if cfg == nil {
 			return
 		}
@@ -35,8 +59,8 @@ func withBRKGA(cfg *ga.ConfigurationBRKGA) Option {
 	}
 }
 
-func withGA(cfg *ga.ConfigurationGA) Option {
-	return func(c *MetaheuristicsConfiguration) {
+func withGA(cfg *ga.ConfigurationGA) parameterOption {
+	return func(c *Parameters) {
 		if cfg == nil {
 			return
 		}
@@ -57,8 +81,8 @@ func withGA(cfg *ga.ConfigurationGA) Option {
 	}
 }
 
-func withSA(cfg *sa.Configuration) Option {
-	return func(c *MetaheuristicsConfiguration) {
+func withSA(cfg *sa.Configuration) parameterOption {
+	return func(c *Parameters) {
 		if cfg == nil {
 			return
 		}
@@ -90,8 +114,8 @@ func withSA(cfg *sa.Configuration) Option {
 	}
 }
 
-func withILS(cfg *ils.Configuration) Option {
-	return func(c *MetaheuristicsConfiguration) {
+func withILS(cfg *ils.Configuration) parameterOption {
+	return func(c *Parameters) {
 		if cfg == nil {
 			return
 		}
@@ -108,8 +132,8 @@ func withILS(cfg *ils.Configuration) Option {
 	}
 }
 
-func withVNS(cfg *vns.Configuration) Option {
-	return func(c *MetaheuristicsConfiguration) {
+func withVNS(cfg *vns.Configuration) parameterOption {
+	return func(c *Parameters) {
 		if cfg == nil {
 			return
 		}
@@ -120,8 +144,8 @@ func withVNS(cfg *vns.Configuration) Option {
 	}
 }
 
-func withLNS(cfg *lns.Configuration) Option {
-	return func(c *MetaheuristicsConfiguration) {
+func withLNS(cfg *lns.Configuration) parameterOption {
+	return func(c *Parameters) {
 		if cfg == nil {
 			return
 		}
