@@ -13,6 +13,9 @@ import (
 
 func rvnd(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment, s *solution.Pool, r *random.Generator, neighbourhood []Type) {
 
+	initialNeighbourhood := make([]Type, len(neighbourhood))
+	copy(initialNeighbourhood, neighbourhood)
+
 	localSolutionCost := rko.Cost
 	maxIterations := int(float64(environment.NumKeys()) * math.Exp(-2))
 
@@ -37,6 +40,8 @@ func rvnd(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment def
 		}
 		if rko.Cost < localSolutionCost {
 			localSolutionCost = rko.Cost
+			neighbourhood = neighbourhood[:len(initialNeighbourhood)]
+			copy(neighbourhood, initialNeighbourhood)
 		} else {
 			neighbourhood = slices.Delete(neighbourhood, neighbourhoodId, neighbourhoodId+1)
 
