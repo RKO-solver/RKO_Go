@@ -6,7 +6,7 @@ Most programs never import these packages: [`rko.CreateDefaultSolver`](../README
 
 | Package | Contents |
 |---|---|
-| `metaheuristc/multistart`, `sa`, `ga`, `ils`, `vns`, `lns` | The seven metaheuristics (`ga` holds GA and BRKGA). |
+| `metaheuristc/multistart`, `sa`, `ga`, `brkga`, `ils`, `vns`, `lns` | The seven metaheuristics. |
 | `metaheuristc/search` | Local searches. |
 | `metaheuristc/solution` | The solution pool shared by every metaheuristic. |
 | `metaheuristc/rk` | `Generate`, `Reset` and `Shake` for random keys. |
@@ -20,7 +20,7 @@ Most programs never import these packages: [`rko.CreateDefaultSolver`](../README
 | MultiStart | `*multistart.MultiStart` | `MULTISTART` | a random solution improved by the local search |
 | Simulated Annealing | `*sa.SimulatedAnnealing` | `SA` | one temperature step of `Iterations` moves |
 | Genetic Algorithm | `*ga.GA` | `GA` | one generation |
-| BRKGA | `*ga.BRKGA` | `BRKGA` | one generation |
+| BRKGA | `*brkga.BRKGA` | `BRKGA` | one generation |
 | Iterated Local Search | `*ils.ILS` | `ILS` | one shake followed by the local search |
 | Variable Neighbourhood Search | `*vns.VNS` | `VNS` | one pass through neighbourhoods 1 to 3, restarting at 1 after each improvement |
 | Large Neighbourhood Search | `*lns.LNS` | `LNS` | one rebuild of some keys followed by the local search |
@@ -62,18 +62,20 @@ log := printer.Default("knapsack")
 defer log.Close()
 pool := solution.NewPool(env, rg, log)
 
-ilsConfig := ils.DefaultConfigurationILS()
+ilsConfig := ils.DefaultConfig()
 ilsConfig.MetropolisCriterion = true
 
-brkgaConfig := ga.DefaultConfigurationBRKGA()
+brkgaConfig := brkga.DefaultConfig()
 brkgaConfig.PopulationSize = 100
 
 brkgaRG := rg.Split()
 solvers := []definition.Solver{
-	ils.CreateILSComplete(env, ilsConfig, search.NewMirror(env), rg.Split(), pool, log),
-	ga.CreateBRKGAComplete(env, brkgaConfig,
-		search.NewRVND(env, pool, brkgaRG, []search.Type{search.Mirror, search.Farey}),
-		brkgaRG, pool, log),
+	ils.New(env, rg.Split(), pool, log,
+		ils.WithConfig(ilsConfig),
+		ils.WithSearch(search.NewMirror(env))),
+	brkga.New(env, brkgaRG, pool, log,
+		brkga.WithConfig(brkgaConfig),
+		brkga.WithSearch(search.NewRVND(env, pool, brkgaRG, []search.Type{search.Mirror, search.Farey}))),
 }
 
 solver := rko.CreateFullSolver(log, env, 30*time.Second, 1000, pool, solvers)
@@ -87,33 +89,26 @@ items := solver.Solve(context.Background()).([]int)
 
 ### Constructors
 
-Each metaheuristic has up to three constructors, with these arguments:
+Each package has one constructor, `New`, that returns the concrete type (`*ils.ILS`, ...):
 
 ```go
-CreateDefaultX(env, rg, pool, log)                    // default configuration, default local search
-CreateX(env, config, searchType, rg, pool, log)       // your configuration, local search from a search.Type
-CreateXComplete(env, config, localSearch, rg, pool, log) // your configuration, a ready search.Local
+New(env, rg, pool, log, opts...)
 ```
 
-`env` is a `definition.Environment`, `rg` a `*random.Generator`, `pool` a `*solution.Pool`, `log` a `logger.Logger`, `searchType` a `search.Type` and `localSearch` a `search.Local`.
+`env` is a `definition.Environment`, `rg` a `*random.Generator`, `pool` a `*solution.Pool` and `log` a `logger.Logger`. Without options it uses the package's `DefaultConfig()` and the default local search, `search.NewDefault` (RVND over all four searches). The options:
 
-| Package | Default | With `search.Type` | With `search.Local` | Configuration |
-|---|---|---|---|---|
-| `multistart` | `CreateDefaultMultiStart` | | `CreateMultiStart(env, localSearch, rg, pool, log)` | none |
-| `sa` | `CreateDefaultSA` | `CreateSA` | `CreateSAComplete` | `*sa.Configuration`, `sa.DefaultConfigurationSA()` |
-| `ga` (GA) | `CreateDefaultGA` | `CreateGA` | `CreateGAComplete` | `*ga.ConfigurationGA`, `ga.DefaultConfigurationGA()` |
-| `ga` (BRKGA) | `CreateDefaultBRKGA` | `CreateBRKGA` | `CreateBRKGAComplete` | `*ga.ConfigurationBRKGA`, `ga.DefaultConfigurationBRKGA()` |
-| `ils` | `CreateDefaultILS` | `CreateILS` | `CreateILSComplete` | `*ils.Configuration`, `ils.DefaultConfigurationILS()` |
-| `vns` | `CreateDefaultVNS` | `CreateVNS` | `CreateVNSComplete` | `*vns.Configuration`, `vns.DefaultConfigurationVNS()` |
-| `lns` | `CreateDefaultLNS` | `CreateLNS` | `CreateLNSComplete` | `*lns.Configuration`, `lns.DefaultConfigurationLNS()` |
+| Option | Sets |
+|---|---|
+| `WithConfig(cfg)` | The parameters. Not available in `multistart`. |
+| `WithSearch(local)` | A ready `search.Local`. |
+| `WithSearchType(t)` | The local search, built with `search.New(t, ...)`. |
 
-- Constructors return the concrete type (`*ils.ILS`, ...), except `sa.CreateSAComplete`, which returns `definition.Solver`.
-- `CreateDefaultX` uses the default local search, `search.NewDefault` (RVND over all four searches).
-- `CreateX` builds its local search with `search.New(searchType, ...)`.
+- If `WithSearch` and `WithSearchType` are both given, the last one wins.
+- A nil config or local search means the default.
 
 ### Configuration structs
 
-The configuration structs have exactly the fields of the YAML sections, with the same names and types; `DefaultConfigurationX()` returns them at their defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Fields are used as is: change them on a default configuration rather than starting from a zero struct.
+`sa`, `ga`, `brkga`, `ils`, `vns` and `lns` each have a `Config` struct with exactly the fields of the YAML sections, with the same names and types; `DefaultConfig()` returns it at its defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Fields are used as is: change them on a default configuration rather than starting from a zero struct.
 
 ## Local searches
 
