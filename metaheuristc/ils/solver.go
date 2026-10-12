@@ -55,16 +55,15 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		// acceptance criterion
 		delta := neighbour.Cost - bestSolution.Cost
 		if delta < 0 {
-			copy(localSolution.RK, neighbour.RK)
-			localSolution.Cost = neighbour.Cost
+			localSolution, neighbour = neighbour, localSolution
 
-			copy(bestSolution.RK, localSolution.RK)
-			bestSolution.Cost = localSolution.Cost
+			rk.Copy(bestSolution, localSolution)
+
 			historyInformation.timesNoImprovement = 0
 
 			bestSolutionCost := solutionPool.BestSolutionCost()
 			if bestSolution.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestSolution.Clone(), time.Since(start))
+				solutionPool.AddSolution(bestSolution, time.Since(start))
 			}
 		} else {
 			historyInformation.timesNoImprovement++
@@ -74,8 +73,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 				total := time.Until(deadline).Seconds() + elapsed
 				prob := math.Exp(-(float64(delta) + 0.00001) / (1000.0 - 1000.0*(elapsed/total)))
 				if rg.Float64() < prob {
-					localSolution.Cost = neighbour.Cost
-					copy(localSolution.RK, neighbour.RK)
+					localSolution, neighbour = neighbour, localSolution
 				}
 			}
 

@@ -55,8 +55,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 
 			delta := neighbour.Cost - localSolution.Cost
 			if delta < 0 {
-				localSolution.Cost = neighbour.Cost
-				copy(localSolution.RK, neighbour.RK)
+				localSolution, neighbour = neighbour, localSolution
 
 				if localSolution.Cost < bestSolutionCost {
 					bestSolutionCost = localSolution.Cost
@@ -66,8 +65,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 			} else {
 				prob := math.Exp(-(float64(delta) + 0.00001) / temperatureLocal)
 				if rg.Float64() < prob {
-					localSolution.Cost = neighbour.Cost
-					copy(localSolution.RK, neighbour.RK)
+					localSolution, neighbour = neighbour, localSolution
 				}
 			}
 		}

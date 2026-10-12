@@ -47,11 +47,9 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 			local.Search(ctx, neighbour)
 
 			if neighbour.Cost < bestSolution.Cost {
-				copy(localSolution.RK, neighbour.RK)
-				localSolution.Cost = neighbour.Cost
+				localSolution, neighbour = neighbour, localSolution
 
-				copy(bestSolution.RK, localSolution.RK)
-				bestSolution.Cost = localSolution.Cost
+				rk.Copy(bestSolution, localSolution)
 
 				solutionPool.AddSolution(bestSolution, time.Since(start))
 
