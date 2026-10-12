@@ -110,7 +110,7 @@ func newSolver(t *testing.T, cfg *config.Config, opts ...config.Option) (*rko.So
 
 func allMetaheuristics() []config.Metaheuristic {
 	var out []config.Metaheuristic
-	for _, mh := range []rko.MetaHeuristic{rko.MULTISTART, rko.SA, rko.GA, rko.VNS, rko.ILS, rko.BRKGA, rko.LNS} {
+	for _, mh := range []rko.Metaheuristic{rko.MultiStart, rko.SA, rko.GA, rko.VNS, rko.ILS, rko.BRKGA, rko.LNS} {
 		out = append(out, config.Metaheuristic{Type: mh, Searches: []search.Type{search.Swap}})
 	}
 	return out
@@ -139,7 +139,7 @@ func TestNewSolverTimeLimitStopsBeforeMaxIterations(t *testing.T) {
 	cfg := silentConfig()
 	cfg.TimeLimit = 200 * time.Millisecond
 	cfg.MaxIterations = math.MaxInt
-	cfg.Metaheuristics = []config.Metaheuristic{{Type: rko.MULTISTART, Searches: []search.Type{search.Swap}}}
+	cfg.Metaheuristics = []config.Metaheuristic{{Type: rko.MultiStart, Searches: []search.Type{search.Swap}}}
 
 	solver, _ := newSolver(t, cfg, config.WithSeed(42))
 	solveWithin(t, solver, 10*time.Second)
@@ -162,7 +162,7 @@ func TestNewSolverSeedPoolInitialSize(t *testing.T) {
 			cfg := silentConfig()
 			cfg.SeedPool = tt.pool
 			solver, _ := newSolver(t, cfg, config.WithSeed(1))
-			assert.Equal(t, tt.want, solver.GetSolutionPool().Len())
+			assert.Equal(t, tt.want, solver.Pool().Len())
 		})
 	}
 }
@@ -182,10 +182,10 @@ func TestNewSolverSeedPoolMaxSizeCap(t *testing.T) {
 			cfg := silentConfig()
 			cfg.MaxIterations = 200
 			cfg.SeedPool = tt.pool
-			cfg.Metaheuristics = []config.Metaheuristic{{Type: rko.MULTISTART, Searches: []search.Type{search.Swap}}}
+			cfg.Metaheuristics = []config.Metaheuristic{{Type: rko.MultiStart, Searches: []search.Type{search.Swap}}}
 			solver, _ := newSolver(t, cfg, config.WithSeed(7))
 			solveWithin(t, solver, 30*time.Second)
-			assert.LessOrEqual(t, solver.GetSolutionPool().Len(), tt.cap)
+			assert.LessOrEqual(t, solver.Pool().Len(), tt.cap)
 		})
 	}
 }
@@ -385,7 +385,7 @@ func TestWithSeedSamePool(t *testing.T) {
 		cfg.Metaheuristics = []config.Metaheuristic{{Type: rko.ILS, Searches: []search.Type{search.Swap}}}
 		solver, _ := newSolver(t, cfg, opt)
 		solveWithin(t, solver, 30*time.Second)
-		costs[i] = solver.GetSolutionPool().BestCost()
+		costs[i] = solver.Pool().BestCost()
 	}
 	assert.Equal(t, costs[0], costs[1])
 }

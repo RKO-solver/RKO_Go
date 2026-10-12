@@ -45,7 +45,7 @@ func (s *Solver) Solve(ctx context.Context) any {
 	ctxStartTime := definition.WithStartTime(ctx, time.Now())
 	for i, sv := range s.solvers {
 		wg.Add(1)
-		go metaheuristc.Worker(ctxStartTime, sv, &metaheuristc.Configuration{Id: i}, s.l, &wg)
+		go metaheuristc.Worker(ctxStartTime, sv, i, s.l, &wg)
 	}
 
 	wg.Wait()
@@ -55,8 +55,8 @@ func (s *Solver) Solve(ctx context.Context) any {
 	return s.env.Decode(rk.RK)
 }
 
-// GetSolutionPool returns the pool shared by every running metaheuristic.
-func (s *Solver) GetSolutionPool() *solution.Pool {
+// Pool returns the pool shared by every running metaheuristic.
+func (s *Solver) Pool() *solution.Pool {
 	return s.solutionPool
 }
 
