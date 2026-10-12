@@ -13,6 +13,8 @@ type SolverLogger interface {
 	Register(local, best, iteration int, elapsed time.Duration)
 	// Event records an occasional event, shown at LevelVerbose.
 	Event(a slog.Attr, elapsed time.Duration)
+	// Policy records the tuner's learned policy at the end of the run.
+	Policy(t Table)
 }
 
 // Logger is what a Solver and its metaheuristics need from a logger.
@@ -39,11 +41,18 @@ type Reporter interface {
 // CSVSaver saves the recorded run as CSV files.
 type CSVSaver interface{ SaveCSV(prefix string) error }
 
+// PolicySaver prints and saves the recorded policies.
+type PolicySaver interface {
+	PrintPolicies(w io.Writer) error
+	SavePoliciesCSV(prefix string) error // one file per solver: <prefix>-<solver>-<id>-policy.csv
+}
+
 // Recorder is a Logger that keeps the run's results; printer and dashboard implement it.
 type Recorder interface {
 	Logger
 	Reporter
 	CSVSaver
+	PolicySaver
 	io.Closer
 }
 
@@ -72,4 +81,10 @@ type WorkerResult struct {
 	Name    string
 	Cost    int
 	Elapsed time.Duration
+}
+
+// Table is a table of text values.
+type Table struct {
+	Header []string
+	Rows   [][]string
 }

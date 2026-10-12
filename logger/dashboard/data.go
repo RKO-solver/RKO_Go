@@ -17,6 +17,7 @@ type solverHistory struct {
 	records []logger.Sample // records not yet spilled to the file
 	events  []event         // the latest event of each key
 	file    spill.File
+	policy  *logger.Table // the tuner's learned policy; nil until Policy
 }
 
 type information struct {
@@ -53,6 +54,14 @@ func (d *information) registerInfo(id int, info solverInfo) {
 	}
 }
 
+// setPolicy keeps t as solver id's policy.
+func (d *information) setPolicy(id int, t logger.Table) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.solvers[id].policy = &t
+}
+
 func (d *information) registerEvent(id int, e event) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -85,6 +94,7 @@ func (s *solverHistory) reset(c spill.Config) {
 	s.last = solverInfo{}
 	s.hasLast = false
 	s.events = nil
+	s.policy = nil
 	c.Solver, c.ID = s.name, s.id
 	s.file.Reset(c)
 	s.records = make([]logger.Sample, 0, spill.Capacity(c.Bytes)) // the capacity is the flush point

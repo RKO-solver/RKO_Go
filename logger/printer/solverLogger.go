@@ -21,6 +21,7 @@ type SolverLogger struct {
 	lastBest int
 	history  []logger.Sample // records not yet spilled to the file
 	file     spill.File
+	policy   *logger.Table // the tuner's learned policy; nil until Policy
 }
 
 func (s *SolverLogger) Register(local, best, iteration int, elapsed time.Duration) {
@@ -45,10 +46,16 @@ func (s *SolverLogger) Event(a slog.Attr, elapsed time.Duration) {
 	fmt.Fprintf(s.w, "(%d) %s %s time=%.3fs\n", s.id, s.name, a, elapsed.Seconds()) // a.String() is "key=value"
 }
 
+// Policy keeps t on this solver, to be read after the run.
+func (s *SolverLogger) Policy(t logger.Table) {
+	s.policy = &t
+}
+
 // reset deletes the spill file, applies c for this solver, empties the history and restores the initial print state.
 func (s *SolverLogger) reset(c spill.Config) {
 	s.next = 0
 	s.lastBest = math.MaxInt
+	s.policy = nil
 	c.Solver, c.ID = s.name, s.id
 	s.file.Reset(c)
 	s.history = make([]logger.Sample, 0, spill.Capacity(c.Bytes)) // the capacity is the flush point

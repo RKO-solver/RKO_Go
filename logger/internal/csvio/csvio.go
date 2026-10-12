@@ -3,6 +3,7 @@ package csvio
 
 import (
 	"bufio"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
@@ -28,4 +29,13 @@ func WritePool(w io.Writer, pool []logger.PoolEntry) error {
 		fmt.Fprintf(bw, "%d,%.8f\n", e.Cost, e.Elapsed.Seconds())
 	}
 	return bw.Flush()
+}
+
+// WriteTable writes t as CSV, header first, to w.
+func WriteTable(w io.Writer, t logger.Table) error {
+	cw := csv.NewWriter(w)
+	if err := cw.Write(t.Header); err != nil {
+		return err
+	}
+	return cw.WriteAll(t.Rows) // WriteAll flushes
 }

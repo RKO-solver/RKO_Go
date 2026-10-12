@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/RKO-solver/rko-go/logger/internal/csvio"
+	"github.com/RKO-solver/rko-go/logger/internal/policyio"
 	"github.com/RKO-solver/rko-go/logger/internal/spill"
 )
 
@@ -25,4 +26,28 @@ func (l *Log) SaveCSV(prefix string) error {
 
 	pool := l.Pool()
 	return errors.Join(err, csvio.Save(prefix+"-pool.csv", func(w io.Writer) error { return csvio.WritePool(w, pool) }))
+}
+
+// PrintPolicies writes the recorded policies to w, in solver id order.
+func (l *Log) PrintPolicies(w io.Writer) error {
+	return policyio.Print(w, l.policies())
+}
+
+// SavePoliciesCSV writes one CSV per solver that recorded a policy.
+func (l *Log) SavePoliciesCSV(prefix string) error {
+	return policyio.Save(cmp.Or(prefix, spill.NamePart(l.problem), "rko"), l.policies())
+}
+
+// policies returns the solvers that recorded a policy, in id order.
+func (l *Log) policies() []policyio.Solver {
+	l.data.mu.Lock()
+	defer l.data.mu.Unlock()
+
+	var solvers []policyio.Solver
+	for _, s := range l.data.solvers {
+		if s.policy != nil {
+			solvers = append(solvers, policyio.Solver{ID: s.id, Name: s.name, Table: *s.policy})
+		}
+	}
+	return solvers
 }

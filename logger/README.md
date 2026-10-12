@@ -85,7 +85,7 @@ Prints a solver's progress line when its best cost improves, otherwise at most o
 > log := printer.New(&lockedWriter{w: &buf}, "MyProblem", nil)
 > ```
 >
-> Nothing else in the `printer` is synchronized either: `SolverLogger`, `Reset`, `Report`, `Pool`, the CSV methods and `Close` are for before the run (setup) or after it (results). Only the `dashboard` is safe to read during a run.
+> Nothing else in the `printer` is synchronized either: `SolverLogger`, `Reset`, `Report`, `Pool`, the CSV and policy methods and `Close` are for before the run (setup) or after it (results). Only the `dashboard` is safe to read during a run.
 
 ```text
 (0) GA started
@@ -125,6 +125,7 @@ pool cost=8 time=2.101s
 - At `LevelVerbose`, the last `PoolLines` pool improvements are listed at the top, and each block adds one line per event key, holding the latest value of that key.
 - `(id) name started` lines are printed before the first frame, so they stay in the scrollback.
 - Lines are cut to fit (300 bytes for pool lines, 100 for solver lines).
+- Policies are not shown; print them after the run with `PrintPolicies` (see [Policies](#policies)).
 
 #### Running the dashboard
 
@@ -188,6 +189,8 @@ Both loggers implement `logger.Recorder`, which is what `config.NewSolver` retur
 | `Report() []logger.SolverReport` | `logger.Reporter` | Each solver's name, id and history. |
 | `Pool() []logger.PoolEntry` | `logger.Reporter` | Every solution added to the pool, in order. |
 | `SaveCSV(prefix) error` | `logger.CSVSaver` | One CSV file per solver and one for the pool. |
+| `PrintPolicies(w) error` | `logger.PolicySaver` | Writes each recorded policy to `w` as text (see [Policies](#policies)). |
+| `SavePoliciesCSV(prefix) error` | `logger.PolicySaver` | One CSV file per solver that recorded a policy. |
 | `Close() error` | `io.Closer` | Deletes the history files (see [History files](#history-files-and-close)). |
 
 ```go
@@ -208,7 +211,7 @@ type PoolEntry struct {
 }
 ```
 
-Read the results after `Solve` returns. Only the `dashboard` makes `Report`, `Pool` and `SaveCSV` safe during a run; the `printer` does not. For any other format, write it from `Report` and `Pool`.
+Read the results after `Solve` returns. Only the `dashboard` makes `Report`, `Pool`, `SaveCSV` and the policy methods safe during a run; the `printer` does not. For any other format, write it from `Report` and `Pool`.
 
 ### CSV
 
@@ -224,6 +227,54 @@ Read the results after `Solve` returns. Only the `dashboard` makes `Report`, `Po
 - The solver part of the name is cleaned the same way.
 - It tries every file and returns all errors joined.
 
+### Policies
+
+A solver that tunes its parameters with a [`tuning`](../metaheuristic/tuning/README.md) tuner can record the policy the tuner learned, by calling `SolverLogger.Policy` once at the end of its run. A policy is a `logger.Table`:
+
+```go
+type Table struct {
+	Header []string
+	Rows   [][]string
+}
+```
+
+The logger never prints policies by itself; call these methods after the run, as with `SaveCSV`:
+
+```go
+if err := log.PrintPolicies(os.Stdout); err != nil {
+	fmt.Println(err)
+}
+if err := log.SavePoliciesCSV(""); err != nil { // MyProblem-<solver>-<id>-policy.csv
+	fmt.Println(err)
+}
+```
+
+`PrintPolicies(w)` writes, for each solver that recorded a policy and in id order, a `(id) name policy` heading and then the table in aligned columns, with a blank line between solvers. `printer` and `dashboard` use the same format:
+
+```text
+(0) GA policy
+state  p0   p1   move       next  q
+0      100  0.1  p0 -> 500  1     3.210823971109405
+1      500  0.1  p1 -> 0.2  3     4.972708303598935
+2      100  0.2  p0 -> 500  3     4.979529508899864
+3      500  0.2  stay       3     4.99976147366455
+
+(2) BRKGA policy
+state  p0   p1   move       next  q
+0      100  0.1  p1 -> 0.2  2     4.998149833211987
+1      500  0.1  p0 -> 100  0     3.7536664626485927
+2      100  0.2  stay       2     4.9999812874147525
+3      500  0.2  p0 -> 100  2     4.98732873922277
+```
+
+The columns depend on the tuner; see [Reading the learned policy](../metaheuristic/tuning/README.md#reading-the-learned-policy) for these ones.
+
+`SavePoliciesCSV(prefix)` writes `<prefix>-<solver>-<id>-policy.csv` for each solver that recorded a policy: the header row, then one row per table row. `prefix` and the solver part are handled as in `SaveCSV`, and an empty `prefix` uses the problem name.
+
+- If no solver recorded a policy, both methods write nothing and return `nil`.
+- `Reset` (so every `Solve`) clears the policies along with the history.
+- The `dashboard` stores a policy directly, not through its update queue, so `Policy` never blocks and works without `Start`.
+
 ## Writing a metaheuristic
 
 A metaheuristic gets a `logger.SolverLogger` from `Logger.SolverLogger(name)` and reports to it:
@@ -232,6 +283,7 @@ A metaheuristic gets a `logger.SolverLogger` from `Logger.SolverLogger(name)` an
 type SolverLogger interface {
 	Register(local, best, iteration int, elapsed time.Duration)
 	Event(a slog.Attr, elapsed time.Duration)
+	Policy(t Table)
 }
 ```
 
@@ -239,6 +291,7 @@ type SolverLogger interface {
 |---|---|---|
 | `Register` | Once per iteration, with the current cost, the best cost, the iteration number and the time since the run started. | Takes no strings and allocates nothing. Recorded at every level. |
 | `Event` | For occasional events, such as a restart or a temperature change. | Shown only at `LevelVerbose`. |
+| `Policy` | Once at the end of the run, if the metaheuristic tunes its parameters, with the tuner's learned policy. | Kept without copying, so don't modify `t` afterwards. Never shown during the run (see [Policies](#policies)). |
 
 ```go
 ctx, counter := definition.NewSolverContext(ctx)
@@ -278,7 +331,7 @@ The built-in solvers also report pool improvements through `solution.Pool.Add`, 
 Each solver keeps its history in a memory buffer of 24 bytes per record. When the buffer is full, the logger appends it to that solver's file in one write and reuses the buffer, so a long run does not hold its whole history in memory.
 
 - The file is created on the first spill; a run that never fills the buffer never touches the disk.
-- `Report` and the CSV methods read the file, then the records still in memory.
+- `Report` and `SaveCSV` read the file, then the records still in memory.
 - Files are named `rko-history-<problem>-<solver>-<id>-*.bin`, in `HistoryDir` or the system temp directory. Each name part is cleaned of characters invalid in file names and cut to 32 bytes.
 - If a file cannot be created or written, that solver keeps the rest of its history in memory and one warning is printed to stderr.
 - `HistoryBuffer` negative keeps everything in memory and creates no files.
@@ -310,12 +363,15 @@ type Logger interface {
 | `WorkerStarted`, `WorkerDone` | By `Solve`, when a metaheuristic starts and when it finishes (with its id, name, final cost and time). |
 | `Reset` | By `Solve` at the start of every run; empty the previous run's data, keeping the registered solvers. |
 
+The `SolverLogger` you return must implement all three of its methods, including `Policy` (see [Writing a metaheuristic](#writing-a-metaheuristic)); if your logger doesn't keep policies, `Policy` can do nothing.
+
 Everything else is optional; implement only what your logger offers:
 
 | Interface | Methods | For |
 |---|---|---|
 | `logger.Reporter` | `Report`, `Pool` | Returning the recorded run. |
 | `logger.CSVSaver` | `SaveCSV` | Saving the run as CSV files. |
+| `logger.PolicySaver` | `PrintPolicies`, `SavePoliciesCSV` | Printing and saving the recorded policies. |
 | `io.Closer` | `Close` | Releasing files or other resources. |
 | `logger.Recorder` | all of the above plus `Logger` | What `printer` and `dashboard` implement. |
 

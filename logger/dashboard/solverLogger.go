@@ -34,5 +34,10 @@ func (sl *SolverLogger) Event(a slog.Attr, elapsed time.Duration) {
 	}
 }
 
+// Policy stores t directly, skipping the update queue.
+func (sl *SolverLogger) Policy(t logger.Table) {
+	sl.log.data.setPolicy(sl.id, t)
+}
+
 // Compile-time check that *SolverLogger implements logger.SolverLogger.
 var _ logger.SolverLogger = (*SolverLogger)(nil)
