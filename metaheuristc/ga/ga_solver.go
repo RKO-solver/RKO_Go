@@ -36,6 +36,8 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 	bestPerson := initialPopulation(population, env, false, rg)
 	solutionPool.AddSolution(bestPerson, time.Since(start))
 
+	var key1, key2 float64
+
 	for ; ctx.Err() == nil; ctxAction.Step() {
 
 		for j := 0; j < configuration.PopulationSize-1; j += 2 {
@@ -44,9 +46,31 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 			copy(children[j].RK, offspring1.RK)
 			copy(children[j+1].RK, offspring2.RK)
 
-			crossover(children[j], children[j+1], configuration.CrossoverAlpha, configuration.MutationAlpha, rg)
+			// crossover
+			if rg.Float64() < configuration.CrossoverAlpha {
+				for i := range numKeys {
+					key1 = children[j].RK[i]
+					key2 = children[j+1].RK[i]
+					if rg.Float64() < 0.5 {
+						children[j].RK[i] = key2
+					}
+
+					if rg.Float64() < 0.5 {
+						children[j+1].RK[i] = key1
+					}
+
+					if rg.Float64() < configuration.MutationAlpha {
+						children[j].RK[i] = rg.Float64()
+					}
+
+					if rg.Float64() < configuration.MutationAlpha {
+						children[j+1].RK[i] = rg.Float64()
+					}
+				}
+			}
 			children[j].Cost = env.Cost(children[j].RK)
 			children[j+1].Cost = env.Cost(children[j+1].RK)
+			// end crossover
 
 			if children[j].Cost < bestPerson.Cost {
 				rk.Copy(bestPerson, children[j])
