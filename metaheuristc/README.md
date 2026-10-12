@@ -57,7 +57,7 @@ Parameters, their meaning and their defaults are in the [`config` package](../co
 Create one pool, then each metaheuristic with its configuration and local search, and pass them to `rko.CreateFullSolver`:
 
 ```go
-rg := random.NewGeneratorSeed(42)
+rg := random.New(42)
 log := printer.Default("knapsack")
 defer log.Close()
 pool := solution.NewDefaultPool(env, rg, log)

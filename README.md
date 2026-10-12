@@ -196,7 +196,7 @@ Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelV
 | [`config`](config/README.md) | Build a solver from a YAML file or a Go struct. |
 | [`logger`](logger/README.md) | Choose or implement a logger, and export results to CSV. |
 | [`metaheuristc`](metaheuristc/README.md) | Build metaheuristics, local searches and the solution pool by hand. |
-| `random` | Create random generators, seeded (`NewGeneratorSeed`) or not (`NewGenerator`). |
+| `random` | Create random generators, seeded (`New`) or randomly seeded (`NewRandom`). |
 
 ## Maintainers
 

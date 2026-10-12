@@ -20,7 +20,7 @@ import (
 
 // CreateDefaultSolver creates a Solver that runs the metaheuristics in mh with default parameters.
 func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger logger.Logger) *Solver {
-	rg := random.NewGenerator()
+	rg := random.NewRandom()
 	solutionPool := solution.NewDefaultPool(env, rg, logger)
 
 	solvers := make([]definition.Solver, 0, len(mh))

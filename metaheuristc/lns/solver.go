@@ -64,7 +64,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 		intensity := rg.RangeInt(intensityMin, intensityMax)
 
-		order := rg.Permutation(env.NumKeys())
+		order := rg.Perm(env.NumKeys())
 
 		for k := range intensity {
 			pos := order[k]

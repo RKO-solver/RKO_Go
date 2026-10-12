@@ -15,7 +15,7 @@ func WithSeed(seed uint64) Option { return func(o *options) { o.seed, o.seeded =
 
 func (o *options) generator() *random.Generator {
 	if o.seeded {
-		return random.NewGeneratorSeed(o.seed)
+		return random.New(o.seed)
 	}
-	return random.NewGenerator()
+	return random.NewRandom()
 }
