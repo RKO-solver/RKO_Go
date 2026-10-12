@@ -3,7 +3,7 @@ package constants
 
 import "time"
 
-// DefaultTimeLimit is the time limit of rko.CreateDefaultSolver.
+// DefaultTimeLimit is the time limit of rko.New.
 const DefaultTimeLimit = 150 * time.Second
 
 // DefaultShakeMin is the default ILS ShakeMin and LNS BetaMin.

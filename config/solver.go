@@ -63,10 +63,10 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 		solvers = append(solvers, s)
 	}
 
-	return rko.CreateFullSolver(log, env, cfg.TimeLimit, cfg.MaxIterations, pool, solvers), log, nil
+	return rko.NewFromSolvers(env, log, pool, solvers, rko.WithTimeLimit(cfg.TimeLimit), rko.WithMaxIterations(cfg.MaxIterations)), log, nil
 }
 
-func newMetaheuristic(t rko.MetaHeuristic, p *Parameters, env definition.Environment, se search.Local, rg *random.Generator, pool *solution.Pool, log logger.Logger) (definition.Solver, bool) {
+func newMetaheuristic(t rko.Metaheuristic, p *Parameters, env definition.Environment, se search.Local, rg *random.Generator, pool *solution.Pool, log logger.Logger) (definition.Solver, bool) {
 	switch t {
 	case rko.ILS:
 		c := *p.ILS
@@ -86,7 +86,7 @@ func newMetaheuristic(t rko.MetaHeuristic, p *Parameters, env definition.Environ
 	case rko.LNS:
 		c := *p.LNS
 		return lns.New(env, rg, pool, log, lns.WithConfig(&c), lns.WithSearch(se)), true
-	case rko.MULTISTART:
+	case rko.MultiStart:
 		return multistart.New(env, rg, pool, log, multistart.WithSearch(se)), true
 	}
 	return nil, false

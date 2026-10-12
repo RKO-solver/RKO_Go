@@ -19,33 +19,42 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// CreateDefaultSolver creates a Solver that runs the metaheuristics in mh with default parameters.
-func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger logger.Logger) *Solver {
+// Option configures New and NewFromSolvers.
+type Option func(*Solver)
+
+// WithTimeLimit sets the time limit; zero or negative means no limit.
+func WithTimeLimit(d time.Duration) Option { return func(s *Solver) { s.timeLimit = d } }
+
+// WithMaxIterations sets the iteration limit; zero or negative means no limit.
+func WithMaxIterations(n int) Option { return func(s *Solver) { s.maxIterations = n } }
+
+// New creates a Solver that runs the metaheuristics in mhs with default parameters; without options the time limit is constants.DefaultTimeLimit.
+func New(env definition.Environment, log logger.Logger, mhs []Metaheuristic, opts ...Option) *Solver {
 	rg := random.NewRandom()
-	solutionPool := solution.NewPool(env, rg, logger)
+	solutionPool := solution.NewPool(env, rg, log)
 
-	solvers := make([]definition.Solver, 0, len(mh))
+	solvers := make([]definition.Solver, 0, len(mhs))
 
-	for _, m := range mh {
+	for _, m := range mhs {
 		var solver definition.Solver
 		srg := rg.Split()
 		switch m {
 		case ILS:
-			solver = ils.New(env, srg, solutionPool, logger)
+			solver = ils.New(env, srg, solutionPool, log)
 		case VNS:
-			solver = vns.New(env, srg, solutionPool, logger)
-		case MULTISTART:
-			solver = multistart.New(env, srg, solutionPool, logger)
+			solver = vns.New(env, srg, solutionPool, log)
+		case MultiStart:
+			solver = multistart.New(env, srg, solutionPool, log)
 		case SA:
-			solver = sa.New(env, srg, solutionPool, logger)
+			solver = sa.New(env, srg, solutionPool, log)
 		case GA:
-			solver = ga.New(env, srg, solutionPool, logger)
+			solver = ga.New(env, srg, solutionPool, log)
 		case BRKGA:
-			solver = brkga.New(env, srg, solutionPool, logger)
+			solver = brkga.New(env, srg, solutionPool, log)
 		case LNS:
-			solver = lns.New(env, srg, solutionPool, logger)
+			solver = lns.New(env, srg, solutionPool, log)
 		default:
-			fmt.Printf("%s not implemented yet\n", GetMetaHeuristicString(m))
+			fmt.Printf("%s not implemented yet\n", m)
 			continue
 		}
 
@@ -54,35 +63,27 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger 
 		}
 	}
 
-	return &Solver{
-		l:            logger,
+	return build(&Solver{
+		l:            log,
 		env:          env,
 		solutionPool: solutionPool,
 		solvers:      solvers,
 		timeLimit:    constants.DefaultTimeLimit,
+	}, opts)
+}
+
+// NewFromSolvers creates a Solver from already-built solvers and their pool; without options it has no limit.
+func NewFromSolvers(env definition.Environment, log logger.Logger, pool *solution.Pool, solvers []definition.Solver, opts ...Option) *Solver {
+	return build(&Solver{l: log, env: env, solutionPool: pool, solvers: solvers}, opts)
+}
+
+// build applies opts to s and prints NoLimitWarning when s ends up with neither limit.
+func build(s *Solver, opts []Option) *Solver {
+	for _, opt := range opts {
+		opt(s)
 	}
-}
-
-// CreateDefaultSolverTimeLimit is like CreateDefaultSolver with an explicit time limit.
-func CreateDefaultSolverTimeLimit(mh []MetaHeuristic, timeLimit time.Duration, env definition.Environment, logger logger.Logger) *Solver {
-	solver := CreateDefaultSolver(mh, env, logger)
-
-	solver.timeLimit = timeLimit
-
-	return solver
-}
-
-// CreateFullSolver creates a Solver from already-built solvers and pool; non-positive limits mean no limit.
-func CreateFullSolver(logger logger.Logger, env definition.Environment, timeLimit time.Duration, maxIterations int, solutionPool *solution.Pool, solvers []definition.Solver) *Solver {
-	if timeLimit <= 0 && maxIterations <= 0 {
+	if s.timeLimit <= 0 && s.maxIterations <= 0 {
 		fmt.Fprintln(os.Stdout, NoLimitWarning)
 	}
-	return &Solver{
-		l:             logger,
-		env:           env,
-		solutionPool:  solutionPool,
-		solvers:       solvers,
-		timeLimit:     timeLimit,
-		maxIterations: maxIterations,
-	}
+	return s
 }
