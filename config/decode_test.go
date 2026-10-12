@@ -399,7 +399,7 @@ func TestDecodeMetaheuristics(t *testing.T) {
 			name:    "names are case-insensitive",
 			entries: []string{"multistart", "Lns=farey"},
 			expected: []config.Metaheuristic{
-				{Type: rko.MULTISTART},
+				{Type: rko.MultiStart},
 				{Type: rko.LNS, Searches: []search.Type{search.Farey}},
 			},
 		},

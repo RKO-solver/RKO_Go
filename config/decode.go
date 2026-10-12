@@ -131,7 +131,7 @@ func parseMetaheuristics(entries []string) ([]Metaheuristic, []error) {
 	for i, e := range entries {
 		parts := strings.SplitN(e, "=", 2)
 		name := strings.TrimSpace(parts[0])
-		mt := rko.GetMetaHeuristic(name)
+		mt := rko.ParseMetaheuristic(name)
 
 		keep := true
 		if mt < 0 {

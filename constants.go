@@ -3,14 +3,14 @@ package rko
 import "strings"
 
 // NoLimitWarning is printed when a Solver is built with neither a time limit nor an iteration limit.
-const NoLimitWarning = "Warning: neither TimeLimitSeconds nor MaxIterations is set; the solver will run until its context is cancelled"
+const NoLimitWarning = "Warning: neither a time limit nor an iteration limit is set; the solver will run until its context is cancelled"
 
-// MetaHeuristic identifies a metaheuristic.
-type MetaHeuristic = int
+// Metaheuristic identifies a metaheuristic.
+type Metaheuristic int
 
-// MetaHeuristic values; GRASP, VLNS, ALNS and IPR are not implemented yet.
+// Metaheuristic values; GRASP, VLNS, ALNS and IPR are not implemented yet.
 const (
-	MULTISTART MetaHeuristic = iota
+	MultiStart Metaheuristic = iota
 	SA
 	GA
 	VNS
@@ -23,12 +23,12 @@ const (
 	IPR
 )
 
-// GetMetaHeuristic returns the MetaHeuristic named by label (case-insensitive), or -1 if unknown.
-func GetMetaHeuristic(label string) MetaHeuristic {
+// ParseMetaheuristic returns the Metaheuristic named by label (case-insensitive), or -1 if unknown.
+func ParseMetaheuristic(label string) Metaheuristic {
 	label = strings.ToUpper(label)
 	switch label {
 	case "MULTISTART":
-		return MULTISTART
+		return MultiStart
 	case "SA":
 		return SA
 	case "GA":
@@ -54,10 +54,10 @@ func GetMetaHeuristic(label string) MetaHeuristic {
 	}
 }
 
-// GetMetaHeuristicString returns the full name of metaHeuristic, or "" if unknown.
-func GetMetaHeuristicString(metaHeuristic MetaHeuristic) string {
-	switch metaHeuristic {
-	case MULTISTART:
+// String returns the full name of m, or "" if unknown.
+func (m Metaheuristic) String() string {
+	switch m {
+	case MultiStart:
 		return "MultiStart"
 	case SA:
 		return "Simulated Annealing"
@@ -84,10 +84,10 @@ func GetMetaHeuristicString(metaHeuristic MetaHeuristic) string {
 	}
 }
 
-// GetMetaHeuristicShort returns the abbreviation of metaHeuristic, or "" if unknown.
-func GetMetaHeuristicShort(metaHeuristic MetaHeuristic) string {
-	switch metaHeuristic {
-	case MULTISTART:
+// Short returns the abbreviation of m, or "" if unknown.
+func (m Metaheuristic) Short() string {
+	switch m {
+	case MultiStart:
 		return "MH"
 	case SA:
 		return "SA"

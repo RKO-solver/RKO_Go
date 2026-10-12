@@ -40,6 +40,6 @@ type SeedPool struct {
 
 // Metaheuristic is one metaheuristic to run and its local searches.
 type Metaheuristic struct {
-	Type     rko.MetaHeuristic
+	Type     rko.Metaheuristic
 	Searches []search.Type
 }
