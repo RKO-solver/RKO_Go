@@ -149,7 +149,7 @@ func parseMetaheuristics(entries []string) ([]Metaheuristic, []error) {
 				if comp == "" {
 					continue
 				}
-				st := search.GetSearchType(comp)
+				st := search.ParseType(comp)
 				if st < 0 {
 					errs = append(errs, fmt.Errorf("config: Metaheuristics[%d]: %w %q", i, ErrUnknownValue, comp))
 					continue

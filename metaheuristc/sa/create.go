@@ -25,7 +25,7 @@ func DefaultConfigurationSA() *Configuration {
 
 // CreateDefaultSA creates a SimulatedAnnealing with the default configuration and local search.
 func CreateDefaultSA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *SimulatedAnnealing {
-	local := search.CreateDefault(env, solutionPool, rg)
+	local := search.NewDefault(env, solutionPool, rg)
 
 	return &SimulatedAnnealing{
 		env:           env,
@@ -39,7 +39,7 @@ func CreateDefaultSA(env definition.Environment, rg *random.Generator, solutionP
 
 // CreateSA creates a SimulatedAnnealing with the local search of searchType.
 func CreateSA(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *SimulatedAnnealing {
-	local := search.Create(searchType, env, solutionPool, rg)
+	local := search.New(searchType, env, solutionPool, rg)
 	return &SimulatedAnnealing{
 		env:           env,
 		configuration: configuration,

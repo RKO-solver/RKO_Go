@@ -7,7 +7,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc"
 )
 
-func mirrorSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment) {
+func mirrorSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, env definition.Environment) {
 	n := rko.RK.Len()
 
 	for i := 0; i < n; i++ {
@@ -16,7 +16,7 @@ func mirrorSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environ
 		}
 
 		rko.RK[i] = 1.0 - rko.RK[i]
-		cost := environment.Cost(rko.RK)
+		cost := env.Cost(rko.RK)
 		if cost < rko.Cost {
 			rko.Cost = cost
 		} else {
@@ -26,20 +26,20 @@ func mirrorSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environ
 }
 
 type mirrorLocalSearch struct {
-	environment definition.Environment
+	env definition.Environment
 }
 
 func (s mirrorLocalSearch) String() string {
-	return GetSearchString(Mirror)
+	return Mirror.String()
 }
 
 func (s mirrorLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
-	mirrorSearch(ctx, rko, s.environment)
+	mirrorSearch(ctx, rko, s.env)
 }
 
-// CreateMirrorLocalSearch returns the Mirror local search.
-func CreateMirrorLocalSearch(environment definition.Environment) Local {
-	return mirrorLocalSearch{environment}
+// NewMirror returns the Mirror local search.
+func NewMirror(env definition.Environment) Local {
+	return mirrorLocalSearch{env}
 }
 
 var _ Local = (*mirrorLocalSearch)(nil)

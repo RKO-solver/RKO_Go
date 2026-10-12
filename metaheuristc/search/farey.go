@@ -30,7 +30,7 @@ var fareySequence = []float64{
 	1.0,
 }
 
-func fareySearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment, rg *random.Generator) {
+func fareySearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, env definition.Environment, rg *random.Generator) {
 
 	fareyLen := len(fareySequence)
 	n := rko.RK.Len()
@@ -44,7 +44,7 @@ func fareySearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environm
 			oldValue := rko.RK[i]
 			value := rg.RangeFloat64(fareySequence[j], fareySequence[j+1])
 			rko.RK[i] = value
-			cost := environment.Cost(rko.RK)
+			cost := env.Cost(rko.RK)
 			if cost < rko.Cost {
 				rko.Cost = cost
 			} else {
@@ -56,21 +56,21 @@ func fareySearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environm
 }
 
 type fareyLocalSearch struct {
-	environment definition.Environment
-	rg          *random.Generator
+	env definition.Environment
+	rg  *random.Generator
 }
 
 func (s fareyLocalSearch) String() string {
-	return GetSearchString(Farey)
+	return Farey.String()
 }
 
 func (s fareyLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
-	fareySearch(ctx, rko, s.environment, s.rg)
+	fareySearch(ctx, rko, s.env, s.rg)
 }
 
-// CreateFareyLocalSearch returns the Farey local search.
-func CreateFareyLocalSearch(environment definition.Environment, rg *random.Generator) Local {
-	return &fareyLocalSearch{environment, rg}
+// NewFarey returns the Farey local search.
+func NewFarey(env definition.Environment, rg *random.Generator) Local {
+	return &fareyLocalSearch{env, rg}
 }
 
 var _ Local = (*fareyLocalSearch)(nil)

@@ -21,7 +21,7 @@ func DefaultConfigurationGA() *ConfigurationGA {
 
 // CreateDefaultGA creates a GA with the default configuration and local search.
 func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
-	local := search.CreateDefault(env, solutionPool, rg)
+	local := search.NewDefault(env, solutionPool, rg)
 
 	return &GA{
 		env:           env,
@@ -35,7 +35,7 @@ func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionP
 
 // CreateGA creates a GA with the local search of searchType.
 func CreateGA(env definition.Environment, configuration *ConfigurationGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
-	local := search.Create(searchType, env, solutionPool, rg)
+	local := search.New(searchType, env, solutionPool, rg)
 	return &GA{
 		env:           env,
 		configuration: configuration,

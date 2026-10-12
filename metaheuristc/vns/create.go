@@ -18,7 +18,7 @@ func DefaultConfigurationVNS() *Configuration {
 
 // CreateDefaultVNS creates a VNS with the default configuration and local search.
 func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
-	local := search.CreateDefault(env, solutionPool, rg)
+	local := search.NewDefault(env, solutionPool, rg)
 
 	return &VNS{
 		env:           env,
@@ -32,7 +32,7 @@ func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solution
 
 // CreateVNS creates a VNS with the local search of searchType.
 func CreateVNS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
-	local := search.Create(searchType, env, solutionPool, rg)
+	local := search.New(searchType, env, solutionPool, rg)
 
 	return &VNS{
 		env:           env,

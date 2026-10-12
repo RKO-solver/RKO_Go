@@ -10,7 +10,7 @@ import (
 
 // CreateDefaultMultiStart creates a MultiStart with the default local search.
 func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart {
-	local := search.CreateDefault(env, solutionPool, rg)
+	local := search.NewDefault(env, solutionPool, rg)
 
 	return &MultiStart{
 		env:          env,

@@ -11,15 +11,15 @@ func getSearch(sea []search.Type, environment definition.Environment, s *solutio
 	if len(sea) == 1 {
 		switch sea[0] {
 		case search.Swap:
-			return search.CreateSwapLocalSearch(environment)
+			return search.NewSwap(environment)
 		case search.Mirror:
-			return search.CreateMirrorLocalSearch(environment)
+			return search.NewMirror(environment)
 		case search.Farey:
-			return search.CreateFareyLocalSearch(environment, rg)
-		case search.Nelder:
-			return search.CreateNelderMeadLocalSearch(environment, s, rg)
+			return search.NewFarey(environment, rg)
+		case search.NelderMead:
+			return search.NewNelderMead(environment, s, rg)
 		case search.RVND:
-			return search.CreateDefault(environment, s, rg)
+			return search.NewDefault(environment, s, rg)
 		}
 	}
 
@@ -33,8 +33,8 @@ func getSearch(sea []search.Type, environment definition.Environment, s *solutio
 			neighbourhood = append(neighbourhood, search.Mirror)
 		case search.Farey:
 			neighbourhood = append(neighbourhood, search.Farey)
-		case search.Nelder:
-			neighbourhood = append(neighbourhood, search.Nelder)
+		case search.NelderMead:
+			neighbourhood = append(neighbourhood, search.NelderMead)
 		case search.RVND:
 			continue
 
@@ -42,8 +42,8 @@ func getSearch(sea []search.Type, environment definition.Environment, s *solutio
 	}
 
 	if len(neighbourhood) == 0 {
-		return search.CreateDefault(environment, s, rg)
+		return search.NewDefault(environment, s, rg)
 	}
 
-	return search.CreateRVND(environment, s, rg, neighbourhood)
+	return search.NewRVND(environment, s, rg, neighbourhood)
 }

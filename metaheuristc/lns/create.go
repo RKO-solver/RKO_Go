@@ -19,7 +19,7 @@ func DefaultConfigurationLNS() *Configuration {
 
 // CreateDefaultLNS creates an LNS with the default configuration and local search.
 func CreateDefaultLNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS {
-	local := search.CreateDefault(env, solutionPool, rg)
+	local := search.NewDefault(env, solutionPool, rg)
 
 	return &LNS{
 		env:           env,
@@ -33,7 +33,7 @@ func CreateDefaultLNS(env definition.Environment, rg *random.Generator, solution
 
 // CreateLNS creates an LNS with the local search of searchType.
 func CreateLNS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS {
-	local := search.Create(searchType, env, solutionPool, rg)
+	local := search.New(searchType, env, solutionPool, rg)
 
 	return &LNS{
 		env:           env,

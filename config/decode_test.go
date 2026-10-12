@@ -393,7 +393,7 @@ func TestDecodeMetaheuristics(t *testing.T) {
 		{
 			name:     "whitespace is trimmed",
 			entries:  []string{"  ils  =  swap ,  MIRROR  , Nelder "},
-			expected: []config.Metaheuristic{{Type: rko.ILS, Searches: []search.Type{search.Swap, search.Mirror, search.Nelder}}},
+			expected: []config.Metaheuristic{{Type: rko.ILS, Searches: []search.Type{search.Swap, search.Mirror, search.NelderMead}}},
 		},
 		{
 			name:    "names are case-insensitive",

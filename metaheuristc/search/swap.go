@@ -7,8 +7,8 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristc"
 )
 
-func swapSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment) {
-	for _, n := range environment.SwapSearch() {
+func swapSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, env definition.Environment) {
+	for _, n := range env.SwapSearch() {
 		if ctx.Err() != nil {
 			break
 		}
@@ -18,7 +18,7 @@ func swapSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environme
 		for i := start; i < end-1 && ctx.Err() == nil; i++ {
 			for j := i + 1; j < end; j++ {
 				rko.RK[i], rko.RK[j] = rko.RK[j], rko.RK[i]
-				cost := environment.Cost(rko.RK)
+				cost := env.Cost(rko.RK)
 				if cost < rko.Cost {
 					rko.Cost = cost
 				} else {
@@ -31,20 +31,20 @@ func swapSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environme
 }
 
 type swapLocalSearch struct {
-	environment definition.Environment
+	env definition.Environment
 }
 
 func (s swapLocalSearch) String() string {
-	return GetSearchString(Swap)
+	return Swap.String()
 }
 
 func (s swapLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
-	swapSearch(ctx, rko, s.environment)
+	swapSearch(ctx, rko, s.env)
 }
 
-// CreateSwapLocalSearch returns the Swap local search.
-func CreateSwapLocalSearch(environment definition.Environment) Local {
-	return swapLocalSearch{environment}
+// NewSwap returns the Swap local search.
+func NewSwap(env definition.Environment) Local {
+	return swapLocalSearch{env}
 }
 
 var _ Local = (*swapLocalSearch)(nil)

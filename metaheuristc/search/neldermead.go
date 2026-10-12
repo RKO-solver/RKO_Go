@@ -56,32 +56,32 @@ func rank(x1, x2, p *metaheuristc.RandomKeyValue) (*metaheuristc.RandomKeyValue,
 }
 
 type nelderMeadLocalSearch struct {
-	environment   definition.Environment
-	solutionPool  *solution.Pool
+	env           definition.Environment
+	pool          *solution.Pool
 	rg            *random.Generator
 	maxIterations int
 }
 
 func (n nelderMeadLocalSearch) String() string {
-	return GetSearchString(Nelder)
+	return NelderMead.String()
 }
 
 func (n nelderMeadLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
-	nelderMeadSearch(ctx, rko, n.maxIterations, n.environment, n.solutionPool, n.rg)
+	nelderMeadSearch(ctx, rko, n.maxIterations, n.env, n.pool, n.rg)
 }
 
-// CreateNelderMeadLocalSearch returns the Nelder-Mead local search.
-func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPool *solution.Pool, rg *random.Generator) Local {
-	maxIterations := int(float64(environment.NumKeys()) * math.Exp(-2))
-	return &nelderMeadLocalSearch{environment, solutionPool, rg, maxIterations}
+// NewNelderMead returns the Nelder-Mead local search.
+func NewNelderMead(env definition.Environment, pool *solution.Pool, rg *random.Generator) Local {
+	maxIterations := int(float64(env.NumKeys()) * math.Exp(-2))
+	return &nelderMeadLocalSearch{env, pool, rg, maxIterations}
 }
 
-func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, maxIterations int, env definition.Environment, solutionPool *solution.Pool, rg *random.Generator) {
+func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, maxIterations int, env definition.Environment, pool *solution.Pool, rg *random.Generator) {
 	var x1, x2, x3, x0, xR, xAux *metaheuristc.RandomKeyValue
 
-	poolSize := solutionPool.Len()
-	x1 = solutionPool.Solution(rg.IntN(poolSize))
-	x2 = solutionPool.Solution(rg.IntN(poolSize))
+	poolSize := pool.Len()
+	x1 = pool.Solution(rg.IntN(poolSize))
+	x2 = pool.Solution(rg.IntN(poolSize))
 
 	if x2.Cost < x1.Cost {
 		x1, x2 = x2, x1
