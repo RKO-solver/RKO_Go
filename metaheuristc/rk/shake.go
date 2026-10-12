@@ -19,14 +19,14 @@ const (
 )
 
 // Shake applies random moves to solution and recomputes its cost.
-func Shake(solution *metaheuristc.RandomKeyValue, min float64, max float64, rg *random.Generator, env definition.Environment) {
+func Shake(solution *metaheuristc.RandomKeyValue, lo float64, hi float64, rg *random.Generator, env definition.Environment) {
 	n := solution.RK.Len()
 	var intensity int
 
-	if min == max {
-		intensity = int(float64(n)*min) + 1
+	if lo == hi {
+		intensity = int(float64(n)*lo) + 1
 	} else {
-		intensity = int(float64(n)*rg.RangeFloat64(min, max)) + 1
+		intensity = int(float64(n)*rg.RangeFloat64(lo, hi)) + 1
 	}
 
 	for k := 0; k < intensity; k++ {
