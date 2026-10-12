@@ -127,7 +127,7 @@ Each metaheuristic counts its own iterations of its outer loop: a generation for
 There is no default limit. With neither set, `NewSolver` prints this line to stdout:
 
 ```text
-Warning: neither TimeLimitSeconds nor MaxIterations is set; the solver will run until its context is cancelled
+Warning: neither a time limit nor an iteration limit is set; the solver will run until its context is cancelled
 ```
 
 ## YAML reference
@@ -279,7 +279,7 @@ solver, rkoLog, err := cfg.NewSolver(env)
 |---|---|
 | `Config` | `LogLevel`, `LogType`, `TimeLimit` (`0` or negative: no limit), `MaxIterations` (`0` or negative: no limit), `SeedPool`, `Metaheuristics`, `Parameters` |
 | `SeedPool` | `MaxSize` (`0`: `solution.DefaultSize`; negative: no cap), `InitialSize` (`0` or negative: `solution.DefaultSize`) |
-| `Metaheuristic` | `Type` (`rko.MetaHeuristic`), `Searches` (`[]search.Type`, same rules as the YAML table above) |
+| `Metaheuristic` | `Type` (`rko.Metaheuristic`), `Searches` (`[]search.Type`, same rules as the YAML table above) |
 | `Parameters` | `BRKGA`, `GA`, `ILS`, `SA`, `VNS`, `LNS`: pointers to the structs of the [`metaheuristc` package](../metaheuristc/README.md#configuration-structs) |
 
 A `Config` you build yourself skips the YAML defaults:

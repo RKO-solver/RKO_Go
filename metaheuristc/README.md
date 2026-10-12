@@ -2,7 +2,7 @@
 
 The metaheuristic implementations and the pieces they share: local searches, the solution pool and random-key helpers.
 
-Most programs never import these packages: [`rko.CreateDefaultSolver`](../README.md#quick-start) and the [`config` package](../config/README.md) build everything for you. Come here to build solvers by hand, combine local searches yourself, or add your own metaheuristic next to the built-in ones.
+Most programs never import these packages: [`rko.New`](../README.md#quick-start) and the [`config` package](../config/README.md) build everything for you. Come here to build solvers by hand, combine local searches yourself, or add your own metaheuristic next to the built-in ones.
 
 | Package | Contents |
 |---|---|
@@ -17,7 +17,7 @@ Most programs never import these packages: [`rko.CreateDefaultSolver`](../README
 
 | Metaheuristic | Type | `rko` constant | One iteration is |
 |---|---|---|---|
-| MultiStart | `*multistart.MultiStart` | `MULTISTART` | a random solution improved by the local search |
+| MultiStart | `*multistart.MultiStart` | `MultiStart` | a random solution improved by the local search |
 | Simulated Annealing | `*sa.SimulatedAnnealing` | `SA` | one temperature step of `Iterations` moves |
 | Genetic Algorithm | `*ga.GA` | `GA` | one generation |
 | BRKGA | `*brkga.BRKGA` | `BRKGA` | one generation |
@@ -54,7 +54,7 @@ Parameters, their meaning and their defaults are in the [`config` package](../co
 
 ## Building a solver by hand
 
-Create one pool, then each metaheuristic with its configuration and local search, and pass them to `rko.CreateFullSolver`:
+Create one pool, then each metaheuristic with its configuration and local search, and pass them to `rko.NewFromSolvers`:
 
 ```go
 rg := random.New(42)
@@ -78,13 +78,14 @@ solvers := []definition.Solver{
 		brkga.WithSearch(search.NewRVND(env, pool, brkgaRG, []search.Type{search.Mirror, search.Farey}))),
 }
 
-solver := rko.CreateFullSolver(log, env, 30*time.Second, 1000, pool, solvers)
+solver := rko.NewFromSolvers(env, log, pool, solvers,
+	rko.WithTimeLimit(30*time.Second), rko.WithMaxIterations(1000))
 items := solver.Solve(context.Background()).([]int)
 ```
 
-- Give every solver the pool and logger you pass to `CreateFullSolver`: `Solve` returns the best solution of that pool.
+- Give every solver the pool and logger you pass to `NewFromSolvers`: `Solve` returns the best solution of that pool.
 - Give each solver its own generator with `rg.Split()`: a `random.Generator` is not safe for concurrent use. A local search that draws random numbers (`Farey`, `NelderMead`, RVND) should use the same generator as its metaheuristic.
-- `CreateFullSolver(log, env, timeLimit, maxIterations, pool, solvers)`: a zero or negative `timeLimit` or `maxIterations` means no limit.
+- `rko.WithTimeLimit(d)` and `rko.WithMaxIterations(n)` set the limits; a zero or negative value means no limit, and with no option there is none.
 - Your own [`definition.Solver`](../definition/README.md#writing-a-metaheuristic) can go in the same slice.
 
 ### Constructors
@@ -162,7 +163,7 @@ type Local interface {
 
 ## Stopping
 
-Each metaheuristic calls `definition.NewSolverContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.CreateFullSolver` or the [`config` package](../config/README.md#stopping). See the [`definition` package](../definition/README.md#context-helpers) for the helpers.
+Each metaheuristic calls `definition.NewSolverContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.WithTimeLimit` and `rko.WithMaxIterations` or the [`config` package](../config/README.md#stopping). See the [`definition` package](../definition/README.md#context-helpers) for the helpers.
 
 ## See also
 

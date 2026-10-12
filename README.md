@@ -76,11 +76,11 @@ func main() {
 	log := printer.Default("tsp")
 	defer log.Close()
 
-	mh := []rko.MetaHeuristic{rko.ILS, rko.BRKGA}
-	solver := rko.CreateDefaultSolverTimeLimit(mh, 5*time.Second, env, log)
+	mh := []rko.Metaheuristic{rko.ILS, rko.BRKGA}
+	solver := rko.New(env, log, mh, rko.WithTimeLimit(5*time.Second))
 
 	tour := solver.Solve(context.Background()).([]int)
-	cost := solver.GetSolutionPool().BestCost()
+	cost := solver.Pool().BestCost()
 	fmt.Println("tour:", tour, "cost:", cost)
 }
 ```
@@ -139,14 +139,14 @@ See the [`config` package](config/README.md) for every key and its default.
 
 | Constructor | Time limit | Iteration limit |
 |---|---|---|
-| `rko.CreateDefaultSolver(mh, env, log)` | 150 s | none |
-| `rko.CreateDefaultSolverTimeLimit(mh, timeLimit, env, log)` | `timeLimit` | none |
-| `rko.CreateFullSolver(log, env, timeLimit, maxIterations, pool, solvers)` | `timeLimit` | `maxIterations` |
+| `rko.New(env, log, mhs, opts...)` | 150 s | none |
+| `rko.NewFromSolvers(env, log, pool, solvers, opts...)` | none | none |
 | `cfg.NewSolver(env)` ([`config`](config/README.md)) | `TimeLimitSeconds` in YAML (`cfg.TimeLimit`) | `MaxIterations` in YAML (`cfg.MaxIterations`) |
 
+- Both `rko` constructors take the options `rko.WithTimeLimit(d)` and `rko.WithMaxIterations(n)`, which replace those defaults.
 - A zero or negative value means no limit.
 - `MaxIterations` is one number for the whole run, counted by each metaheuristic separately: each one stops after that many iterations of its own outer loop (a generation for GA and BRKGA, a temperature step for SA). `Solve` returns once all of them have stopped.
-- With neither limit, the solver runs until `ctx` is cancelled. `rko.CreateFullSolver`, and so `cfg.NewSolver`, prints a warning in that case.
+- With neither limit, the solver runs until `ctx` is cancelled. `rko.New` and `rko.NewFromSolvers`, and so `cfg.NewSolver`, print a warning in that case.
 - SA also ends on its own once its temperature reaches `TemperatureGoal`.
 
 To stop the search yourself, for example on a shutdown signal, pass your own context. The configured limits still apply:
@@ -160,11 +160,11 @@ result := solver.Solve(ctx)
 
 ## Choosing metaheuristics
 
-`rko.CreateDefaultSolver` and `rko.CreateDefaultSolverTimeLimit` take a slice of `rko.MetaHeuristic` constants and use each one's default parameters and local search:
+`rko.New` takes a slice of `rko.Metaheuristic` constants and uses each one's default parameters and local search:
 
 | Constant | Metaheuristic |
 |---|---|
-| `rko.MULTISTART` | MultiStart |
+| `rko.MultiStart` | MultiStart |
 | `rko.SA` | Simulated Annealing |
 | `rko.GA` | Genetic Algorithm |
 | `rko.BRKGA` | Biased Random-Key Genetic Algorithm |
@@ -174,7 +174,7 @@ result := solver.Solve(ctx)
 
 Listing a constant twice runs two independent instances. `GRASP`, `VLNS`, `ALNS` and `IPR` are declared but not implemented; they are skipped with a `not implemented yet` message.
 
-To change parameters or local searches, use a [YAML file](config/README.md), or build each solver yourself and pass them to `rko.CreateFullSolver` (see the [`metaheuristc` package](metaheuristc/README.md)).
+To change parameters or local searches, use a [YAML file](config/README.md), or build each solver yourself and pass them to `rko.NewFromSolvers` (see the [`metaheuristc` package](metaheuristc/README.md)).
 
 ## Logging
 
@@ -191,7 +191,7 @@ Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelV
 
 | Package | Use it to |
 |---|---|
-| `rko` (root) | Create a `Solver` (`CreateDefaultSolver`, `CreateDefaultSolverTimeLimit`, `CreateFullSolver`) and run it (`Solve`, `GetSolutionPool`, `Print`). |
+| `rko` (root) | Create a `Solver` (`New`, `NewFromSolvers`, with `WithTimeLimit` and `WithMaxIterations`) and run it (`Solve`, `Pool`, `Print`). Name a metaheuristic with `Metaheuristic` (`ParseMetaheuristic`, `String`, `Short`). |
 | [`definition`](definition/README.md) | Implement `Environment` for your problem, or `Solver` for your own metaheuristic. |
 | [`config`](config/README.md) | Build a solver from a YAML file or a Go struct. |
 | [`logger`](logger/README.md) | Choose or implement a logger, and export results to CSV. |

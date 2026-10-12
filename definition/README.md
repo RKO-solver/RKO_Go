@@ -197,7 +197,7 @@ func (s *RandomSearch) Solve(ctx context.Context) definition.Result {
 }
 ```
 
-Pass it to `rko.CreateFullSolver` with the other solvers; the [`metaheuristc` package](../metaheuristc/README.md#building-a-solver-by-hand) shows how. Report progress once per iteration with `Register` and occasional events with `Event`; see the [`logger` package](../logger/README.md).
+Pass it to `rko.NewFromSolvers` with the other solvers; the [`metaheuristc` package](../metaheuristc/README.md#building-a-solver-by-hand) shows how. Report progress once per iteration with `Register` and occasional events with `Event`; see the [`logger` package](../logger/README.md).
 
 ## See also
 

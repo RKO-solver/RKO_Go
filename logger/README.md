@@ -24,7 +24,7 @@ func main() {
 	log := printer.New(nil, "MyProblem", &printer.Options{Level: logger.LevelVerbose})
 	defer log.Close() // deletes the history files, so read the results first
 
-	solver := rko.CreateDefaultSolverTimeLimit([]rko.MetaHeuristic{rko.GA, rko.SA}, 10*time.Second, env, log)
+	solver := rko.New(env, log, []rko.Metaheuristic{rko.GA, rko.SA}, rko.WithTimeLimit(10*time.Second))
 	result := solver.Solve(context.Background())
 	fmt.Printf("Best solution: %+v\n", result)
 
