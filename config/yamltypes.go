@@ -25,10 +25,10 @@ type yamlSeedPool struct {
 }
 
 type yamlParameters struct {
-	BRKGA *brkga.ConfigurationBRKGA `yaml:"BRKGA"`
-	GA    *ga.ConfigurationGA       `yaml:"GA"`
-	ILS   *ils.Configuration        `yaml:"ILS"`
-	SA    *sa.Configuration         `yaml:"SA"`
-	VNS   *vns.Configuration        `yaml:"VNS"`
-	LNS   *lns.Configuration        `yaml:"LNS"`
+	BRKGA *brkga.Config `yaml:"BRKGA"`
+	GA    *ga.Config    `yaml:"GA"`
+	ILS   *ils.Config   `yaml:"ILS"`
+	SA    *sa.Config    `yaml:"SA"`
+	VNS   *vns.Config   `yaml:"VNS"`
+	LNS   *lns.Config   `yaml:"LNS"`
 }

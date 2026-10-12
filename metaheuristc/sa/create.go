@@ -9,9 +9,9 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// DefaultConfigurationSA returns the default SA parameters.
-func DefaultConfigurationSA() *Configuration {
-	return &Configuration{
+// DefaultConfig returns the default SA parameters.
+func DefaultConfig() *Config {
+	return &Config{
 		Alpha:              constants.DefaultAlphaSimulationAnnealing,
 		TemperatureInitial: constants.DefaultTemperatureInitial,
 		TemperatureGoal:    constants.DefaultTemperatureGoal,
@@ -23,41 +23,36 @@ func DefaultConfigurationSA() *Configuration {
 	}
 }
 
-// CreateDefaultSA creates a SimulatedAnnealing with the default configuration and local search.
-func CreateDefaultSA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *SimulatedAnnealing {
-	local := search.NewDefault(env, solutionPool, rg)
+// Option configures New.
+type Option func(*SimulatedAnnealing)
 
-	return &SimulatedAnnealing{
-		env:           env,
-		configuration: DefaultConfigurationSA(),
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
-	}
+// WithConfig sets the parameters; nil keeps DefaultConfig.
+func WithConfig(cfg *Config) Option { return func(s *SimulatedAnnealing) { s.configuration = cfg } }
+
+// WithSearch sets the local search; nil keeps the default.
+func WithSearch(local search.Local) Option { return func(s *SimulatedAnnealing) { s.search = local } }
+
+// WithSearchType sets the local search to search.New(t, ...).
+func WithSearchType(t search.Type) Option {
+	return func(s *SimulatedAnnealing) { s.search = search.New(t, s.env, s.solutionPool, s.rg) }
 }
 
-// CreateSA creates a SimulatedAnnealing with the local search of searchType.
-func CreateSA(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *SimulatedAnnealing {
-	local := search.New(searchType, env, solutionPool, rg)
-	return &SimulatedAnnealing{
-		env:           env,
-		configuration: configuration,
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
+// New creates an SA; without options it uses DefaultConfig and search.NewDefault.
+func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *SimulatedAnnealing {
+	s := &SimulatedAnnealing{
+		env:          env,
+		logger:       log.SolverLogger(name),
+		solutionPool: pool,
+		rg:           rg,
 	}
-}
-
-// CreateSAComplete creates a SimulatedAnnealing with the local search se.
-func CreateSAComplete(env definition.Environment, config *Configuration, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) definition.Solver {
-	return &SimulatedAnnealing{
-		env:           env,
-		configuration: config,
-		logger:        l.SolverLogger(name),
-		search:        se,
-		solutionPool:  pool,
-		rg:            rg,
+	for _, opt := range opts {
+		opt(s)
 	}
+	if s.configuration == nil {
+		s.configuration = DefaultConfig()
+	}
+	if s.search == nil {
+		s.search = search.NewDefault(env, pool, rg)
+	}
+	return s
 }

@@ -11,8 +11,8 @@ import (
 
 const name = "SA"
 
-// Configuration holds the SA parameters.
-type Configuration struct {
+// Config holds the SA parameters.
+type Config struct {
 	Alpha              float64 `yaml:"Alpha"`
 	TemperatureInitial float64 `yaml:"TemperatureInitial"`
 	TemperatureGoal    float64 `yaml:"TemperatureGoal"`
@@ -26,7 +26,7 @@ type Configuration struct {
 // SimulatedAnnealing is a Simulated Annealing solver.
 type SimulatedAnnealing struct {
 	env           definition.Environment
-	configuration *Configuration
+	configuration *Config
 	logger        logger.SolverLogger
 	search        search.Local
 	rg            *random.Generator

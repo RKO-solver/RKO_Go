@@ -8,26 +8,30 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// CreateDefaultMultiStart creates a MultiStart with the default local search.
-func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart {
-	local := search.NewDefault(env, solutionPool, rg)
+// Option configures New.
+type Option func(*MultiStart)
 
-	return &MultiStart{
-		env:          env,
-		logger:       logger.SolverLogger(name),
-		search:       local,
-		solutionPool: solutionPool,
-		rg:           rg,
-	}
+// WithSearch sets the local search; nil keeps the default.
+func WithSearch(local search.Local) Option { return func(s *MultiStart) { s.search = local } }
+
+// WithSearchType sets the local search to search.New(t, ...).
+func WithSearchType(t search.Type) Option {
+	return func(s *MultiStart) { s.search = search.New(t, s.env, s.solutionPool, s.rg) }
 }
 
-// CreateMultiStart creates a MultiStart with the local search se.
-func CreateMultiStart(env definition.Environment, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *MultiStart {
-	return &MultiStart{
+// New creates a MultiStart; without options it uses search.NewDefault.
+func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *MultiStart {
+	s := &MultiStart{
 		env:          env,
-		logger:       logger.SolverLogger(name),
-		search:       se,
-		solutionPool: solutionPool,
+		logger:       log.SolverLogger(name),
+		solutionPool: pool,
 		rg:           rg,
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	if s.search == nil {
+		s.search = search.NewDefault(env, pool, rg)
+	}
+	return s
 }

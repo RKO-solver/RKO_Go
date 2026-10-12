@@ -9,9 +9,9 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// DefaultConfigurationGA returns the default GA parameters.
-func DefaultConfigurationGA() *ConfigurationGA {
-	return &ConfigurationGA{
+// DefaultConfig returns the default GA parameters.
+func DefaultConfig() *Config {
+	return &Config{
 		PopulationSize:             constants.DefaultPopulationSize,
 		CrossoverAlpha:             constants.DefaultCrossoverAlpha,
 		MutationAlpha:              constants.DefaultMutationAlpha,
@@ -19,41 +19,36 @@ func DefaultConfigurationGA() *ConfigurationGA {
 	}
 }
 
-// CreateDefaultGA creates a GA with the default configuration and local search.
-func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
-	local := search.NewDefault(env, solutionPool, rg)
+// Option configures New.
+type Option func(*GA)
 
-	return &GA{
-		env:           env,
-		configuration: DefaultConfigurationGA(),
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
-	}
+// WithConfig sets the parameters; nil keeps DefaultConfig.
+func WithConfig(cfg *Config) Option { return func(s *GA) { s.configuration = cfg } }
+
+// WithSearch sets the local search; nil keeps the default.
+func WithSearch(local search.Local) Option { return func(s *GA) { s.search = local } }
+
+// WithSearchType sets the local search to search.New(t, ...).
+func WithSearchType(t search.Type) Option {
+	return func(s *GA) { s.search = search.New(t, s.env, s.solutionPool, s.rg) }
 }
 
-// CreateGA creates a GA with the local search of searchType.
-func CreateGA(env definition.Environment, configuration *ConfigurationGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *GA {
-	local := search.New(searchType, env, solutionPool, rg)
-	return &GA{
-		env:           env,
-		configuration: configuration,
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
+// New creates a GA; without options it uses DefaultConfig and search.NewDefault.
+func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *GA {
+	s := &GA{
+		env:          env,
+		logger:       log.SolverLogger(name),
+		solutionPool: pool,
+		rg:           rg,
 	}
-}
-
-// CreateGAComplete creates a GA with the local search se.
-func CreateGAComplete(env definition.Environment, config *ConfigurationGA, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *GA {
-	return &GA{
-		env:           env,
-		configuration: config,
-		logger:        l.SolverLogger(name),
-		search:        se,
-		solutionPool:  pool,
-		rg:            rg,
+	for _, opt := range opts {
+		opt(s)
 	}
+	if s.configuration == nil {
+		s.configuration = DefaultConfig()
+	}
+	if s.search == nil {
+		s.search = search.NewDefault(env, pool, rg)
+	}
+	return s
 }

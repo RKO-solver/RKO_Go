@@ -9,50 +9,44 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// DefaultConfigurationLNS returns the default LNS parameters.
-func DefaultConfigurationLNS() *Configuration {
-	return &Configuration{
+// DefaultConfig returns the default LNS parameters.
+func DefaultConfig() *Config {
+	return &Config{
 		BetaMin: constants.DefaultShakeMin,
 		BetaMax: constants.DefaultShakeMax,
 	}
 }
 
-// CreateDefaultLNS creates an LNS with the default configuration and local search.
-func CreateDefaultLNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS {
-	local := search.NewDefault(env, solutionPool, rg)
+// Option configures New.
+type Option func(*LNS)
 
-	return &LNS{
-		env:           env,
-		configuration: DefaultConfigurationLNS(),
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
-	}
+// WithConfig sets the parameters; nil keeps DefaultConfig.
+func WithConfig(cfg *Config) Option { return func(s *LNS) { s.configuration = cfg } }
+
+// WithSearch sets the local search; nil keeps the default.
+func WithSearch(local search.Local) Option { return func(s *LNS) { s.search = local } }
+
+// WithSearchType sets the local search to search.New(t, ...).
+func WithSearchType(t search.Type) Option {
+	return func(s *LNS) { s.search = search.New(t, s.env, s.solutionPool, s.rg) }
 }
 
-// CreateLNS creates an LNS with the local search of searchType.
-func CreateLNS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS {
-	local := search.New(searchType, env, solutionPool, rg)
-
-	return &LNS{
-		env:           env,
-		configuration: configuration,
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
+// New creates an LNS; without options it uses DefaultConfig and search.NewDefault.
+func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *LNS {
+	s := &LNS{
+		env:          env,
+		logger:       log.SolverLogger(name),
+		solutionPool: pool,
+		rg:           rg,
 	}
-}
-
-// CreateLNSComplete creates an LNS with the local search se.
-func CreateLNSComplete(env definition.Environment, configuration *Configuration, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *LNS {
-	return &LNS{
-		env:           env,
-		configuration: configuration,
-		logger:        logger.SolverLogger(name),
-		search:        se,
-		solutionPool:  solutionPool,
-		rg:            rg,
+	for _, opt := range opts {
+		opt(s)
 	}
+	if s.configuration == nil {
+		s.configuration = DefaultConfig()
+	}
+	if s.search == nil {
+		s.search = search.NewDefault(env, pool, rg)
+	}
+	return s
 }

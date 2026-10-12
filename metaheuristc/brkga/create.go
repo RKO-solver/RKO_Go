@@ -9,9 +9,9 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// DefaultConfigurationBRKGA returns the default BRKGA parameters.
-func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
-	return &ConfigurationBRKGA{
+// DefaultConfig returns the default BRKGA parameters.
+func DefaultConfig() *Config {
+	return &Config{
 		PopulationSize:             constants.DefaultPopulationSize,
 		EliteRatio:                 constants.DefaultEliteRatio,
 		MutantRatio:                constants.DefaultMutantRatio,
@@ -21,41 +21,36 @@ func DefaultConfigurationBRKGA() *ConfigurationBRKGA {
 	}
 }
 
-// CreateDefaultBRKGA creates a BRKGA with the default configuration and local search.
-func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA {
-	local := search.NewDefault(env, solutionPool, rg)
+// Option configures New.
+type Option func(*BRKGA)
 
-	return &BRKGA{
-		env:           env,
-		configuration: DefaultConfigurationBRKGA(),
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
-	}
+// WithConfig sets the parameters; nil keeps DefaultConfig.
+func WithConfig(cfg *Config) Option { return func(s *BRKGA) { s.configuration = cfg } }
+
+// WithSearch sets the local search; nil keeps the default.
+func WithSearch(local search.Local) Option { return func(s *BRKGA) { s.search = local } }
+
+// WithSearchType sets the local search to search.New(t, ...).
+func WithSearchType(t search.Type) Option {
+	return func(s *BRKGA) { s.search = search.New(t, s.env, s.solutionPool, s.rg) }
 }
 
-// CreateBRKGA creates a BRKGA with the local search of searchType.
-func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *BRKGA {
-	local := search.New(searchType, env, solutionPool, rg)
-	return &BRKGA{
-		env:           env,
-		configuration: configuration,
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
+// New creates a BRKGA; without options it uses DefaultConfig and search.NewDefault.
+func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *BRKGA {
+	s := &BRKGA{
+		env:          env,
+		logger:       log.SolverLogger(name),
+		solutionPool: pool,
+		rg:           rg,
 	}
-}
-
-// CreateBRKGAComplete creates a BRKGA with the local search se.
-func CreateBRKGAComplete(env definition.Environment, config *ConfigurationBRKGA, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *BRKGA {
-	return &BRKGA{
-		env:           env,
-		configuration: config,
-		logger:        l.SolverLogger(name),
-		search:        se,
-		solutionPool:  pool,
-		rg:            rg,
+	for _, opt := range opts {
+		opt(s)
 	}
+	if s.configuration == nil {
+		s.configuration = DefaultConfig()
+	}
+	if s.search == nil {
+		s.search = search.NewDefault(env, pool, rg)
+	}
+	return s
 }

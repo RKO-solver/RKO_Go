@@ -70,24 +70,24 @@ func newMetaheuristic(t rko.MetaHeuristic, p *Parameters, env definition.Environ
 	switch t {
 	case rko.ILS:
 		c := *p.ILS
-		return ils.CreateILSComplete(env, &c, se, rg, pool, log), true
+		return ils.New(env, rg, pool, log, ils.WithConfig(&c), ils.WithSearch(se)), true
 	case rko.VNS:
 		c := *p.VNS
-		return vns.CreateVNSComplete(env, &c, se, rg, pool, log), true
+		return vns.New(env, rg, pool, log, vns.WithConfig(&c), vns.WithSearch(se)), true
 	case rko.SA:
 		c := *p.SA
-		return sa.CreateSAComplete(env, &c, se, rg, pool, log), true
+		return sa.New(env, rg, pool, log, sa.WithConfig(&c), sa.WithSearch(se)), true
 	case rko.GA:
 		c := *p.GA
-		return ga.CreateGAComplete(env, &c, se, rg, pool, log), true
+		return ga.New(env, rg, pool, log, ga.WithConfig(&c), ga.WithSearch(se)), true
 	case rko.BRKGA:
 		c := *p.BRKGA
-		return brkga.CreateBRKGAComplete(env, &c, se, rg, pool, log), true
+		return brkga.New(env, rg, pool, log, brkga.WithConfig(&c), brkga.WithSearch(se)), true
 	case rko.LNS:
 		c := *p.LNS
-		return lns.CreateLNSComplete(env, &c, se, rg, pool, log), true
+		return lns.New(env, rg, pool, log, lns.WithConfig(&c), lns.WithSearch(se)), true
 	case rko.MULTISTART:
-		return multistart.CreateMultiStart(env, se, rg, pool, log), true
+		return multistart.New(env, rg, pool, log, multistart.WithSearch(se)), true
 	}
 	return nil, false
 }

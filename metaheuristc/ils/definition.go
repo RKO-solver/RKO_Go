@@ -11,8 +11,8 @@ import (
 
 const name = "ILS"
 
-// Configuration holds the ILS parameters.
-type Configuration struct {
+// Config holds the ILS parameters.
+type Config struct {
 	ShakeMin            float64 `yaml:"ShakeMin"`
 	ShakeMax            float64 `yaml:"ShakeMax"`
 	MetropolisCriterion bool    `yaml:"MetropolisCriterion"`
@@ -21,7 +21,7 @@ type Configuration struct {
 // ILS is an Iterated Local Search solver.
 type ILS struct {
 	env           definition.Environment
-	configuration *Configuration
+	configuration *Config
 	logger        logger.SolverLogger
 	search        search.Local
 	rg            *random.Generator

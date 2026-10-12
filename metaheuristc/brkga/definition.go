@@ -11,8 +11,8 @@ import (
 
 const name = "BRKGA"
 
-// ConfigurationBRKGA holds the BRKGA parameters.
-type ConfigurationBRKGA struct {
+// Config holds the BRKGA parameters.
+type Config struct {
 	PopulationSize             int     `yaml:"PopulationSize"`
 	EliteRatio                 float64 `yaml:"EliteRatio"`
 	MutantRatio                float64 `yaml:"MutantRatio"`
@@ -24,7 +24,7 @@ type ConfigurationBRKGA struct {
 // BRKGA is a Biased Random-Key Genetic Algorithm solver.
 type BRKGA struct {
 	env           definition.Environment
-	configuration *ConfigurationBRKGA
+	configuration *Config
 	logger        logger.SolverLogger
 	search        search.Local
 	rg            *random.Generator

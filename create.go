@@ -31,19 +31,19 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger 
 		srg := rg.Split()
 		switch m {
 		case ILS:
-			solver = ils.CreateDefaultILS(env, srg, solutionPool, logger)
+			solver = ils.New(env, srg, solutionPool, logger)
 		case VNS:
-			solver = vns.CreateDefaultVNS(env, srg, solutionPool, logger)
+			solver = vns.New(env, srg, solutionPool, logger)
 		case MULTISTART:
-			solver = multistart.CreateDefaultMultiStart(env, srg, solutionPool, logger)
+			solver = multistart.New(env, srg, solutionPool, logger)
 		case SA:
-			solver = sa.CreateDefaultSA(env, srg, solutionPool, logger)
+			solver = sa.New(env, srg, solutionPool, logger)
 		case GA:
-			solver = ga.CreateDefaultGA(env, srg, solutionPool, logger)
+			solver = ga.New(env, srg, solutionPool, logger)
 		case BRKGA:
-			solver = brkga.CreateDefaultBRKGA(env, srg, solutionPool, logger)
+			solver = brkga.New(env, srg, solutionPool, logger)
 		case LNS:
-			solver = lns.CreateDefaultLNS(env, srg, solutionPool, logger)
+			solver = lns.New(env, srg, solutionPool, logger)
 		default:
 			fmt.Printf("%s not implemented yet\n", GetMetaHeuristicString(m))
 			continue

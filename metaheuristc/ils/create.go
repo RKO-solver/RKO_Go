@@ -9,50 +9,45 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// DefaultConfigurationILS returns the default ILS parameters.
-func DefaultConfigurationILS() *Configuration {
-	return &Configuration{
+// DefaultConfig returns the default ILS parameters.
+func DefaultConfig() *Config {
+	return &Config{
 		ShakeMin:            constants.DefaultShakeMin,
 		ShakeMax:            constants.DefaultShakeMax,
 		MetropolisCriterion: false,
 	}
 }
 
-// CreateDefaultILS creates an ILS with the default configuration and local search.
-func CreateDefaultILS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *ILS {
-	local := search.NewDefault(env, solutionPool, rg)
+// Option configures New.
+type Option func(*ILS)
 
-	return &ILS{
-		env:           env,
-		configuration: DefaultConfigurationILS(),
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
-	}
+// WithConfig sets the parameters; nil keeps DefaultConfig.
+func WithConfig(cfg *Config) Option { return func(s *ILS) { s.configuration = cfg } }
+
+// WithSearch sets the local search; nil keeps the default.
+func WithSearch(local search.Local) Option { return func(s *ILS) { s.search = local } }
+
+// WithSearchType sets the local search to search.New(t, ...).
+func WithSearchType(t search.Type) Option {
+	return func(s *ILS) { s.search = search.New(t, s.env, s.solutionPool, s.rg) }
 }
 
-// CreateILS creates an ILS with the local search of searchType.
-func CreateILS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *ILS {
-	local := search.New(searchType, env, solutionPool, rg)
-	return &ILS{
-		env:           env,
-		configuration: configuration,
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
+// New creates an ILS; without options it uses DefaultConfig and search.NewDefault.
+func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *ILS {
+	s := &ILS{
+		env:          env,
+		logger:       log.SolverLogger(name),
+		solutionPool: pool,
+		rg:           rg,
 	}
-}
-
-// CreateILSComplete creates an ILS with the local search se.
-func CreateILSComplete(env definition.Environment, config *Configuration, se search.Local, rg *random.Generator, pool *solution.Pool, l logger.Logger) *ILS {
-	return &ILS{
-		env:           env,
-		configuration: config,
-		logger:        l.SolverLogger(name),
-		search:        se,
-		solutionPool:  pool,
-		rg:            rg,
+	for _, opt := range opts {
+		opt(s)
 	}
+	if s.configuration == nil {
+		s.configuration = DefaultConfig()
+	}
+	if s.search == nil {
+		s.search = search.NewDefault(env, pool, rg)
+	}
+	return s
 }

@@ -11,29 +11,29 @@ import (
 
 // Parameters holds the tuning parameters of each metaheuristic.
 type Parameters struct {
-	BRKGA *brkga.ConfigurationBRKGA
-	GA    *ga.ConfigurationGA
-	ILS   *ils.Configuration
-	SA    *sa.Configuration
-	VNS   *vns.Configuration
-	LNS   *lns.Configuration
+	BRKGA *brkga.Config
+	GA    *ga.Config
+	ILS   *ils.Config
+	SA    *sa.Config
+	VNS   *vns.Config
+	LNS   *lns.Config
 }
 
 // DefaultParameters returns every metaheuristic's default parameters.
 func DefaultParameters() *Parameters {
 	return &Parameters{
-		BRKGA: brkga.DefaultConfigurationBRKGA(),
-		GA:    ga.DefaultConfigurationGA(),
-		ILS:   ils.DefaultConfigurationILS(),
-		SA:    sa.DefaultConfigurationSA(),
-		VNS:   vns.DefaultConfigurationVNS(),
-		LNS:   lns.DefaultConfigurationLNS(),
+		BRKGA: brkga.DefaultConfig(),
+		GA:    ga.DefaultConfig(),
+		ILS:   ils.DefaultConfig(),
+		SA:    sa.DefaultConfig(),
+		VNS:   vns.DefaultConfig(),
+		LNS:   lns.DefaultConfig(),
 	}
 }
 
 type parameterOption func(*Parameters)
 
-func withBRKGA(cfg *brkga.ConfigurationBRKGA) parameterOption {
+func withBRKGA(cfg *brkga.Config) parameterOption {
 	return func(c *Parameters) {
 		if cfg == nil {
 			return
@@ -60,7 +60,7 @@ func withBRKGA(cfg *brkga.ConfigurationBRKGA) parameterOption {
 	}
 }
 
-func withGA(cfg *ga.ConfigurationGA) parameterOption {
+func withGA(cfg *ga.Config) parameterOption {
 	return func(c *Parameters) {
 		if cfg == nil {
 			return
@@ -82,7 +82,7 @@ func withGA(cfg *ga.ConfigurationGA) parameterOption {
 	}
 }
 
-func withSA(cfg *sa.Configuration) parameterOption {
+func withSA(cfg *sa.Config) parameterOption {
 	return func(c *Parameters) {
 		if cfg == nil {
 			return
@@ -115,7 +115,7 @@ func withSA(cfg *sa.Configuration) parameterOption {
 	}
 }
 
-func withILS(cfg *ils.Configuration) parameterOption {
+func withILS(cfg *ils.Config) parameterOption {
 	return func(c *Parameters) {
 		if cfg == nil {
 			return
@@ -133,7 +133,7 @@ func withILS(cfg *ils.Configuration) parameterOption {
 	}
 }
 
-func withVNS(cfg *vns.Configuration) parameterOption {
+func withVNS(cfg *vns.Config) parameterOption {
 	return func(c *Parameters) {
 		if cfg == nil {
 			return
@@ -145,7 +145,7 @@ func withVNS(cfg *vns.Configuration) parameterOption {
 	}
 }
 
-func withLNS(cfg *lns.Configuration) parameterOption {
+func withLNS(cfg *lns.Config) parameterOption {
 	return func(c *Parameters) {
 		if cfg == nil {
 			return

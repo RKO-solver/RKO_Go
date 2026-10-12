@@ -9,49 +9,43 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// DefaultConfigurationVNS returns the default VNS parameters.
-func DefaultConfigurationVNS() *Configuration {
-	return &Configuration{
+// DefaultConfig returns the default VNS parameters.
+func DefaultConfig() *Config {
+	return &Config{
 		Rate: constants.DefaultRate,
 	}
 }
 
-// CreateDefaultVNS creates a VNS with the default configuration and local search.
-func CreateDefaultVNS(env definition.Environment, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
-	local := search.NewDefault(env, solutionPool, rg)
+// Option configures New.
+type Option func(*VNS)
 
-	return &VNS{
-		env:           env,
-		configuration: DefaultConfigurationVNS(),
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
-	}
+// WithConfig sets the parameters; nil keeps DefaultConfig.
+func WithConfig(cfg *Config) Option { return func(s *VNS) { s.configuration = cfg } }
+
+// WithSearch sets the local search; nil keeps the default.
+func WithSearch(local search.Local) Option { return func(s *VNS) { s.search = local } }
+
+// WithSearchType sets the local search to search.New(t, ...).
+func WithSearchType(t search.Type) Option {
+	return func(s *VNS) { s.search = search.New(t, s.env, s.solutionPool, s.rg) }
 }
 
-// CreateVNS creates a VNS with the local search of searchType.
-func CreateVNS(env definition.Environment, configuration *Configuration, searchType search.Type, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
-	local := search.New(searchType, env, solutionPool, rg)
-
-	return &VNS{
-		env:           env,
-		configuration: configuration,
-		logger:        logger.SolverLogger(name),
-		search:        local,
-		solutionPool:  solutionPool,
-		rg:            rg,
+// New creates a VNS; without options it uses DefaultConfig and search.NewDefault.
+func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *VNS {
+	s := &VNS{
+		env:          env,
+		logger:       log.SolverLogger(name),
+		solutionPool: pool,
+		rg:           rg,
 	}
-}
-
-// CreateVNSComplete creates a VNS with the local search se.
-func CreateVNSComplete(env definition.Environment, configuration *Configuration, se search.Local, rg *random.Generator, solutionPool *solution.Pool, logger logger.Logger) *VNS {
-	return &VNS{
-		env:           env,
-		configuration: configuration,
-		logger:        logger.SolverLogger(name),
-		search:        se,
-		solutionPool:  solutionPool,
-		rg:            rg,
+	for _, opt := range opts {
+		opt(s)
 	}
+	if s.configuration == nil {
+		s.configuration = DefaultConfig()
+	}
+	if s.search == nil {
+		s.search = search.NewDefault(env, pool, rg)
+	}
+	return s
 }

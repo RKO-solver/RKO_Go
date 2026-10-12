@@ -11,15 +11,15 @@ import (
 
 const name = "VNS"
 
-// Configuration holds the VNS parameters.
-type Configuration struct {
+// Config holds the VNS parameters.
+type Config struct {
 	Rate float64 `yaml:"Rate"`
 }
 
 // VNS is a Variable Neighbourhood Search solver.
 type VNS struct {
 	env           definition.Environment
-	configuration *Configuration
+	configuration *Config
 	logger        logger.SolverLogger
 	search        search.Local
 	rg            *random.Generator

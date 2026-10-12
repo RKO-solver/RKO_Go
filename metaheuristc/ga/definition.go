@@ -11,8 +11,8 @@ import (
 
 const name = "GA"
 
-// ConfigurationGA holds the GA parameters.
-type ConfigurationGA struct {
+// Config holds the GA parameters.
+type Config struct {
 	PopulationSize             int     `yaml:"PopulationSize"`
 	CrossoverAlpha             float64 `yaml:"CrossoverAlpha"`
 	MutationAlpha              float64 `yaml:"MutationAlpha"`
@@ -22,7 +22,7 @@ type ConfigurationGA struct {
 // GA is a Genetic Algorithm solver.
 type GA struct {
 	env           definition.Environment
-	configuration *ConfigurationGA
+	configuration *Config
 	logger        logger.SolverLogger
 	search        search.Local
 	rg            *random.Generator

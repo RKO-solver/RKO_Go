@@ -11,8 +11,8 @@ import (
 
 const name = "LNS"
 
-// Configuration holds the LNS parameters.
-type Configuration struct {
+// Config holds the LNS parameters.
+type Config struct {
 	BetaMin float64 `yaml:"BetaMin"`
 	BetaMax float64 `yaml:"BetaMax"`
 }
@@ -20,7 +20,7 @@ type Configuration struct {
 // LNS is a Large Neighbourhood Search solver.
 type LNS struct {
 	env           definition.Environment
-	configuration *Configuration
+	configuration *Config
 	logger        logger.SolverLogger
 	search        search.Local
 	rg            *random.Generator
