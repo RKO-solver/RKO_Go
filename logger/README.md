@@ -241,7 +241,7 @@ type SolverLogger interface {
 | `Event` | For occasional events, such as a restart or a temperature change. | Shown only at `LevelVerbose`. |
 
 ```go
-ctx, counter := definition.GetMHContext(ctx)
+ctx, counter := definition.NewSolverContext(ctx)
 defer counter.Stop()
 
 for ; ctx.Err() == nil; counter.Step() {

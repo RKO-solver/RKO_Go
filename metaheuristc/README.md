@@ -70,9 +70,9 @@ brkgaConfig.PopulationSize = 100
 
 brkgaRG := rg.Split()
 solvers := []definition.Solver{
-	ils.CreateILSComplete(env, ilsConfig, search.CreateMirrorLocalSearch(env), rg.Split(), pool, log),
+	ils.CreateILSComplete(env, ilsConfig, search.NewMirror(env), rg.Split(), pool, log),
 	ga.CreateBRKGAComplete(env, brkgaConfig,
-		search.CreateRVND(env, pool, brkgaRG, []search.Type{search.Mirror, search.Farey}),
+		search.NewRVND(env, pool, brkgaRG, []search.Type{search.Mirror, search.Farey}),
 		brkgaRG, pool, log),
 }
 
@@ -81,7 +81,7 @@ items := solver.Solve(context.Background()).([]int)
 ```
 
 - Give every solver the pool and logger you pass to `CreateFullSolver`: `Solve` returns the best solution of that pool.
-- Give each solver its own generator with `rg.Split()`: a `random.Generator` is not safe for concurrent use. A local search that draws random numbers (`Farey`, `Nelder`, RVND) should use the same generator as its metaheuristic.
+- Give each solver its own generator with `rg.Split()`: a `random.Generator` is not safe for concurrent use. A local search that draws random numbers (`Farey`, `NelderMead`, RVND) should use the same generator as its metaheuristic.
 - `CreateFullSolver(log, env, timeLimit, maxIterations, pool, solvers)`: a zero or negative `timeLimit` or `maxIterations` means no limit.
 - Your own [`definition.Solver`](../definition/README.md#writing-a-metaheuristic) can go in the same slice.
 
@@ -108,8 +108,8 @@ CreateXComplete(env, config, localSearch, rg, pool, log) // your configuration, 
 | `lns` | `CreateDefaultLNS` | `CreateLNS` | `CreateLNSComplete` | `*lns.Configuration`, `lns.DefaultConfigurationLNS()` |
 
 - Constructors return the concrete type (`*ils.ILS`, ...), except `sa.CreateSAComplete`, which returns `definition.Solver`.
-- `CreateDefaultX` uses the default local search, `search.CreateDefault` (RVND over all four searches).
-- `CreateX` builds its local search with `search.Create(searchType, ...)`.
+- `CreateDefaultX` uses the default local search, `search.NewDefault` (RVND over all four searches).
+- `CreateX` builds its local search with `search.New(searchType, ...)`.
 
 ### Configuration structs
 
@@ -124,18 +124,18 @@ A local search improves a solution in place, never making it worse, and returns 
 | `Swap` | Swapping every pair of keys inside each `Environment.SwapSearch()` range. |
 | `Mirror` | Replacing each key `v` with `1 - v`. |
 | `Farey` | For each key, a random value in each interval of a Farey sequence. |
-| `Nelder` | A Nelder-Mead-style search that blends the solution with two solutions from the pool. |
+| `NelderMead` | A Nelder-Mead-style search that blends the solution with two solutions from the pool. |
 | `RVND` | The searches in its list in random order, dropping each one that fails to improve, until none is left. |
 
 | Constructor | Builds |
 |---|---|
-| `CreateSwapLocalSearch(env)` | `Swap` |
-| `CreateMirrorLocalSearch(env)` | `Mirror` |
-| `CreateFareyLocalSearch(env, rg)` | `Farey` |
-| `CreateNelderMeadLocalSearch(env, pool, rg)` | `Nelder` |
-| `CreateRVND(env, pool, rg, types)` | RVND over `types` (`RVND` entries are removed) |
-| `CreateDefault(env, pool, rg)` | RVND over `Swap`, `Mirror`, `Farey`, `Nelder` |
-| `Create(searchType, env, pool, rg)` | The single search for `Swap`, `Mirror`, `Farey` or `Nelder`; RVND over `Swap`, `Mirror`, `Farey` for `RVND`; `CreateDefault` for any other value |
+| `NewSwap(env)` | `Swap` |
+| `NewMirror(env)` | `Mirror` |
+| `NewFarey(env, rg)` | `Farey` |
+| `NewNelderMead(env, pool, rg)` | `NelderMead` |
+| `NewRVND(env, pool, rg, types)` | RVND over `types` (`RVND` entries are removed) |
+| `NewDefault(env, pool, rg)` | RVND over `Swap`, `Mirror`, `Farey`, `NelderMead` |
+| `New(searchType, env, pool, rg)` | The single search for `Swap`, `Mirror`, `Farey` or `NelderMead`; RVND over `Swap`, `Mirror`, `Farey` for `RVND`; `NewDefault` for any other value |
 
 All return a `search.Local`:
 
@@ -146,7 +146,7 @@ type Local interface {
 }
 ```
 
-`GetSearchType(name)` parses `"Swap"`, `"Mirror"`, `"Farey"`, `"Nelder"` or `"RVND"` (case-insensitive; `-1` if unknown). `GetSearchString(t)` returns the display name (`"Nelder-Mead"` for `Nelder`).
+`ParseType(name)` parses `"Swap"`, `"Mirror"`, `"Farey"`, `"Nelder"` or `"RVND"` (case-insensitive; `-1` if unknown). `t.String()` returns the display name (`"Nelder-Mead"` for `NelderMead`).
 
 ## Solution pool
 
@@ -167,7 +167,7 @@ type Local interface {
 
 ## Stopping
 
-Each metaheuristic calls `definition.GetMHContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.CreateFullSolver` or the [`config` package](../config/README.md#stopping). See the [`definition` package](../definition/README.md#context-helpers) for the helpers.
+Each metaheuristic calls `definition.NewSolverContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.CreateFullSolver` or the [`config` package](../config/README.md#stopping). See the [`definition` package](../definition/README.md#context-helpers) for the helpers.
 
 ## See also
 

@@ -126,7 +126,7 @@ The run's best solution is the one in the shared solution pool, which is what `r
 | `WithStartTime(ctx, t) context.Context` | Returns a context carrying the run's start time. |
 | `StartTime(ctx) time.Time` | Returns the stored start time, or `time.Now()` if there is none. |
 | `WithMaxIterations(ctx, n) context.Context` | Returns a context carrying the iteration limit of each metaheuristic. Zero or negative means no limit. |
-| `GetMHContext(ctx) (context.Context, *IterationCounter)` | Returns a context for one metaheuristic and the counter that cancels it at the limit. Without a limit, it returns `ctx` itself. |
+| `NewSolverContext(ctx) (context.Context, *IterationCounter)` | Returns a context for one metaheuristic and the counter that cancels it at the limit. Without a limit, it returns `ctx` itself. |
 
 `IterationCounter` methods:
 
@@ -138,7 +138,7 @@ The run's best solution is the one in the shared solution pool, which is what `r
 
 ## Writing a metaheuristic
 
-Call `GetMHContext` first, count one iteration of your outer loop with `Step`, and stop when `ctx.Err()` is not nil. That single check covers the time limit, the iteration limit and cancellation. Offer improvements to the shared pool so the other metaheuristics can use them; it keeps only solutions that beat its best.
+Call `NewSolverContext` first, count one iteration of your outer loop with `Step`, and stop when `ctx.Err()` is not nil. That single check covers the time limit, the iteration limit and cancellation. Offer improvements to the shared pool so the other metaheuristics can use them; it keeps only solutions that beat its best.
 
 ```go
 package mysolver
@@ -173,7 +173,7 @@ func (s *RandomSearch) Name() string { return "RandomSearch" }
 func (s *RandomSearch) Print()       { fmt.Println(s.Name()) }
 
 func (s *RandomSearch) Solve(ctx context.Context) definition.Result {
-	ctx, counter := definition.GetMHContext(ctx)
+	ctx, counter := definition.NewSolverContext(ctx)
 	defer counter.Stop()
 	start := definition.StartTime(ctx)
 
