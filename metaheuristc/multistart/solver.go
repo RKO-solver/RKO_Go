@@ -12,14 +12,14 @@ import (
 )
 
 func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.GetMHContext(ctx)
+	ctx, ctxAction := definition.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	rg := m.rg
 
 	local := m.search
 
-	localSolution := metaheuristc.CreateEmptyRandomKeyValue(m.env.NumKeys())
+	localSolution := metaheuristc.NewRandomKeyValue(m.env.NumKeys())
 
 	bestSolutionCost := math.MaxInt
 	start := definition.StartTime(ctx)

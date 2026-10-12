@@ -34,7 +34,7 @@ var fareySequence = []float64{
 }
 
 func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.GetMHContext(ctx)
+	ctx, ctxAction := definition.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	configuration := lns.configuration
@@ -46,7 +46,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 	start := definition.StartTime(ctx)
 
-	bestSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
+	bestSolution = metaheuristc.NewRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
 	solutionPool.Add(bestSolution, start)

@@ -25,8 +25,8 @@ func (rko *RandomKeyValue) Clone() *RandomKeyValue {
 	return sol
 }
 
-// CreateEmptyRandomKeyValue returns numKeys zero keys with an unevaluated (MaxInt) cost.
-func CreateEmptyRandomKeyValue(numKeys int) *RandomKeyValue {
+// NewRandomKeyValue returns numKeys zero keys with an unevaluated (MaxInt) cost.
+func NewRandomKeyValue(numKeys int) *RandomKeyValue {
 	return &RandomKeyValue{
 		RK:   make(definition.RandomKey, numKeys),
 		Cost: math.MaxInt,

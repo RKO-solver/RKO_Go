@@ -12,7 +12,7 @@ import (
 )
 
 func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.GetMHContext(ctx)
+	ctx, ctxAction := definition.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	configuration := ga.configuration
@@ -25,8 +25,8 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 	population := make([]*metaheuristc.RandomKeyValue, populationSize)
 	populationIntermediary := make([]*metaheuristc.RandomKeyValue, populationSize)
 	for i := range populationSize {
-		population[i] = metaheuristc.CreateEmptyRandomKeyValue(numKeys)
-		populationIntermediary[i] = metaheuristc.CreateEmptyRandomKeyValue(numKeys)
+		population[i] = metaheuristc.NewRandomKeyValue(numKeys)
+		populationIntermediary[i] = metaheuristc.NewRandomKeyValue(numKeys)
 	}
 
 	generationNoImprovement := 0

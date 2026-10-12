@@ -63,8 +63,8 @@ func maxIterations(ctx context.Context) (int, bool) {
 	return -1, false
 }
 
-// GetMHContext returns a context for one metaheuristic and its IterationCounter.
-func GetMHContext(ctx context.Context) (context.Context, *IterationCounter) {
+// NewSolverContext returns a context for one metaheuristic and its IterationCounter.
+func NewSolverContext(ctx context.Context) (context.Context, *IterationCounter) {
 	maxIteration, hasLimit := maxIterations(ctx)
 	if !hasLimit {
 		return ctx, &IterationCounter{}

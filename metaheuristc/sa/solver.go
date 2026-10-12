@@ -13,7 +13,7 @@ import (
 )
 
 func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.GetMHContext(ctx)
+	ctx, ctxAction := definition.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	configuration := sa.configuration
@@ -32,7 +32,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 	start := definition.StartTime(ctx)
 
 	if localSolution == nil {
-		localSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
+		localSolution = metaheuristc.NewRandomKeyValue(env.NumKeys())
 		rk.Reset(localSolution.RK, rg)
 		localSolution.Cost = env.Cost(localSolution.RK)
 		solutionPool.Add(localSolution, start)

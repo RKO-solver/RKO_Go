@@ -12,7 +12,7 @@ import (
 )
 
 func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.GetMHContext(ctx)
+	ctx, ctxAction := definition.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	configuration := ils.configuration
@@ -34,7 +34,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 	start := definition.StartTime(ctx)
 
-	bestSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
+	bestSolution = metaheuristc.NewRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
 	solutionPool.Add(bestSolution, start)

@@ -12,7 +12,7 @@ import (
 )
 
 func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristc.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.GetMHContext(ctx)
+	ctx, ctxAction := definition.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	configuration := ga.configuration
@@ -24,8 +24,8 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 	children := make([]*metaheuristc.RandomKeyValue, configuration.PopulationSize)
 	population := make([]*metaheuristc.RandomKeyValue, configuration.PopulationSize)
 	for i := range configuration.PopulationSize {
-		population[i] = metaheuristc.CreateEmptyRandomKeyValue(numKeys)
-		children[i] = metaheuristc.CreateEmptyRandomKeyValue(numKeys)
+		population[i] = metaheuristc.NewRandomKeyValue(numKeys)
+		children[i] = metaheuristc.NewRandomKeyValue(numKeys)
 	}
 
 	hasImproved := false
