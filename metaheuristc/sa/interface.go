@@ -4,13 +4,7 @@ import (
 	"context"
 
 	"github.com/RKO-solver/rko-go/definition"
-	"github.com/RKO-solver/rko-go/random"
 )
-
-func (sa *SimulatedAnnealing) SetRG(rg *random.Generator) {
-	sa.RG = rg
-	sa.search.SetRG(sa.RG)
-}
 
 func (sa *SimulatedAnnealing) Name() string {
 	return name

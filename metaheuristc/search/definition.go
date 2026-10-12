@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/RKO-solver/rko-go/metaheuristc"
-	"github.com/RKO-solver/rko-go/random"
 )
 
 // Type identifies a local search.
@@ -27,8 +26,6 @@ const (
 
 // Local is a local search that improves a solution in place.
 type Local interface {
-	// SetRG sets the random generator of the search.
-	SetRG(rg *random.Generator)
 	// Search improves rko in place, stopping early when ctx is done.
 	Search(ctx context.Context, rko *metaheuristc.RandomKeyValue)
 	// String returns the search name.

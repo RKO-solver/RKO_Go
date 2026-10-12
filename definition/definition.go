@@ -6,8 +6,6 @@ import (
 	"math"
 	"sort"
 	"time"
-
-	"github.com/RKO-solver/rko-go/random"
 )
 
 // RandomKey is a solution encoded as keys in [0, 1).
@@ -19,8 +17,6 @@ type Solver interface {
 	Solve(ctx context.Context) Result
 	// Name returns the solver name.
 	Name() string
-	// SetRG sets the random generator of the solver.
-	SetRG(rg *random.Generator)
 	// Print prints the solver configuration.
 	Print()
 }

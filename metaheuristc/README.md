@@ -141,7 +141,6 @@ All return a `search.Local`:
 
 ```go
 type Local interface {
-    SetRG(rg *random.Generator)
     Search(ctx context.Context, rko *metaheuristc.RandomKeyValue)
     String() string
 }

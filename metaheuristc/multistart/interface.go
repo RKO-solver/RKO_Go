@@ -4,13 +4,7 @@ import (
 	"context"
 
 	"github.com/RKO-solver/rko-go/definition"
-	"github.com/RKO-solver/rko-go/random"
 )
-
-func (m *MultiStart) SetRG(rg *random.Generator) {
-	m.RG = rg
-	m.search.SetRG(m.RG)
-}
 
 func (m *MultiStart) Name() string {
 	return name

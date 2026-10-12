@@ -5,7 +5,6 @@ import (
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
-	"github.com/RKO-solver/rko-go/random"
 )
 
 func mirrorSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment) {
@@ -37,8 +36,6 @@ func (s mirrorLocalSearch) String() string {
 func (s mirrorLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
 	mirrorSearch(ctx, rko, s.environment)
 }
-
-func (s mirrorLocalSearch) SetRG(rg *random.Generator) {}
 
 // CreateMirrorLocalSearch returns the Mirror local search.
 func CreateMirrorLocalSearch(environment definition.Environment) Local {

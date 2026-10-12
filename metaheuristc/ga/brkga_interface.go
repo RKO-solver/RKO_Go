@@ -4,13 +4,7 @@ import (
 	"context"
 
 	"github.com/RKO-solver/rko-go/definition"
-	"github.com/RKO-solver/rko-go/random"
 )
-
-func (ga *BRKGA) SetRG(rg *random.Generator) {
-	ga.RG = rg
-	ga.search.SetRG(ga.RG)
-}
 
 func (ga *BRKGA) Name() string {
 	return nameBRKGA

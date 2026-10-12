@@ -99,7 +99,6 @@ Every metaheuristic implements `Solver`. You only implement it to add your own m
 type Solver interface {
     Solve(ctx context.Context) Result
     Name() string
-    SetRG(rg *random.Generator)
     Print()
 }
 
@@ -114,7 +113,6 @@ type Result struct {
 |---|---|
 | `Solve(ctx)` | Searches until `ctx` is done and returns a `Result`. |
 | `Name()` | Returns the name used in logs. |
-| `SetRG(rg)` | Replaces the solver's random generator. |
 | `Print()` | Prints the solver's configuration to stdout. |
 
 The run's best solution is the one in the shared solution pool, which is what `rko.Solver.Solve` returns.
@@ -166,9 +164,13 @@ type RandomSearch struct {
 	log  logger.SolverLogger // from Logger.SolverLogger("RandomSearch")
 }
 
-func (s *RandomSearch) Name() string               { return "RandomSearch" }
-func (s *RandomSearch) SetRG(rg *random.Generator) { s.rg = rg }
-func (s *RandomSearch) Print()                     { fmt.Println(s.Name()) }
+// NewRandomSearch receives its dependencies, including the generator, through the constructor.
+func NewRandomSearch(env definition.Environment, pool *solution.Pool, rg *random.Generator, log logger.SolverLogger) *RandomSearch {
+	return &RandomSearch{env: env, pool: pool, rg: rg, log: log}
+}
+
+func (s *RandomSearch) Name() string { return "RandomSearch" }
+func (s *RandomSearch) Print()       { fmt.Println(s.Name()) }
 
 func (s *RandomSearch) Solve(ctx context.Context) definition.Result {
 	ctx, counter := definition.GetMHContext(ctx)

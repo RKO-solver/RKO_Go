@@ -68,10 +68,6 @@ func (s fareyLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKe
 	fareySearch(ctx, rko, s.environment, s.rg)
 }
 
-func (s *fareyLocalSearch) SetRG(rg *random.Generator) {
-	s.rg = rg
-}
-
 // CreateFareyLocalSearch returns the Farey local search.
 func CreateFareyLocalSearch(environment definition.Environment, rg *random.Generator) Local {
 	return &fareyLocalSearch{environment, rg}

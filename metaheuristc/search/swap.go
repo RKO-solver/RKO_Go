@@ -5,7 +5,6 @@ import (
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
-	"github.com/RKO-solver/rko-go/random"
 )
 
 func swapSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, environment definition.Environment) {
@@ -42,8 +41,6 @@ func (s swapLocalSearch) String() string {
 func (s swapLocalSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue) {
 	swapSearch(ctx, rko, s.environment)
 }
-
-func (s swapLocalSearch) SetRG(rg *random.Generator) {}
 
 // CreateSwapLocalSearch returns the Swap local search.
 func CreateSwapLocalSearch(environment definition.Environment) Local {

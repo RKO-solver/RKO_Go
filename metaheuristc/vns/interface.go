@@ -4,13 +4,7 @@ import (
 	"context"
 
 	"github.com/RKO-solver/rko-go/definition"
-	"github.com/RKO-solver/rko-go/random"
 )
-
-func (vns *VNS) SetRG(rg *random.Generator) {
-	vns.RG = rg
-	vns.search.SetRG(rg)
-}
 
 func (vns *VNS) Name() string {
 	return name

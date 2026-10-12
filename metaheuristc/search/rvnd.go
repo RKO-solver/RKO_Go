@@ -73,10 +73,6 @@ func (s rvndSearch) Search(ctx context.Context, rko *metaheuristc.RandomKeyValue
 	rvnd(ctx, rko, s.environment, s.s, s.rg, neighbourhood)
 }
 
-func (s *rvndSearch) SetRG(rg *random.Generator) {
-	s.rg = rg
-}
-
 // CreateRVND returns an RVND local search over neighbourhood.
 func CreateRVND(environment definition.Environment, s *solution.Pool, rg *random.Generator, neighbourhood []Type) Local {
 	n := 0
