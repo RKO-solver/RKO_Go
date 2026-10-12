@@ -7,7 +7,7 @@ import (
 )
 
 func (ga *GA) Name() string {
-	return nameGA
+	return name
 }
 
 func (ga *GA) Solve(ctx context.Context) definition.Result {

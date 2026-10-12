@@ -7,6 +7,7 @@ import (
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
+	"github.com/RKO-solver/rko-go/metaheuristc/internal/genetic"
 	"github.com/RKO-solver/rko-go/metaheuristc/rk"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
@@ -33,7 +34,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 	generationNoImprovement := 0
 
 	start := definition.StartTime(ctx)
-	bestPerson := initialPopulation(population, env, false, rg)
+	bestPerson := genetic.InitialPopulation(population, env, false, rg)
 	solutionPool.Add(bestPerson, start)
 
 	var key1, key2 float64
@@ -114,7 +115,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
 			ga.logger.Event(slog.String("restart", "limit generations without improvement"), time.Since(start))
-			restartBest := initialPopulation(population, env, false, rg)
+			restartBest := genetic.InitialPopulation(population, env, false, rg)
 			if restartBest.Cost < bestPerson.Cost {
 				rk.Copy(bestPerson, restartBest)
 				solutionPool.Add(bestPerson, start)

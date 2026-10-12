@@ -1,4 +1,4 @@
-// Package ga implements the Genetic Algorithm (GA) and the Biased Random-Key Genetic Algorithm (BRKGA).
+// Package ga implements the Genetic Algorithm (GA).
 package ga
 
 import (
@@ -9,7 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-const nameGA = "GA"
+const name = "GA"
 
 // ConfigurationGA holds the GA parameters.
 type ConfigurationGA struct {
@@ -30,5 +30,5 @@ type GA struct {
 }
 
 func (ga *GA) Print() {
-	search.PrintSolver(nameGA, ga.search)
+	search.PrintSolver(name, ga.search)
 }

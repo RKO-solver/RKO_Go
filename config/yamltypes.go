@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/RKO-solver/rko-go/metaheuristc/brkga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
 	"github.com/RKO-solver/rko-go/metaheuristc/lns"
@@ -24,10 +25,10 @@ type yamlSeedPool struct {
 }
 
 type yamlParameters struct {
-	BRKGA *ga.ConfigurationBRKGA `yaml:"BRKGA"`
-	GA    *ga.ConfigurationGA    `yaml:"GA"`
-	ILS   *ils.Configuration     `yaml:"ILS"`
-	SA    *sa.Configuration      `yaml:"SA"`
-	VNS   *vns.Configuration     `yaml:"VNS"`
-	LNS   *lns.Configuration     `yaml:"LNS"`
+	BRKGA *brkga.ConfigurationBRKGA `yaml:"BRKGA"`
+	GA    *ga.ConfigurationGA       `yaml:"GA"`
+	ILS   *ils.Configuration        `yaml:"ILS"`
+	SA    *sa.Configuration         `yaml:"SA"`
+	VNS   *vns.Configuration        `yaml:"VNS"`
+	LNS   *lns.Configuration        `yaml:"LNS"`
 }

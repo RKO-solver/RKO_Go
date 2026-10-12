@@ -1,4 +1,4 @@
-package ga
+package brkga
 
 import (
 	"github.com/RKO-solver/rko-go/definition"
@@ -28,7 +28,7 @@ func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, soluti
 	return &BRKGA{
 		env:           env,
 		configuration: DefaultConfigurationBRKGA(),
-		logger:        logger.SolverLogger(nameBRKGA),
+		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
 		rg:            rg,
@@ -41,7 +41,7 @@ func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, 
 	return &BRKGA{
 		env:           env,
 		configuration: configuration,
-		logger:        logger.SolverLogger(nameBRKGA),
+		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
 		rg:            rg,
@@ -53,7 +53,7 @@ func CreateBRKGAComplete(env definition.Environment, config *ConfigurationBRKGA,
 	return &BRKGA{
 		env:           env,
 		configuration: config,
-		logger:        l.SolverLogger(nameBRKGA),
+		logger:        l.SolverLogger(name),
 		search:        se,
 		solutionPool:  pool,
 		rg:            rg,

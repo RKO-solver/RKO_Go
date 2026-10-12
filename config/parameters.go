@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/RKO-solver/rko-go/metaheuristc/brkga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
 	"github.com/RKO-solver/rko-go/metaheuristc/lns"
@@ -10,7 +11,7 @@ import (
 
 // Parameters holds the tuning parameters of each metaheuristic.
 type Parameters struct {
-	BRKGA *ga.ConfigurationBRKGA
+	BRKGA *brkga.ConfigurationBRKGA
 	GA    *ga.ConfigurationGA
 	ILS   *ils.Configuration
 	SA    *sa.Configuration
@@ -21,7 +22,7 @@ type Parameters struct {
 // DefaultParameters returns every metaheuristic's default parameters.
 func DefaultParameters() *Parameters {
 	return &Parameters{
-		BRKGA: ga.DefaultConfigurationBRKGA(),
+		BRKGA: brkga.DefaultConfigurationBRKGA(),
 		GA:    ga.DefaultConfigurationGA(),
 		ILS:   ils.DefaultConfigurationILS(),
 		SA:    sa.DefaultConfigurationSA(),
@@ -32,7 +33,7 @@ func DefaultParameters() *Parameters {
 
 type parameterOption func(*Parameters)
 
-func withBRKGA(cfg *ga.ConfigurationBRKGA) parameterOption {
+func withBRKGA(cfg *brkga.ConfigurationBRKGA) parameterOption {
 	return func(c *Parameters) {
 		if cfg == nil {
 			return

@@ -7,6 +7,7 @@ import (
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristc/brkga"
 	"github.com/RKO-solver/rko-go/metaheuristc/constants"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
@@ -40,7 +41,7 @@ func CreateDefaultSolver(mh []MetaHeuristic, env definition.Environment, logger 
 		case GA:
 			solver = ga.CreateDefaultGA(env, srg, solutionPool, logger)
 		case BRKGA:
-			solver = ga.CreateDefaultBRKGA(env, srg, solutionPool, logger)
+			solver = brkga.CreateDefaultBRKGA(env, srg, solutionPool, logger)
 		case LNS:
 			solver = lns.CreateDefaultLNS(env, srg, solutionPool, logger)
 		default:

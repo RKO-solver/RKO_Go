@@ -10,6 +10,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/logger/dashboard"
 	"github.com/RKO-solver/rko-go/logger/printer"
+	"github.com/RKO-solver/rko-go/metaheuristc/brkga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ga"
 	"github.com/RKO-solver/rko-go/metaheuristc/ils"
 	"github.com/RKO-solver/rko-go/metaheuristc/lns"
@@ -81,7 +82,7 @@ func newMetaheuristic(t rko.MetaHeuristic, p *Parameters, env definition.Environ
 		return ga.CreateGAComplete(env, &c, se, rg, pool, log), true
 	case rko.BRKGA:
 		c := *p.BRKGA
-		return ga.CreateBRKGAComplete(env, &c, se, rg, pool, log), true
+		return brkga.CreateBRKGAComplete(env, &c, se, rg, pool, log), true
 	case rko.LNS:
 		c := *p.LNS
 		return lns.CreateLNSComplete(env, &c, se, rg, pool, log), true

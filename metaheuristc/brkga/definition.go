@@ -1,4 +1,5 @@
-package ga
+// Package brkga implements the Biased Random-Key Genetic Algorithm (BRKGA).
+package brkga
 
 import (
 	"github.com/RKO-solver/rko-go/definition"
@@ -8,7 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-const nameBRKGA = "BRKGA"
+const name = "BRKGA"
 
 // ConfigurationBRKGA holds the BRKGA parameters.
 type ConfigurationBRKGA struct {
@@ -30,6 +31,6 @@ type BRKGA struct {
 	solutionPool  *solution.Pool
 }
 
-func (ga *BRKGA) Print() {
-	search.PrintSolver(nameBRKGA, ga.search)
+func (brkga *BRKGA) Print() {
+	search.PrintSolver(name, brkga.search)
 }
