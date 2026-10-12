@@ -64,7 +64,7 @@ func (m Metaheuristic) String() string {
 	case GA:
 		return "Genetic Algorithm"
 	case VNS:
-		return "Variable Neighborhood Search"
+		return "Variable Neighbourhood Search"
 	case ILS:
 		return "Iterated Local Search"
 	case BRKGA:
@@ -88,7 +88,7 @@ func (m Metaheuristic) String() string {
 func (m Metaheuristic) Short() string {
 	switch m {
 	case MultiStart:
-		return "MH"
+		return "MS"
 	case SA:
 		return "SA"
 	case GA:
