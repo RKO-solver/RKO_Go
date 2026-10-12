@@ -60,8 +60,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		// Future Q-Learning
 		intensityMin, intensityMax := int(configuration.BetaMin*float64(env.NumKeys())), int(configuration.BetaMax*float64(env.NumKeys()))
 
-		copy(localSolution.RK, bestSolution.RK)
-		localSolution.Cost = bestSolution.Cost
+		rk.Copy(localSolution, bestSolution)
 
 		intensity := rg.RangeInt(intensityMin, intensityMax)
 
@@ -95,8 +94,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		local.Search(ctx, localSolution)
 
 		if localSolution.Cost < bestSolution.Cost {
-			copy(bestSolution.RK, localSolution.RK)
-			bestSolution.Cost = localSolution.Cost
+			rk.Copy(bestSolution, localSolution)
 
 			bestSolutionCost := solutionPool.BestSolutionCost()
 			if bestSolution.Cost < bestSolutionCost {
