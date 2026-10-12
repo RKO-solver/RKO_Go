@@ -271,7 +271,7 @@ MultiStart, ILS and LNS emit none.
 
 A `SolverLogger` is used by one goroutine at a time, so use one per solver. With the `dashboard`, `Register` and `Event` block when the update queue is full.
 
-The built-in solvers also report pool improvements through `solution.Pool.Add`, which calls `Logger.AddSolutionPool`. See the [`definition`](../definition/README.md) and [`metaheuristc`](../metaheuristc/README.md) packages.
+The built-in solvers also report pool improvements through `solution.Pool.Add`, which calls `Logger.AddSolutionPool`. See the [`definition`](../definition/README.md) and [`metaheuristic`](../metaheuristic/README.md) packages.
 
 ## History files and Close
 
@@ -334,4 +334,4 @@ type Runner interface{ Start() (stop func()) }
 - [Project README](../README.md)
 - [`config` package](../config/README.md)
 - [`definition` package](../definition/README.md)
-- [`metaheuristc` package](../metaheuristc/README.md)
+- [`metaheuristic` package](../metaheuristic/README.md)

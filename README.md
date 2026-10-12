@@ -174,7 +174,7 @@ result := solver.Solve(ctx)
 
 Listing a constant twice runs two independent instances. `GRASP`, `VLNS`, `ALNS` and `IPR` are declared but not implemented; they are skipped with a `not implemented yet` message.
 
-To change parameters or local searches, use a [YAML file](config/README.md), or build each solver yourself and pass them to `rko.NewFromSolvers` (see the [`metaheuristc` package](metaheuristc/README.md)).
+To change parameters or local searches, use a [YAML file](config/README.md), or build each solver yourself and pass them to `rko.NewFromSolvers` (see the [`metaheuristic` package](metaheuristic/README.md)).
 
 ## Logging
 
@@ -195,7 +195,7 @@ Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelV
 | [`definition`](definition/README.md) | Implement `Environment` for your problem, or `Solver` for your own metaheuristic. |
 | [`config`](config/README.md) | Build a solver from a YAML file or a Go struct. |
 | [`logger`](logger/README.md) | Choose or implement a logger, and export results to CSV. |
-| [`metaheuristc`](metaheuristc/README.md) | Build metaheuristics, local searches and the solution pool by hand. |
+| [`metaheuristic`](metaheuristic/README.md) | Build metaheuristics, local searches and the solution pool by hand. |
 | `random` | Create random generators, seeded (`New`) or randomly seeded (`NewRandom`). |
 
 ## Maintainers

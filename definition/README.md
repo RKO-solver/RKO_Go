@@ -150,9 +150,9 @@ import (
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/metaheuristc"
-	"github.com/RKO-solver/rko-go/metaheuristc/rk"
-	"github.com/RKO-solver/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/metaheuristic/rk"
+	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -178,12 +178,12 @@ func (s *RandomSearch) Solve(ctx context.Context) definition.Result {
 	start := definition.StartTime(ctx)
 
 	key := rk.Generate(s.env, s.rg)
-	best := &metaheuristc.RandomKeyValue{RK: key, Cost: s.env.Cost(key)}
+	best := &metaheuristic.RandomKeyValue{RK: key, Cost: s.env.Cost(key)}
 
 	for ; ctx.Err() == nil; counter.Step() {
 		key := rk.Generate(s.env, s.rg)
 		if cost := s.env.Cost(key); cost < best.Cost {
-			best = &metaheuristc.RandomKeyValue{RK: key, Cost: cost}
+			best = &metaheuristic.RandomKeyValue{RK: key, Cost: cost}
 			s.pool.Add(best, start)
 		}
 		s.log.Register(best.Cost, best.Cost, counter.Iteration(), time.Since(start))
@@ -197,11 +197,11 @@ func (s *RandomSearch) Solve(ctx context.Context) definition.Result {
 }
 ```
 
-Pass it to `rko.NewFromSolvers` with the other solvers; the [`metaheuristc` package](../metaheuristc/README.md#building-a-solver-by-hand) shows how. Report progress once per iteration with `Register` and occasional events with `Event`; see the [`logger` package](../logger/README.md).
+Pass it to `rko.NewFromSolvers` with the other solvers; the [`metaheuristic` package](../metaheuristic/README.md#building-a-solver-by-hand) shows how. Report progress once per iteration with `Register` and occasional events with `Event`; see the [`logger` package](../logger/README.md).
 
 ## See also
 
 - [Project README](../README.md)
 - [`config` package](../config/README.md)
-- [`metaheuristc` package](../metaheuristc/README.md)
+- [`metaheuristic` package](../metaheuristic/README.md)
 - [`logger` package](../logger/README.md)

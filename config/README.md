@@ -122,7 +122,7 @@ case errors.Is(err, config.ErrNotImplemented):
 | set | set | at whichever comes first |
 | not set | not set | only when `ctx` is cancelled |
 
-Each metaheuristic counts its own iterations of its outer loop: a generation for GA and BRKGA, a temperature step for SA (each runs `Iterations` moves). The [`metaheuristc` package](../metaheuristc/README.md#metaheuristics) lists what one iteration is for each.
+Each metaheuristic counts its own iterations of its outer loop: a generation for GA and BRKGA, a temperature step for SA (each runs `Iterations` moves). The [`metaheuristic` package](../metaheuristic/README.md#metaheuristics) lists what one iteration is for each.
 
 There is no default limit. With neither set, `NewSolver` prints this line to stdout:
 
@@ -162,7 +162,7 @@ The same rules apply to a `Config` built in Go.
 Each entry is `NAME` or `NAME=search1,search2,...`, for example `"VNS=Farey,Nelder"`.
 
 - Names: `MultiStart`, `SA`, `GA`, `BRKGA`, `ILS`, `VNS`, `LNS`.
-- Searches: `Swap`, `Mirror`, `Farey`, `Nelder`. They are described in the [`metaheuristc` package](../metaheuristc/README.md#local-searches).
+- Searches: `Swap`, `Mirror`, `Farey`, `Nelder`. They are described in the [`metaheuristic` package](../metaheuristic/README.md#local-searches).
 - Names and searches are case-insensitive, and surrounding spaces are trimmed (`" ils = swap , MIRROR "` works).
 - `RVND` is ignored in search lists, since listing several searches already gives an RVND.
 - `GRASP`, `VLNS`, `ALNS` and `IPR` are recognised but not implemented. See [Strict and lenient](#strict-and-lenient).
@@ -178,7 +178,7 @@ The search list sets the entry's local search:
 
 ### `Parameters` section
 
-Every section and key is optional, and must sit under `Parameters:`. Field names match the Go configuration structs of the [`metaheuristc` package](../metaheuristc/README.md#configuration-structs).
+Every section and key is optional, and must sit under `Parameters:`. Field names match the Go configuration structs of the [`metaheuristic` package](../metaheuristic/README.md#configuration-structs).
 
 A value replaces its default only when it is greater than `0`; `0` or a negative value keeps the default. `ILS.MetropolisCriterion` can only be switched on: `true` sets it, `false` keeps the default (`false`).
 
@@ -280,7 +280,7 @@ solver, rkoLog, err := cfg.NewSolver(env)
 | `Config` | `LogLevel`, `LogType`, `TimeLimit` (`0` or negative: no limit), `MaxIterations` (`0` or negative: no limit), `SeedPool`, `Metaheuristics`, `Parameters` |
 | `SeedPool` | `MaxSize` (`0`: `solution.DefaultSize`; negative: no cap), `InitialSize` (`0` or negative: `solution.DefaultSize`) |
 | `Metaheuristic` | `Type` (`rko.Metaheuristic`), `Searches` (`[]search.Type`, same rules as the YAML table above) |
-| `Parameters` | `BRKGA`, `GA`, `ILS`, `SA`, `VNS`, `LNS`: pointers to the structs of the [`metaheuristc` package](../metaheuristc/README.md#configuration-structs) |
+| `Parameters` | `BRKGA`, `GA`, `ILS`, `SA`, `VNS`, `LNS`: pointers to the structs of the [`metaheuristic` package](../metaheuristic/README.md#configuration-structs) |
 
 A `Config` you build yourself skips the YAML defaults:
 
@@ -292,5 +292,5 @@ A `Config` you build yourself skips the YAML defaults:
 
 - [Project README](../README.md)
 - [`definition` package](../definition/README.md)
-- [`metaheuristc` package](../metaheuristc/README.md)
+- [`metaheuristic` package](../metaheuristic/README.md)
 - [`logger` package](../logger/README.md)

@@ -1,4 +1,4 @@
-# `metaheuristc` Package
+# `metaheuristic` Package
 
 The metaheuristic implementations and the pieces they share: local searches, the solution pool and random-key helpers.
 
@@ -6,12 +6,12 @@ Most programs never import these packages: [`rko.New`](../README.md#quick-start)
 
 | Package | Contents |
 |---|---|
-| `metaheuristc/multistart`, `sa`, `ga`, `brkga`, `ils`, `vns`, `lns` | The seven metaheuristics. |
-| `metaheuristc/search` | Local searches. |
-| `metaheuristc/solution` | The solution pool shared by every metaheuristic. |
-| `metaheuristc/rk` | `Generate`, `Reset` and `Shake` for random keys. |
-| `metaheuristc/constants` | Default parameter values and `DefaultTimeLimit` (150 s). |
-| `metaheuristc` | `RandomKeyValue` (a key and its cost), `Sort` and the `Worker` used by `rko.Solver`. |
+| `metaheuristic/multistart`, `sa`, `ga`, `brkga`, `ils`, `vns`, `lns` | The seven metaheuristics. |
+| `metaheuristic/search` | Local searches. |
+| `metaheuristic/solution` | The solution pool shared by every metaheuristic. |
+| `metaheuristic/rk` | `Generate`, `Reset` and `Shake` for random keys. |
+| `metaheuristic/constants` | Default parameter values and `DefaultTimeLimit` (150 s). |
+| `metaheuristic` | `RandomKeyValue` (a key and its cost), `Sort` and the `Worker` used by `rko.Solver`. |
 
 ## Metaheuristics
 
@@ -137,7 +137,7 @@ All return a `search.Local`:
 
 ```go
 type Local interface {
-    Search(ctx context.Context, rko *metaheuristc.RandomKeyValue)
+    Search(ctx context.Context, rko *metaheuristic.RandomKeyValue)
     String() string
 }
 ```
