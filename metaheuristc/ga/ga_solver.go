@@ -7,6 +7,7 @@ import (
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristc"
+	"github.com/RKO-solver/rko-go/metaheuristc/rk"
 	"github.com/RKO-solver/rko-go/metaheuristc/solution"
 )
 
@@ -48,11 +49,11 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 			children[j+1].Cost = env.Cost(children[j+1].RK)
 
 			if children[j].Cost < bestPerson.Cost {
-				bestPerson = children[j].Clone()
+				rk.Copy(bestPerson, children[j])
 				hasImproved = true
 			}
 			if children[j+1].Cost < bestPerson.Cost {
-				bestPerson = children[j+1].Clone()
+				rk.Copy(bestPerson, children[j+1])
 				hasImproved = true
 			}
 
@@ -60,15 +61,14 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 		}
 
 		if isOdd {
-			copy(children[configuration.PopulationSize-1].RK, bestPerson.RK)
-			children[configuration.PopulationSize-1].Cost = bestPerson.Cost
+			rk.Copy(children[configuration.PopulationSize-1], bestPerson)
 		}
 
 		k := rg.IntN(configuration.PopulationSize)
 		local.Search(ctx, children[k])
 
 		if children[k].Cost < bestPerson.Cost {
-			bestPerson = children[k].Clone()
+			rk.Copy(bestPerson, children[k])
 			hasImproved = true
 		}
 
@@ -92,7 +92,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 			ga.logger.Event(slog.String("restart", "limit generations without improvement"), time.Since(start))
 			restartBest := initialPopulation(population, env, false, rg)
 			if restartBest.Cost < bestPerson.Cost {
-				bestPerson = restartBest
+				rk.Copy(bestPerson, restartBest)
 				solutionPool.AddSolution(bestPerson, elapsed)
 
 			}

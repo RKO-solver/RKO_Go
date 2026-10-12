@@ -39,13 +39,29 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 	mutantSize := int(configuration.MutantRatio * float64(populationSize))
 	for ; ctx.Err() == nil; ctxAction.Step() {
 		for i := range eliteSize {
-			copy(populationIntermediary[i].RK, population[i].RK)
-			populationIntermediary[i].Cost = population[i].Cost
+			rk.Copy(populationIntermediary[i], population[i])
 		}
 
 		for i := eliteSize; i < (populationSize - mutantSize); i++ {
-			populationIntermediary[i].RK = crossoverUniformElite(population, eliteSize, populationSize, configuration.MutationAlpha, configuration.CrossoverAlpha, rg)
+
+			// crossoverUniformElite
+			eliteParentId := rg.IntN(eliteSize)
+			nonEliteParentId := rg.RangeInt(eliteSize, populationSize)
+
+			copy(populationIntermediary[i].RK, population[eliteParentId].RK)
+
+			for j := range numKeys {
+				if rg.Float64() < configuration.MutationAlpha {
+					populationIntermediary[i].RK[j] = rg.Float64()
+				} else {
+					if rg.Float64() >= configuration.CrossoverAlpha {
+						populationIntermediary[i].RK[j] = population[nonEliteParentId].RK[j]
+					}
+				}
+			}
+
 			populationIntermediary[i].Cost = env.Cost(populationIntermediary[i].RK)
+			// end crossoverUniformElite
 
 		}
 
@@ -63,7 +79,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 		if ctx.Err() != nil {
 			if population[0].Cost < bestPerson.Cost {
-				bestPerson = population[0].Clone()
+				rk.Copy(bestPerson, population[0])
 			}
 
 			solutionPool.AddSolution(bestPerson, time.Since(start))
@@ -73,7 +89,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 		elapsed := time.Since(start)
 		if population[0].Cost < bestPerson.Cost {
-			bestPerson = population[0].Clone()
+			rk.Copy(bestPerson, population[0])
 			generationNoImprovement = 0
 		} else {
 			generationNoImprovement++
@@ -87,8 +103,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 			ga.logger.Event(slog.String("restart", "limit generations without improvement"), time.Since(start))
 			restartBest := initialPopulation(population, env, true, rg)
 			if restartBest.Cost < bestPerson.Cost {
-				bestPerson = restartBest
-
+				rk.Copy(bestPerson, restartBest)
 			}
 			solutionPool.AddSolution(bestPerson, time.Since(start))
 
