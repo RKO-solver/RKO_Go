@@ -185,7 +185,7 @@ Every constructor takes a [`logger.Logger`](logger/README.md). Two ship with the
 | `logger/printer` | `printer.Default(name)`, `printer.New(w, name, opts)` | Plain lines: a solver's progress when its best cost improves, otherwise at most every 500 ms (`Options.PrintInterval`). Suits batch jobs and CI. |
 | `logger/dashboard` | `dashboard.New(name, opts)` | A live dashboard in the terminal's alternate screen; the final frame stays in the scrollback. Suits interactive runs. |
 
-Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelVerbose`. `Solve` resets the logger at the start of every run, so `Report` and `Pool` describe the last run. Both loggers can save the run to CSV (`SaveCSV`), and spill each solver's history to [temporary files](logger/README.md#history-files) on long runs. `Solve` never calls the logger's `Close`, which deletes those files: `defer` it after creating the logger. See the [`logger` package](logger/README.md).
+Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelVerbose`. `Solve` resets the logger at the start of every run, so `Report` and `Pool` describe the last run. Both loggers can save the run to CSV (`SaveCSV`), and spill each solver's history to [temporary files](logger/README.md#history-files-and-close) on long runs. `Solve` never calls the logger's `Close`, which deletes those files: `defer` it after creating the logger. See the [`logger` package](logger/README.md).
 
 ## Packages
 

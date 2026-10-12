@@ -27,6 +27,7 @@ func Reset(randomKey definition.RandomKey, rg *random.Generator) {
 	}
 }
 
+// Copy copies src into dst; both must have the same length.
 func Copy(dst, src *metaheuristic.RandomKeyValue) {
 	copy(dst.RK, src.RK)
 	dst.Cost = src.Cost

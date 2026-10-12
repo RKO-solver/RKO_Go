@@ -73,7 +73,7 @@ func (l *Log) Start() (stop func()) {
 	})
 
 	if l.level > logger.LevelSilent {
-		wg.Go(func() { // the display ticker that Solve used to run
+		wg.Go(func() { // the display ticker
 			t := time.NewTicker(l.refresh)
 			defer t.Stop()
 			for {

@@ -188,7 +188,7 @@ Both loggers implement `logger.Recorder`, which is what `config.NewSolver` retur
 | `Report() []logger.SolverReport` | `logger.Reporter` | Each solver's name, id and history. |
 | `Pool() []logger.PoolEntry` | `logger.Reporter` | Every solution added to the pool, in order. |
 | `SaveCSV(prefix) error` | `logger.CSVSaver` | One CSV file per solver and one for the pool. |
-| `Close() error` | `io.Closer` | Deletes the history files (see [History files](#history-files)). |
+| `Close() error` | `io.Closer` | Deletes the history files (see [History files](#history-files-and-close)). |
 
 ```go
 type SolverReport struct {
@@ -264,7 +264,7 @@ The built-in metaheuristics emit these events:
 | GA, BRKGA | `stalled` | group: `generation`, `no-improvement` (ints) | After each generation that did not improve the best solution. |
 | GA, BRKGA | `restart` | string | When the population restarts. |
 | SA | `temperature` | float | After every temperature step. |
-| SA | `reheat` | int | At each reheat, with the number of earlier reheats. |
+| SA | `reheat` | int | At each reheat, with the reheat number (`1` for the first). |
 | VNS | `improved` | group: `iteration`, `local` (ints) | When a neighbour beats the best solution. |
 
 MultiStart, ILS and LNS emit none.

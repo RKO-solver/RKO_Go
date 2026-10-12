@@ -9,7 +9,7 @@ Most programs never import these packages: [`rko.New`](../README.md#quick-start)
 | `metaheuristic/multistart`, `sa`, `ga`, `brkga`, `ils`, `vns`, `lns` | The seven metaheuristics. |
 | `metaheuristic/search` | Local searches. |
 | `metaheuristic/solution` | The solution pool shared by every metaheuristic. |
-| `metaheuristic/rk` | `Generate`, `Reset` and `Shake` for random keys. |
+| `metaheuristic/rk` | `Generate`, `Reset`, `Copy` and `Shake` for random keys. |
 | `metaheuristic/constants` | Default parameter values and `DefaultTimeLimit` (150 s). |
 | `metaheuristic` | `RandomKeyValue` (a key and its cost), `Sort` and the `Worker` used by `rko.Solver`. |
 
@@ -45,7 +45,7 @@ Every metaheuristic calls `Register` once per iteration (see the [`logger` packa
 | GA, BRKGA | `stalled` | group: `generation` (int), `no-improvement` (int) | After each generation that did not improve the best solution. `no-improvement` counts consecutive such generations. |
 | GA, BRKGA | `restart` | string `limit generations without improvement` | When the population restarts. |
 | SA | `temperature` | float | After every temperature step, with the new temperature. |
-| SA | `reheat` | int | At each reheat, with the number of earlier reheats (`0` for the first). |
+| SA | `reheat` | int | At each reheat, with the reheat number (`1` for the first). |
 | VNS | `improved` | group: `iteration` (int), `local` (int) | When a neighbour beats the best solution. |
 
 MultiStart, ILS and LNS emit no events. A group prints as `stalled=[generation=152 no-improvement=3]`.
@@ -121,7 +121,7 @@ A local search improves a solution in place, never making it worse, and returns 
 | `Mirror` | Replacing each key `v` with `1 - v`. |
 | `Farey` | For each key, a random value in each interval of a Farey sequence. |
 | `NelderMead` | A Nelder-Mead-style search that blends the solution with two solutions from the pool. |
-| `RVND` | The searches in its list in random order, dropping each one that fails to improve, until none is left. |
+| `RVND` | The searches in its list in random order. A search that fails to improve is dropped; an improvement restores the full list. It ends when none is left. |
 
 | Constructor | Builds |
 |---|---|
