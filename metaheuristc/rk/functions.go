@@ -3,6 +3,7 @@ package rk
 
 import (
 	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/metaheuristc"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -24,4 +25,9 @@ func Reset(randomKey definition.RandomKey, rg *random.Generator) {
 	for i := 0; i < len(randomKey); i++ {
 		randomKey[i] = rg.Float64()
 	}
+}
+
+func Copy(dst, src *metaheuristc.RandomKeyValue) {
+	copy(dst.RK, src.RK)
+	dst.Cost = src.Cost
 }
