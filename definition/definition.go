@@ -35,6 +35,11 @@ type Environment interface {
 	ProblemName() string
 }
 
+// Cloner is an Environment that gives each solver its own copy.
+type Cloner interface {
+	Clone() Environment
+}
+
 // Result is the outcome of one Solver.Solve call.
 type Result struct {
 	Solution any           // Solution decoded by Environment.Decode

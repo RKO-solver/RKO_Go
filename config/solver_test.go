@@ -2,9 +2,11 @@ package config_test
 
 import (
 	"context"
+	"io"
 	"math"
 	"reflect"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -12,6 +14,7 @@ import (
 	"github.com/RKO-solver/rko-go/config"
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger/printer"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/stretchr/testify/assert"
@@ -396,4 +399,85 @@ func TestNewSolverNoOptions(t *testing.T) {
 	solver, log := newSolver(t, cfg)
 	solveWithin(t, solver, 30*time.Second)
 	assert.Len(t, log.Report(), len(cfg.Metaheuristics))
+}
+
+// scratchEnv is an Environment whose Cost writes into a per-instance scratch buffer.
+type scratchEnv struct {
+	n       int
+	buf     []int         // scratch written by every Cost call
+	calls   int           // Cost calls on this instance
+	busy    atomic.Bool   // true while Cost runs on this instance
+	overlap *atomic.Bool  // set when two Cost calls overlap on one instance
+	clones  *atomic.Int32 // Clone calls, shared by the original and its copies
+}
+
+func newScratchEnv(n int) *scratchEnv {
+	return &scratchEnv{n: n, buf: make([]int, n), overlap: new(atomic.Bool), clones: new(atomic.Int32)}
+}
+
+func (e *scratchEnv) NumKeys() int                      { return e.n }
+func (e *scratchEnv) ProblemName() string               { return "scratch" }
+func (e *scratchEnv) SwapSearch() [][2]int              { return [][2]int{{0, e.n}} }
+func (e *scratchEnv) Decode(r definition.RandomKey) any { return r.Clone() }
+
+func (e *scratchEnv) Cost(r definition.RandomKey) int {
+	if e.busy.CompareAndSwap(false, true) {
+		defer e.busy.Store(false)
+	} else {
+		e.overlap.Store(true)
+	}
+	e.calls++
+	for i, v := range r {
+		e.buf[i] = int(v*1000) * (i + 1)
+	}
+	c := 0
+	for _, v := range e.buf {
+		c += v
+	}
+	return c
+}
+
+// Clone returns a copy with its own scratch buffer.
+func (e *scratchEnv) Clone() definition.Environment {
+	e.clones.Add(1)
+	return &scratchEnv{n: e.n, buf: make([]int, e.n), overlap: e.overlap, clones: e.clones}
+}
+
+var _ definition.Cloner = (*scratchEnv)(nil)
+
+func TestSolverClonesEnvironmentPerSolver(t *testing.T) {
+	mhs := allMetaheuristics()
+	builders := map[string]func(t *testing.T, env *scratchEnv) *rko.Solver{
+		"rko.New": func(t *testing.T, env *scratchEnv) *rko.Solver {
+			log := printer.New(io.Discard, env.ProblemName(), &printer.Options{Level: logger.LevelSilent})
+			t.Cleanup(func() { require.NoError(t, log.Close()) })
+			types := make([]rko.Metaheuristic, len(mhs))
+			for i, m := range mhs {
+				types[i] = m.Type
+			}
+			return rko.New(env, log, types, rko.WithMaxIterations(3))
+		},
+		"config.NewSolver": func(t *testing.T, env *scratchEnv) *rko.Solver {
+			cfg := silentConfig()
+			cfg.Metaheuristics = mhs
+			solver, log, err := cfg.NewSolver(env, config.WithSeed(11))
+			require.NoError(t, err)
+			t.Cleanup(func() { require.NoError(t, log.Close()) })
+			return solver
+		},
+	}
+	for name, build := range builders {
+		t.Run(name, func(t *testing.T) {
+			env := newScratchEnv(30)
+			solver := build(t, env)
+			require.EqualValues(t, len(mhs), env.clones.Load(), "Clone calls")
+			poolCalls := env.calls
+
+			solveWithin(t, solver, 30*time.Second)
+
+			assert.EqualValues(t, len(mhs), env.clones.Load(), "Clone calls")
+			assert.Equal(t, poolCalls, env.calls, "a solver called Cost on the original Environment")
+			assert.False(t, env.overlap.Load(), "Cost ran concurrently on one Environment")
+		})
+	}
 }

@@ -85,6 +85,7 @@ items := solver.Solve(context.Background()).([]int)
 
 - Give every solver the pool and logger you pass to `NewFromSolvers`: `Solve` returns the best solution of that pool.
 - Give each solver its own generator with `rg.Split()`: a `random.Generator` is not safe for concurrent use. A local search that draws random numbers (`Farey`, `NelderMead`, RVND) should use the same generator as its metaheuristic.
+- If you need a dedicated `Environment` per solver (to handle concurrency), give each solver and its local search its own `env.Clone()` (see [`definition.Cloner`](../definition/README.md#environment)).
 - `rko.WithTimeLimit(d)` and `rko.WithMaxIterations(n)` set the limits; a zero or negative value means no limit, and with no option there is none.
 - Your own [`definition.Solver`](../definition/README.md#writing-a-metaheuristic) can go in the same slice.
 

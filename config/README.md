@@ -247,6 +247,7 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 - Returns an error, before creating anything, for an invalid `LogLevel` or `LogType`, an invalid or unimplemented metaheuristic `Type`, or a nil section inside a non-nil `Parameters`. All problems are joined; test them with `errors.Is`.
 - A nil `Parameters` means `DefaultParameters()`.
 - `NewSolver` never modifies `cfg`, and each metaheuristic gets its own copy of its parameters. One `Config` can be reused for several solvers and shared across goroutines.
+- If `env` implements [`definition.Cloner`](../definition/README.md#environment), each metaheuristic and its local search get their own `env.Clone()`.
 - The logger is named from `env.ProblemName()`. Neither `NewSolver` nor `Solve` closes it: `defer` its `Close`, which deletes the run's history files, once you have read the results. To read or save them, see the [`logger` package](../logger/README.md).
 - `WithSeed(seed uint64)` seeds the random generator. Without it, each `NewSolver` call uses a randomly seeded generator.
 

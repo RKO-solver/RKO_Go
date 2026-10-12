@@ -38,21 +38,25 @@ func New(env definition.Environment, log logger.Logger, mhs []Metaheuristic, opt
 	for _, m := range mhs {
 		var solver definition.Solver
 		srg := rg.Split()
+		senv := env
+		if c, ok := env.(definition.Cloner); ok {
+			senv = c.Clone()
+		}
 		switch m {
 		case ILS:
-			solver = ils.New(env, srg, solutionPool, log)
+			solver = ils.New(senv, srg, solutionPool, log)
 		case VNS:
-			solver = vns.New(env, srg, solutionPool, log)
+			solver = vns.New(senv, srg, solutionPool, log)
 		case MultiStart:
-			solver = multistart.New(env, srg, solutionPool, log)
+			solver = multistart.New(senv, srg, solutionPool, log)
 		case SA:
-			solver = sa.New(env, srg, solutionPool, log)
+			solver = sa.New(senv, srg, solutionPool, log)
 		case GA:
-			solver = ga.New(env, srg, solutionPool, log)
+			solver = ga.New(senv, srg, solutionPool, log)
 		case BRKGA:
-			solver = brkga.New(env, srg, solutionPool, log)
+			solver = brkga.New(senv, srg, solutionPool, log)
 		case LNS:
-			solver = lns.New(env, srg, solutionPool, log)
+			solver = lns.New(senv, srg, solutionPool, log)
 		default:
 			fmt.Printf("%s not implemented yet\n", m)
 			continue

@@ -54,8 +54,12 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 	solvers := make([]definition.Solver, 0, len(cfg.Metaheuristics))
 	for i, m := range cfg.Metaheuristics {
 		srg := rg.Split()
-		se := getSearch(m.Searches, env, pool, srg)
-		s, ok := newMetaheuristic(m.Type, params, env, se, srg, pool, log)
+		senv := env
+		if c, ok := env.(definition.Cloner); ok {
+			senv = c.Clone()
+		}
+		se := getSearch(m.Searches, senv, pool, srg)
+		s, ok := newMetaheuristic(m.Type, params, senv, se, srg, pool, log)
 		if !ok {
 			_ = log.Close()
 			return nil, nil, metaheuristicError(i, m.Type)

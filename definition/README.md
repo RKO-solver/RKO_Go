@@ -26,7 +26,15 @@ type Environment interface {
 | `SwapSearch()` | `{start, end}` ranges for the swap local search, which tries swapping keys `i` and `j` for every `start <= i < j < end`. Return `[][2]int{{0, NumKeys()}}` to allow any pair, or `nil` to disable it. |
 | `ProblemName()` | The problem name. It labels the logger and its output files, such as the CSV and history files, so keep it short and safe in file names. |
 
-The metaheuristics run in parallel and call `Cost` and `Decode` concurrently, so these methods must not modify shared state.
+The metaheuristics run in parallel and call the `Environment` methods concurrently. If your `Environment` needs a strategy to handle those concurrent calls, implementing it is up to you. To give each metaheuristic a dedicated `Environment`, implement `Cloner`:
+
+```go
+type Cloner interface {
+    Clone() Environment
+}
+```
+
+`rko.New` and `config.NewSolver` then give each metaheuristic its own `Clone()`.
 
 For ordering problems, decode with `r.SortedIndex()`: the indices of `r` in ascending order of their keys, a permutation. The [root README](../README.md#quick-start) solves a travelling salesman problem this way.
 
