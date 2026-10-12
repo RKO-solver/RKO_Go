@@ -9,8 +9,8 @@ import (
 
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/metaheuristc"
-	"github.com/RKO-solver/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 )
 
 // Solver runs several metaheuristics in parallel over a shared solution pool.
@@ -45,7 +45,7 @@ func (s *Solver) Solve(ctx context.Context) any {
 	ctxStartTime := definition.WithStartTime(ctx, time.Now())
 	for i, sv := range s.solvers {
 		wg.Add(1)
-		go metaheuristc.Worker(ctxStartTime, sv, i, s.l, &wg)
+		go metaheuristic.Worker(ctxStartTime, sv, i, s.l, &wg)
 	}
 
 	wg.Wait()

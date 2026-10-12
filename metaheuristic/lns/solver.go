@@ -1,0 +1,106 @@
+package lns
+
+import (
+	"context"
+	"math"
+	"time"
+
+	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/metaheuristic/rk"
+	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+)
+
+var fareySequence = []float64{
+	0.00,
+	0.142857,
+	0.166667,
+	0.20,
+	0.25,
+	0.285714,
+	0.333333,
+	0.40,
+	0.428571,
+	0.50,
+	0.571429,
+	0.60,
+	0.666667,
+	0.714286,
+	0.75,
+	0.80,
+	0.833333,
+	0.857143,
+	1.0,
+}
+
+func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristic.RandomKeyValue, time.Duration) {
+	ctx, ctxAction := definition.NewSolverContext(ctx)
+	defer ctxAction.Stop()
+
+	configuration := lns.configuration
+	rg := lns.rg
+	local := lns.search
+	env := lns.env
+
+	var bestSolution, localSolution *metaheuristic.RandomKeyValue
+
+	start := definition.StartTime(ctx)
+
+	bestSolution = metaheuristic.NewRandomKeyValue(env.NumKeys())
+	rk.Reset(bestSolution.RK, rg)
+	bestSolution.Cost = env.Cost(bestSolution.RK)
+	solutionPool.Add(bestSolution, start)
+
+	localSolution = &metaheuristic.RandomKeyValue{
+		RK:   make(definition.RandomKey, env.NumKeys()),
+		Cost: 0,
+	}
+
+	for ; ctx.Err() == nil; ctxAction.Step() {
+		// Future Q-Learning
+		intensityMin, intensityMax := int(configuration.BetaMin*float64(env.NumKeys())), int(configuration.BetaMax*float64(env.NumKeys()))
+
+		rk.Copy(localSolution, bestSolution)
+
+		intensity := rg.RangeInt(intensityMin, intensityMax)
+
+		order := rg.Perm(env.NumKeys())
+
+		for k := range intensity {
+			pos := order[k]
+			currentBest := math.MaxInt
+			rkBest := 0.0
+
+			for j := 0; j < len(fareySequence)-1; j++ {
+				if ctx.Err() != nil {
+					return bestSolution, time.Since(start)
+
+				}
+
+				localSolution.RK[pos] = rg.RangeFloat64(fareySequence[j], fareySequence[j+1])
+
+				localSolution.Cost = env.Cost(localSolution.RK)
+
+				if localSolution.Cost < currentBest {
+					currentBest = localSolution.Cost
+					rkBest = localSolution.RK[pos]
+				}
+			}
+
+			localSolution.Cost = currentBest
+			localSolution.RK[pos] = rkBest
+		}
+
+		local.Search(ctx, localSolution)
+
+		if localSolution.Cost < bestSolution.Cost {
+			rk.Copy(bestSolution, localSolution)
+
+			solutionPool.Add(bestSolution, start)
+		}
+
+		lns.logger.Register(localSolution.Cost, bestSolution.Cost, ctxAction.Iteration(), time.Since(start))
+	}
+
+	return bestSolution, time.Since(start)
+}

@@ -12,8 +12,8 @@ import (
 	"github.com/RKO-solver/rko-go/config"
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/metaheuristc/search"
-	"github.com/RKO-solver/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic/search"
+	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

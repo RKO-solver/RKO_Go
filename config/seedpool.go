@@ -3,7 +3,7 @@ package config
 import (
 	"math"
 
-	"github.com/RKO-solver/rko-go/metaheuristc/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 )
 
 // seedPoolSizes resolves the seed pool max and initial sizes, applying defaults and the unlimited sentinel.

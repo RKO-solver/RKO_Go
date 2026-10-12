@@ -1,12 +1,12 @@
 package config
 
 import (
-	"github.com/RKO-solver/rko-go/metaheuristc/brkga"
-	"github.com/RKO-solver/rko-go/metaheuristc/ga"
-	"github.com/RKO-solver/rko-go/metaheuristc/ils"
-	"github.com/RKO-solver/rko-go/metaheuristc/lns"
-	"github.com/RKO-solver/rko-go/metaheuristc/sa"
-	"github.com/RKO-solver/rko-go/metaheuristc/vns"
+	"github.com/RKO-solver/rko-go/metaheuristic/brkga"
+	"github.com/RKO-solver/rko-go/metaheuristic/ga"
+	"github.com/RKO-solver/rko-go/metaheuristic/ils"
+	"github.com/RKO-solver/rko-go/metaheuristic/lns"
+	"github.com/RKO-solver/rko-go/metaheuristic/sa"
+	"github.com/RKO-solver/rko-go/metaheuristic/vns"
 )
 
 type yamlConfig struct {

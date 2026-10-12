@@ -11,7 +11,7 @@ import (
 
 	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/metaheuristc/search"
+	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"go.yaml.in/yaml/v3"
 )
 
