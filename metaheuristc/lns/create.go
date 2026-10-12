@@ -27,7 +27,7 @@ func CreateDefaultLNS(env definition.Environment, rg *random.Generator, solution
 		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -41,7 +41,7 @@ func CreateLNS(env definition.Environment, configuration *Configuration, searchT
 		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -53,6 +53,6 @@ func CreateLNSComplete(env definition.Environment, configuration *Configuration,
 		logger:        logger.SolverLogger(name),
 		search:        se,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }

@@ -18,7 +18,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 
 	configuration := sa.configuration
 	env := sa.env
-	rg := sa.RG
+	rg := sa.rg
 	local := sa.search
 	alpha := 1.0 - configuration.Alpha
 	temperatureLocal := configuration.TemperatureInitial

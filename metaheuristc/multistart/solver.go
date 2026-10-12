@@ -15,7 +15,7 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 	ctx, ctxAction := definition.GetMHContext(ctx)
 	defer ctxAction.Stop()
 
-	rg := m.RG
+	rg := m.rg
 
 	local := m.search
 

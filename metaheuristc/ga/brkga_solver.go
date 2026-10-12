@@ -17,7 +17,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 	configuration := ga.configuration
 	env := ga.env
-	rg := ga.RG
+	rg := ga.rg
 	local := ga.search
 	numKeys := env.NumKeys()
 	populationSize := configuration.PopulationSize

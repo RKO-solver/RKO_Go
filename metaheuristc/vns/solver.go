@@ -16,7 +16,7 @@ func (vns *VNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	defer ctxAction.Stop()
 
 	configuration := vns.configuration
-	rg := vns.RG
+	rg := vns.rg
 	local := vns.search
 	env := vns.env
 

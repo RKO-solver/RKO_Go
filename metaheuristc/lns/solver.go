@@ -38,7 +38,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	defer ctxAction.Stop()
 
 	configuration := lns.configuration
-	rg := lns.RG
+	rg := lns.rg
 	local := lns.search
 	env := lns.env
 

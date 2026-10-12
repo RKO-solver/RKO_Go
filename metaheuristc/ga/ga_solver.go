@@ -17,7 +17,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 	configuration := ga.configuration
 	env := ga.env
-	rg := ga.RG
+	rg := ga.rg
 	local := ga.search
 	numKeys := env.NumKeys()
 

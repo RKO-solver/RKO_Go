@@ -25,7 +25,7 @@ type GA struct {
 	configuration *ConfigurationGA
 	logger        logger.SolverLogger
 	search        search.Local
-	RG            *random.Generator
+	rg            *random.Generator
 	solutionPool  *solution.Pool
 }
 

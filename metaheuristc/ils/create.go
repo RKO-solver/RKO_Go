@@ -28,7 +28,7 @@ func CreateDefaultILS(env definition.Environment, rg *random.Generator, solution
 		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -41,7 +41,7 @@ func CreateILS(env definition.Environment, configuration *Configuration, searchT
 		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -53,6 +53,6 @@ func CreateILSComplete(env definition.Environment, config *Configuration, se sea
 		logger:        l.SolverLogger(name),
 		search:        se,
 		solutionPool:  pool,
-		RG:            rg,
+		rg:            rg,
 	}
 }

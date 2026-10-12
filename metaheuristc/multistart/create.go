@@ -17,7 +17,7 @@ func CreateDefaultMultiStart(env definition.Environment, rg *random.Generator, s
 		logger:       logger.SolverLogger(name),
 		search:       local,
 		solutionPool: solutionPool,
-		RG:           rg,
+		rg:           rg,
 	}
 }
 
@@ -28,6 +28,6 @@ func CreateMultiStart(env definition.Environment, se search.Local, rg *random.Ge
 		logger:       logger.SolverLogger(name),
 		search:       se,
 		solutionPool: solutionPool,
-		RG:           rg,
+		rg:           rg,
 	}
 }

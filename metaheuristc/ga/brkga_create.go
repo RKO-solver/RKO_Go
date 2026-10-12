@@ -31,7 +31,7 @@ func CreateDefaultBRKGA(env definition.Environment, rg *random.Generator, soluti
 		logger:        logger.SolverLogger(nameBRKGA),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -44,7 +44,7 @@ func CreateBRKGA(env definition.Environment, configuration *ConfigurationBRKGA, 
 		logger:        logger.SolverLogger(nameBRKGA),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -56,6 +56,6 @@ func CreateBRKGAComplete(env definition.Environment, config *ConfigurationBRKGA,
 		logger:        l.SolverLogger(nameBRKGA),
 		search:        se,
 		solutionPool:  pool,
-		RG:            rg,
+		rg:            rg,
 	}
 }

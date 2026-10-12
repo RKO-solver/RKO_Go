@@ -29,7 +29,7 @@ func CreateDefaultGA(env definition.Environment, rg *random.Generator, solutionP
 		logger:        logger.SolverLogger(nameGA),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -42,7 +42,7 @@ func CreateGA(env definition.Environment, configuration *ConfigurationGA, search
 		logger:        logger.SolverLogger(nameGA),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -54,6 +54,6 @@ func CreateGAComplete(env definition.Environment, config *ConfigurationGA, se se
 		logger:        l.SolverLogger(nameGA),
 		search:        se,
 		solutionPool:  pool,
-		RG:            rg,
+		rg:            rg,
 	}
 }

@@ -16,7 +16,7 @@ type MultiStart struct {
 	env          definition.Environment
 	logger       logger.SolverLogger
 	search       search.Local
-	RG           *random.Generator
+	rg           *random.Generator
 	solutionPool *solution.Pool
 }
 

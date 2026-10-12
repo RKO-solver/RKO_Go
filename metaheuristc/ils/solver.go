@@ -17,7 +17,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 	configuration := ils.configuration
 	env := ils.env
-	rg := ils.RG
+	rg := ils.rg
 	local := ils.search
 	_, hasTimeOut := ctx.Deadline()
 	metropolisCriterion := configuration.MetropolisCriterion && hasTimeOut

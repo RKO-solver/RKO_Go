@@ -33,7 +33,7 @@ func CreateDefaultSA(env definition.Environment, rg *random.Generator, solutionP
 		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -46,7 +46,7 @@ func CreateSA(env definition.Environment, configuration *Configuration, searchTy
 		logger:        logger.SolverLogger(name),
 		search:        local,
 		solutionPool:  solutionPool,
-		RG:            rg,
+		rg:            rg,
 	}
 }
 
@@ -58,6 +58,6 @@ func CreateSAComplete(env definition.Environment, config *Configuration, se sear
 		logger:        l.SolverLogger(name),
 		search:        se,
 		solutionPool:  pool,
-		RG:            rg,
+		rg:            rg,
 	}
 }

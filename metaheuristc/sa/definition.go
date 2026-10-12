@@ -29,7 +29,7 @@ type SimulatedAnnealing struct {
 	configuration *Configuration
 	logger        logger.SolverLogger
 	search        search.Local
-	RG            *random.Generator
+	rg            *random.Generator
 	solutionPool  *solution.Pool
 }
 
