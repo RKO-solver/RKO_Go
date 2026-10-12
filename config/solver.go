@@ -48,7 +48,7 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 	}
 
 	rg := o.generator()
-	pool := solution.NewPool(maxSize, initialSize, env, rg, log)
+	pool := solution.NewPoolSize(env, rg, log, maxSize, initialSize)
 
 	solvers := make([]definition.Solver, 0, len(cfg.Metaheuristics))
 	for i, m := range cfg.Metaheuristics {

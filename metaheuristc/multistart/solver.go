@@ -31,7 +31,7 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 		local.Search(ctx, localSolution)
 
 		if localSolution.Cost < bestSolutionCost {
-			solutionPool.AddSolution(localSolution, time.Since(start))
+			solutionPool.Add(localSolution, start)
 			bestSolutionCost = localSolution.Cost
 		}
 

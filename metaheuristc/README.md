@@ -60,7 +60,7 @@ Create one pool, then each metaheuristic with its configuration and local search
 rg := random.New(42)
 log := printer.Default("knapsack")
 defer log.Close()
-pool := solution.NewDefaultPool(env, rg, log)
+pool := solution.NewPool(env, rg, log)
 
 ilsConfig := ils.DefaultConfigurationILS()
 ilsConfig.MetropolisCriterion = true
@@ -154,18 +154,16 @@ type Local interface {
 
 | Function | Creates |
 |---|---|
-| `NewDefaultPool(env, rg, log)` | A pool seeded with 10 random solutions, keeping at most 10. |
-| `NewDefaultPoolUnlimited(env, rg, log)` | The same, without a size cap. |
-| `NewPool(maxSize, initialSize, env, rg, log)` | A pool seeded with `initialSize` random solutions. `maxSize` below 1 means no cap; a cap below `initialSize` is raised to it. |
-| `GetGlobalInstance(env, log, rg)` | A process-wide default pool, created on the first call. |
+| `NewPool(env, rg, log)` | A pool seeded with 10 random solutions, keeping at most 10. |
+| `NewPoolSize(env, rg, log, maxSize, initialSize)` | A pool seeded with `initialSize` random solutions. A `maxSize` of 0 or less means no cap; a cap below `initialSize` is raised to it. |
 
 | Method | Does |
 |---|---|
-| `AddSolution(s, elapsed)` | Adds a copy of `s` only if its cost is strictly lower than the pool's best, and reports it to `log.AddSolutionPool`. |
-| `BestSolution()` | Returns a copy of the best solution, or nil if the pool is empty. |
-| `BestSolutionCost()` | Returns the best cost, or `math.MaxInt` if the pool is empty. |
-| `GetSolution(i)` | Returns a copy of the `i`-th best solution (`0` is the best). |
-| `Size()` | Returns the number of solutions. |
+| `Add(s, start)` | Adds a copy of `s` only if its cost is strictly lower than the pool's best, and reports it to `log.AddSolutionPool` with the time elapsed since `start`. |
+| `Best()` | Returns a copy of the best solution, or nil if the pool is empty. |
+| `BestCost()` | Returns the best cost, or `math.MaxInt` if the pool is empty. |
+| `Solution(i)` | Returns a copy of the `i`-th best solution (`0` is the best). |
+| `Len()` | Returns the number of solutions. |
 
 ## Stopping
 

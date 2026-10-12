@@ -33,7 +33,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 
 	start := definition.StartTime(ctx)
 	bestPerson := initialPopulation(population, env, true, rg)
-	solutionPool.AddSolution(bestPerson, time.Since(start))
+	solutionPool.Add(bestPerson, start)
 
 	eliteSize := int(configuration.EliteRatio * float64(populationSize))
 	mutantSize := int(configuration.MutantRatio * float64(populationSize))
@@ -82,7 +82,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 				rk.Copy(bestPerson, population[0])
 			}
 
-			solutionPool.AddSolution(bestPerson, time.Since(start))
+			solutionPool.Add(bestPerson, start)
 
 			break
 		}
@@ -96,7 +96,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 			ga.logger.Event(slog.Attr{Key: "stalled", Value: slog.GroupValue(slog.Int("generation", ctxAction.Iteration()), slog.Int("no-improvement", generationNoImprovement))}, elapsed)
 
 		}
-		solutionPool.AddSolution(bestPerson, time.Since(start))
+		solutionPool.Add(bestPerson, start)
 		ga.logger.Register(population[0].Cost, bestPerson.Cost, ctxAction.Iteration(), elapsed)
 
 		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
@@ -105,7 +105,7 @@ func (ga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metah
 			if restartBest.Cost < bestPerson.Cost {
 				rk.Copy(bestPerson, restartBest)
 			}
-			solutionPool.AddSolution(bestPerson, time.Since(start))
+			solutionPool.Add(bestPerson, start)
 
 			generationNoImprovement = 0
 		}

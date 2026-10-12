@@ -6,6 +6,7 @@ import (
 	"slices"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -15,44 +16,30 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
+// DefaultSize is the default maximum and initial pool size.
 const DefaultSize = 10
 
 //const similarlyMinimum = 0.8
 
 // Pool is a thread-safe set of solutions sorted by ascending cost.
 type Pool struct {
-	mu        sync.RWMutex
+	mu        sync.Mutex
 	solutions []*metaheuristc.RandomKeyValue
-	limited   bool
+	best      atomic.Int64
 	//similarity bool
 	maxSize int
 	logger  logger.Logger
 }
 
-var (
-	instance *Pool
-	once     sync.Once
-)
-
-// GetGlobalInstance returns the process-wide default Pool.
-func GetGlobalInstance(env definition.Environment, logger logger.Logger, rg *random.Generator) *Pool {
-	once.Do(func() {
-		instance = NewDefaultPool(env, rg, logger)
-	})
-
-	return instance
-}
-
-// NewPool creates a Pool of initialSize random solutions capped at maxSize.
-func NewPool(maxSize int, initialSize int, env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
+// NewPoolSize creates a Pool of initialSize random solutions; maxSize <= 0 means no cap, else it is at least initialSize.
+func NewPoolSize(env definition.Environment, rg *random.Generator, logger logger.Logger, maxSize int, initialSize int) *Pool {
 	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
-		limited:   maxSize >= 1 && maxSize < math.MaxInt,
 		solutions: make([]*metaheuristc.RandomKeyValue, 0, max(maxSize, initialSize)),
 	}
 
-	if pool.limited {
+	if maxSize > 0 {
 		pool.maxSize = max(initialSize, maxSize)
 	}
 
@@ -67,27 +54,31 @@ func NewPool(maxSize int, initialSize int, env definition.Environment, rg *rando
 	}
 
 	sort.Slice(pool.solutions, func(i, j int) bool { return pool.solutions[i].Cost < pool.solutions[j].Cost })
+	pool.best.Store(math.MaxInt)
+	if len(pool.solutions) > 0 {
+		pool.best.Store(int64(pool.solutions[0].Cost))
+	}
 	return pool
 }
 
-// NewDefaultPool creates a Pool of 10 random solutions capped at 10.
-func NewDefaultPool(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
-	return NewPool(DefaultSize, DefaultSize, env, rg, logger)
+// NewPool creates a Pool of DefaultSize random solutions capped at DefaultSize.
+func NewPool(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
+	return NewPoolSize(env, rg, logger, DefaultSize, DefaultSize)
 }
 
-// NewDefaultPoolUnlimited creates an uncapped Pool of 10 random solutions.
-func NewDefaultPoolUnlimited(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
-	return NewPool(-1, DefaultSize, env, rg, logger)
-}
+// Add adds a copy of solution only if its cost is below the best; start sets the logged elapsed time.
+func (p *Pool) Add(solution *metaheuristc.RandomKeyValue, start time.Time) {
+	if int64(solution.Cost) >= p.best.Load() {
+		return
+	}
 
-// AddSolution adds a copy of solution if it beats the pool's best.
-func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, elapsed time.Duration) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
 	if len(p.solutions) == 0 {
 		p.solutions = append(p.solutions, solution.Clone())
-		p.logger.AddSolutionPool(solution.Cost, elapsed)
+		p.best.Store(int64(solution.Cost))
+		p.logger.AddSolutionPool(solution.Cost, time.Since(start))
 		return
 	}
 
@@ -106,17 +97,18 @@ func (p *Pool) AddSolution(solution *metaheuristc.RandomKeyValue, elapsed time.D
 	//}
 
 	p.solutions = slices.Insert(p.solutions, 0, solution.Clone())
-	p.logger.AddSolutionPool(solution.Cost, elapsed)
-	if p.limited && len(p.solutions) >= p.maxSize {
+	p.best.Store(int64(solution.Cost))
+	p.logger.AddSolutionPool(solution.Cost, time.Since(start))
+	if p.maxSize > 0 && len(p.solutions) >= p.maxSize {
 		p.solutions = p.solutions[:p.maxSize]
 	}
 
 }
 
-// BestSolution returns a clone of the lowest-cost solution, or nil if empty.
-func (p *Pool) BestSolution() *metaheuristc.RandomKeyValue {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
+// Best returns a clone of the lowest-cost solution, or nil if empty.
+func (p *Pool) Best() *metaheuristc.RandomKeyValue {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
 	if len(p.solutions) == 0 {
 		return nil
@@ -125,30 +117,23 @@ func (p *Pool) BestSolution() *metaheuristc.RandomKeyValue {
 	return p.solutions[0].Clone()
 }
 
-// GetSolution returns a clone of the solution at index (0 is the best).
-func (p *Pool) GetSolution(index int) *metaheuristc.RandomKeyValue {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
+// Solution returns a clone of the solution at index (0 is the best).
+func (p *Pool) Solution(index int) *metaheuristc.RandomKeyValue {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
 	return p.solutions[index].Clone()
 }
 
-// BestSolutionCost returns the lowest cost, or math.MaxInt if empty.
-func (p *Pool) BestSolutionCost() int {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-
-	if len(p.solutions) == 0 {
-		return math.MaxInt
-	}
-
-	return p.solutions[0].Cost
+// BestCost returns the lowest cost, or math.MaxInt if empty.
+func (p *Pool) BestCost() int {
+	return int(p.best.Load())
 }
 
-// Size returns the number of solutions in the pool.
-func (p *Pool) Size() int {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
+// Len returns the number of solutions in the pool.
+func (p *Pool) Len() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 
 	return len(p.solutions)
 }

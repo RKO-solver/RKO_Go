@@ -49,7 +49,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	bestSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
-	solutionPool.AddSolution(bestSolution, time.Since(start))
+	solutionPool.Add(bestSolution, start)
 
 	localSolution = &metaheuristc.RandomKeyValue{
 		RK:   make(definition.RandomKey, env.NumKeys()),
@@ -96,10 +96,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		if localSolution.Cost < bestSolution.Cost {
 			rk.Copy(bestSolution, localSolution)
 
-			bestSolutionCost := solutionPool.BestSolutionCost()
-			if bestSolution.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestSolution.Clone(), time.Since(start))
-			}
+			solutionPool.Add(bestSolution, start)
 		}
 
 		lns.logger.Register(localSolution.Cost, bestSolution.Cost, ctxAction.Iteration(), time.Since(start))

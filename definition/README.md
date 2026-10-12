@@ -184,7 +184,7 @@ func (s *RandomSearch) Solve(ctx context.Context) definition.Result {
 		key := rk.Generate(s.env, s.rg)
 		if cost := s.env.Cost(key); cost < best.Cost {
 			best = &metaheuristc.RandomKeyValue{RK: key, Cost: cost}
-			s.pool.AddSolution(best, time.Since(start))
+			s.pool.Add(best, start)
 		}
 		s.log.Register(best.Cost, best.Cost, counter.Iteration(), time.Since(start))
 	}

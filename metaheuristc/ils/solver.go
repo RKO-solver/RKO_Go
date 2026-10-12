@@ -37,7 +37,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	bestSolution = metaheuristc.CreateEmptyRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
 	bestSolution.Cost = env.Cost(bestSolution.RK)
-	solutionPool.AddSolution(bestSolution, time.Since(start))
+	solutionPool.Add(bestSolution, start)
 
 	localSolution = bestSolution.Clone()
 
@@ -61,10 +61,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 			historyInformation.timesNoImprovement = 0
 
-			bestSolutionCost := solutionPool.BestSolutionCost()
-			if bestSolution.Cost < bestSolutionCost {
-				solutionPool.AddSolution(bestSolution, time.Since(start))
-			}
+			solutionPool.Add(bestSolution, start)
 		} else {
 			historyInformation.timesNoImprovement++
 			if metropolisCriterion {

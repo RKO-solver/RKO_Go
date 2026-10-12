@@ -79,9 +79,9 @@ func CreateNelderMeadLocalSearch(environment definition.Environment, solutionPoo
 func nelderMeadSearch(ctx context.Context, rko *metaheuristc.RandomKeyValue, maxIterations int, env definition.Environment, solutionPool *solution.Pool, rg *random.Generator) {
 	var x1, x2, x3, x0, xR, xAux *metaheuristc.RandomKeyValue
 
-	poolSize := solutionPool.Size()
-	x1 = solutionPool.GetSolution(rg.IntN(poolSize))
-	x2 = solutionPool.GetSolution(rg.IntN(poolSize))
+	poolSize := solutionPool.Len()
+	x1 = solutionPool.Solution(rg.IntN(poolSize))
+	x2 = solutionPool.Solution(rg.IntN(poolSize))
 
 	if x2.Cost < x1.Cost {
 		x1, x2 = x2, x1

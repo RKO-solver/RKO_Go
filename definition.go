@@ -51,7 +51,7 @@ func (s *Solver) Solve(ctx context.Context) any {
 	wg.Wait()
 	stop()
 
-	rk := s.solutionPool.BestSolution()
+	rk := s.solutionPool.Best()
 	return s.env.Decode(rk.RK)
 }
 

@@ -80,7 +80,7 @@ func main() {
 	solver := rko.CreateDefaultSolverTimeLimit(mh, 5*time.Second, env, log)
 
 	tour := solver.Solve(context.Background()).([]int)
-	cost := solver.GetSolutionPool().BestSolutionCost()
+	cost := solver.GetSolutionPool().BestCost()
 	fmt.Println("tour:", tour, "cost:", cost)
 }
 ```

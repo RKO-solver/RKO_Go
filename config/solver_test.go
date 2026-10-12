@@ -162,7 +162,7 @@ func TestNewSolverSeedPoolInitialSize(t *testing.T) {
 			cfg := silentConfig()
 			cfg.SeedPool = tt.pool
 			solver, _ := newSolver(t, cfg, config.WithSeed(1))
-			assert.Equal(t, tt.want, solver.GetSolutionPool().Size())
+			assert.Equal(t, tt.want, solver.GetSolutionPool().Len())
 		})
 	}
 }
@@ -185,7 +185,7 @@ func TestNewSolverSeedPoolMaxSizeCap(t *testing.T) {
 			cfg.Metaheuristics = []config.Metaheuristic{{Type: rko.MULTISTART, Searches: []search.Type{search.Swap}}}
 			solver, _ := newSolver(t, cfg, config.WithSeed(7))
 			solveWithin(t, solver, 30*time.Second)
-			assert.LessOrEqual(t, solver.GetSolutionPool().Size(), tt.cap)
+			assert.LessOrEqual(t, solver.GetSolutionPool().Len(), tt.cap)
 		})
 	}
 }
@@ -385,7 +385,7 @@ func TestWithSeedSamePool(t *testing.T) {
 		cfg.Metaheuristics = []config.Metaheuristic{{Type: rko.ILS, Searches: []search.Type{search.Swap}}}
 		solver, _ := newSolver(t, cfg, opt)
 		solveWithin(t, solver, 30*time.Second)
-		costs[i] = solver.GetSolutionPool().BestSolutionCost()
+		costs[i] = solver.GetSolutionPool().BestCost()
 	}
 	assert.Equal(t, costs[0], costs[1])
 }

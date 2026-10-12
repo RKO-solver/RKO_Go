@@ -34,7 +34,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 
 	start := definition.StartTime(ctx)
 	bestPerson := initialPopulation(population, env, false, rg)
-	solutionPool.AddSolution(bestPerson, time.Since(start))
+	solutionPool.Add(bestPerson, start)
 
 	var key1, key2 float64
 
@@ -81,7 +81,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 				hasImproved = true
 			}
 
-			solutionPool.AddSolution(bestPerson, time.Since(start))
+			solutionPool.Add(bestPerson, start)
 		}
 
 		if isOdd {
@@ -96,7 +96,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 			hasImproved = true
 		}
 
-		solutionPool.AddSolution(bestPerson, time.Since(start))
+		solutionPool.Add(bestPerson, start)
 
 		elapsed := time.Since(start)
 		if hasImproved {
@@ -117,7 +117,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 			restartBest := initialPopulation(population, env, false, rg)
 			if restartBest.Cost < bestPerson.Cost {
 				rk.Copy(bestPerson, restartBest)
-				solutionPool.AddSolution(bestPerson, elapsed)
+				solutionPool.Add(bestPerson, start)
 
 			}
 			generationNoImprovement = 0
