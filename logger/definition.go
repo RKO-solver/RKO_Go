@@ -45,7 +45,7 @@ type CSVSaver interface{ SaveCSV(prefix string) error }
 
 // PolicySaver prints and saves the recorded policies.
 type PolicySaver interface {
-	PrintPolicies(w io.Writer) error
+	PrintPolicies() error
 	SavePoliciesCSV(prefix string) error // one file per solver: <prefix>-<solver>-<id>-policy.csv
 }
 

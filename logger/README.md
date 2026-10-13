@@ -125,7 +125,7 @@ pool cost=8 time=2.101s
 - At `LevelVerbose`, the last `PoolLines` pool improvements are listed at the top, and each block adds one line per event key, holding the latest value of that key.
 - `(id) name started` lines are printed before the first frame, so they stay in the scrollback.
 - Lines are cut to fit (300 bytes for pool lines, 100 for solver lines).
-- Policies are not shown; print them after the run with `PrintPolicies` (see [Policies](#policies)).
+- Policies are not shown; print them after the run with `PrintPolicies`, which writes them to `os.Stdout` (see [Policies](#policies)).
 
 #### Running the dashboard
 
@@ -189,7 +189,7 @@ Both loggers implement `logger.Recorder`, which is what `config.NewSolver` retur
 | `Report() []logger.SolverReport` | `logger.Reporter` | Each solver's name, id and history. |
 | `Pool() []logger.PoolEntry` | `logger.Reporter` | Every solution added to the pool, in order. |
 | `SaveCSV(prefix) error` | `logger.CSVSaver` | One CSV file per solver and one for the pool. |
-| `PrintPolicies(w) error` | `logger.PolicySaver` | Writes each recorded policy to `w` as text (see [Policies](#policies)). |
+| `PrintPolicies() error` | `logger.PolicySaver` | Writes each recorded policy as text to the logger's output (see [Policies](#policies)). |
 | `SavePoliciesCSV(prefix) error` | `logger.PolicySaver` | One CSV file per solver that recorded a policy. |
 | `Close() error` | `io.Closer` | Deletes the history files (see [History files](#history-files-and-close)). |
 
@@ -241,7 +241,7 @@ type Table struct {
 The logger never prints policies by itself; call these methods after the run, as with `SaveCSV`:
 
 ```go
-if err := log.PrintPolicies(os.Stdout); err != nil {
+if err := log.PrintPolicies(); err != nil {
 	fmt.Println(err)
 }
 if err := log.SavePoliciesCSV(""); err != nil { // MyProblem-<solver>-<id>-policy.csv
@@ -249,7 +249,7 @@ if err := log.SavePoliciesCSV(""); err != nil { // MyProblem-<solver>-<id>-polic
 }
 ```
 
-`PrintPolicies(w)` writes, for each solver that recorded a policy and in id order, a `(id) name policy` heading and then the table in aligned columns, with a blank line between solvers. `printer` and `dashboard` use the same format. Here GA tunes `PopulationSize: [100, 200]` and `MutationAlpha: [0.005, 0.01]`, and BRKGA `PopulationSize: [100, 200]` and `EliteRatio: [0.1, 0.2]`:
+`PrintPolicies()` writes to the logger's output: the `w` given to `printer.New` (`os.Stdout` if `nil`), or `os.Stdout` for `dashboard`. For each solver that recorded a policy and in id order, it writes a `(id) name policy` heading and then the table in aligned columns, with a blank line between solvers. `printer` and `dashboard` use the same format. Here GA tunes `PopulationSize: [100, 200]` and `MutationAlpha: [0.005, 0.01]`, and BRKGA `PopulationSize: [100, 200]` and `EliteRatio: [0.1, 0.2]`:
 
 ```text
 (0) GA policy

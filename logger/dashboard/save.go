@@ -28,9 +28,9 @@ func (l *Log) SaveCSV(prefix string) error {
 	return errors.Join(err, csvio.Save(prefix+"-pool.csv", func(w io.Writer) error { return csvio.WritePool(w, pool) }))
 }
 
-// PrintPolicies writes the recorded policies to w, in solver id order.
-func (l *Log) PrintPolicies(w io.Writer) error {
-	return policyio.Print(w, l.policies())
+// PrintPolicies writes the recorded policies to os.Stdout, in solver id order.
+func (l *Log) PrintPolicies() error {
+	return policyio.Print(l.out, l.policies())
 }
 
 // SavePoliciesCSV writes one CSV per solver that recorded a policy.
