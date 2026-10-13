@@ -152,7 +152,7 @@ See the [`config` package](config/README.md) for every key and its default.
 - A zero or negative value means no limit.
 - `MaxIterations` is one number for the whole run, counted by each metaheuristic separately: each one stops after that many iterations of its own outer loop (a generation for GA and BRKGA, a temperature step for SA). `Solve` returns once all of them have stopped.
 - With neither limit, the solver runs until `ctx` is cancelled. `rko.New` and `rko.NewFromSolvers`, and so `cfg.NewSolver`, print a warning in that case.
-- SA also ends on its own once its temperature reaches `TemperatureGoal`.
+- With `Restart: false`, SA also ends on its own once its temperature reaches `TemperatureGoal`. With `Restart: true` (the default), it restarts there and runs until one of the rules above stops it.
 
 To stop the search yourself, for example on a shutdown signal, pass your own context. The configured limits still apply:
 

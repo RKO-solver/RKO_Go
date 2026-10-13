@@ -192,7 +192,7 @@ Every section and key is optional, and must sit under `Parameters:`. The Type co
 
 A key replaces its default when it has at least one value; a missing or empty key keeps the default. Values are used as written, including `0`, negative numbers and `ILS.MetropolisCriterion: false`.
 
-Every key accepts a single value or a list. With two or more values in any key, the metaheuristic tunes its parameters while it runs (see [Parameter tuning](../metaheuristic/README.md#parameter-tuning)):
+Every key accepts a single value or a list, except `SA.Restart` and `ILS.MetropolisCriterion`: they are plain bools, and a list there is a type error. With two or more values in any key, the metaheuristic tunes its parameters while it runs (see [Parameter tuning](../metaheuristic/README.md#parameter-tuning)):
 
 ```yaml
 Parameters:
@@ -208,7 +208,7 @@ Rules for lists, checked by `NewSolver`. A broken rule gives an error wrapping `
 
 - A list cannot repeat a value.
 - No `ShakeMin` value (ILS, SA) may be greater than any `ShakeMax` value, and no `BetaMin` value (LNS) greater than any `BetaMax` value.
-- `SA.TemperatureGoal` and `ILS.MetropolisCriterion` take a single value.
+- Every `SA.TemperatureGoal` value must be below every `SA.TemperatureInitial` value, e.g. `config: Parameters.SA.TemperatureGoal: invalid value: 10 is not below the minimum TemperatureInitial 5`. Equal values are rejected too.
 
 A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r` drawn from the shake range. MultiStart has no parameters.
 
@@ -246,12 +246,13 @@ A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r`
 |---|---|---|---|
 | `Alpha` | float | `0.0005` | After each temperature step, the temperature is multiplied by `1 - Alpha` (unless it reheats). |
 | `TemperatureInitial` | float | `10000000.0` | Starting temperature. |
-| `TemperatureGoal` | float | `1e-16` | SA stops when the temperature falls to this value. |
+| `TemperatureGoal` | float | `1e-16` | When the temperature falls to this value, SA stops, or restarts with `Restart`. |
 | `TemperatureReheat` | float | `5.0` | Below this temperature, SA reheats if it has reheats left. |
 | `ShakeMin` | float | `0.1` | Lower bound of the shake range. |
 | `ShakeMax` | float | `0.3` | Upper bound of the shake range. |
 | `QtdReheat` | int (`0`–`255`) | `0` | Number of reheats; the n-th sets the temperature to `TemperatureInitial / 2^n`. Values outside `0`–`255` are a type error. |
 | `Iterations` | int | `1000` | Moves per temperature step. |
+| `Restart` | bool | `true` | At `TemperatureGoal`, set the temperature back to `TemperatureInitial`, continue from a new random solution and allow `QtdReheat` reheats again, until the run stops. With `false`, SA ends at `TemperatureGoal`. |
 
 #### `VNS`
 
@@ -274,8 +275,8 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 
 - Returns an error, before creating anything, for an invalid `LogLevel` or `LogType`, an invalid or unimplemented metaheuristic `Type`, a nil section inside a non-nil `Parameters`, or invalid lists (see [`Parameters` section](#parameters-section)). All problems are joined; test them with `errors.Is`.
 - Panics, instead of returning an error, on a bad BRKGA `EliteRatio` and `PopulationSize` or LNS `BetaMin` and `BetaMax` combination (see [`BRKGA`](#brkga) and [`LNS`](#lns)): `brkga.New` and `lns.New` check them while the solvers are built.
-- A nil `Parameters` means `DefaultParameters()`. In a non-nil `Parameters`, an empty list means the default, as in YAML.
-- `NewSolver` never modifies `cfg`, and each metaheuristic gets its own copy of its `Config` struct. The lists inside are not copied: they are shared with `cfg.Parameters` and kept by the solver and its tuner, so don't modify them after `NewSolver`. One `Config` can be reused for several solvers and shared across goroutines.
+- A nil `Parameters` means `DefaultParameters()`. In a non-nil `Parameters`, an empty list or a nil `Restart` or `MetropolisCriterion` means the default, as in YAML.
+- `NewSolver` never modifies `cfg`, and each metaheuristic gets its own copy of its `Config` struct. The lists and the `Restart` and `MetropolisCriterion` pointers inside are not copied: they are shared with `cfg.Parameters` and kept by the solver and its tuner, so don't modify them after `NewSolver`. One `Config` can be reused for several solvers and shared across goroutines.
 - If `env` implements [`definition.Cloner`](../definition/README.md#environment), each metaheuristic and its local search get their own `env.Clone()`.
 - The logger is named from `env.ProblemName()`. Neither `NewSolver` nor `Solve` closes it: `defer` its `Close`, which deletes the run's history files, once you have read the results. To read or save them, see the [`logger` package](../logger/README.md).
 - `WithSeed(seed uint64)` seeds the random generator. Without it, each `NewSolver` call uses a randomly seeded generator.
@@ -316,7 +317,7 @@ A `Config` you build yourself skips the YAML defaults:
 
 - The zero `LogType` is `logger.TypePrint` and the zero `LogLevel` is `logger.LevelInfo`, the same as the YAML defaults.
 - `LogType` must be `logger.TypePrint` or `logger.TypeDashboard`, and `LogLevel` between `logger.LevelSilent` and `logger.LevelVerbose`.
-- `Parameters` fields are lists, e.g. `params.GA.PopulationSize = []int{100}`. An empty list means the default, and a nil section is an error.
+- `Parameters` fields are lists, e.g. `params.GA.PopulationSize = []int{100}`, except `SA.Restart` and `ILS.MetropolisCriterion`, which are `*bool`, e.g. `params.SA.Restart = new(false)`. An empty list or a nil `*bool` means the default, and a nil section is an error.
 
 ## See also
 

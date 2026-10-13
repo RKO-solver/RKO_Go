@@ -267,7 +267,7 @@ state  p0   p1   p2    p3    p4     p5   move       next  q
 3      200  0.2  0.05  0.95  0.005  100  p0 -> 100  2     0.040708076771112024
 ```
 
-The columns depend on the tuner; for `QLearning`, see [Reading the learned policy](../metaheuristic/tuning/README.md#reading-the-learned-policy). The built-in metaheuristics give one `p` column per `Config` field, single-valued ones included, in the order listed in [Learned policy](../metaheuristic/README.md#learned-policy).
+The columns depend on the tuner; for `QLearning`, see [Reading the learned policy](../metaheuristic/tuning/README.md#reading-the-learned-policy). The built-in metaheuristics give one `p` column per tunable `Config` field, even one with a single value, in the order listed in [Learned policy](../metaheuristic/README.md#learned-policy).
 
 `SavePoliciesCSV(prefix)` writes `<prefix>-<solver>-<id>-policy.csv` for each solver that recorded a policy: the header row, then one row per table row. `prefix` and the solver part are handled as in `SaveCSV`, and an empty `prefix` uses the problem name.
 
@@ -308,7 +308,7 @@ for ; ctx.Err() == nil; counter.Step() {
 
 Build the attribute with a typed constructor (`slog.Int`, `slog.Float64`, `slog.String`, `slog.Bool`, `slog.Duration`) and a constant key. That allocates nothing, and the value is formatted only when shown. The `dashboard` keeps the latest value of each key, so use a stable key per quantity (`"temperature"`, not `"temperature 10"`).
 
-`slog.GroupValue` joins several values into one event, but allocates; use it only for rare events. The built-in metaheuristics use it for `stalled` and `improved`.
+`slog.GroupValue` joins several values into one event, but allocates; use it only for rare events. The built-in metaheuristics use it for `stalled`, `improved` and SA's `restart`.
 
 The built-in metaheuristics emit these events:
 
@@ -318,6 +318,7 @@ The built-in metaheuristics emit these events:
 | GA, BRKGA | `restart` | string | When the population restarts. |
 | SA | `temperature` | float | After every temperature step. |
 | SA | `reheat` | int | At each reheat, with the reheat number (`1` for the first). |
+| SA | `restart` | group: `iteration` (int) | At each restart. The best cost passed to `Register` then restarts too, so it can go up. |
 | VNS | `improved` | group: `iteration`, `local` (ints) | When a neighbour beats the best solution. |
 
 MultiStart, ILS and LNS emit none.

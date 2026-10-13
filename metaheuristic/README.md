@@ -29,7 +29,7 @@ Most programs never import these packages: [`rko.New`](../README.md#quick-start)
 The iteration limit counts these iterations (see [Stopping](#stopping)). Every metaheuristic offers its improvements to the shared pool.
 
 - **MultiStart** draws a random solution and improves it with the local search, over and over.
-- **SA** starts from the pool's best solution. Each move shakes the current solution and runs the local search on it; a worse result is accepted with probability `exp(-Δ / T)`. It reheats up to `QtdReheat` times and ends when the temperature reaches `TemperatureGoal`.
+- **SA** starts from the pool's best solution. Each move shakes the current solution and runs the local search on it; a worse result is accepted with probability `exp(-Δ / T)`. It reheats up to `QtdReheat` times. When the temperature reaches `TemperatureGoal`, SA ends, or, with `Restart`, starts over: the temperature goes back to `TemperatureInitial`, the current solution becomes a new random one and the `QtdReheat` reheats are available again. With `Restart`, SA runs until its context stops.
 - **GA** picks parents by 3-way tournament, applies uniform crossover with mutation, and runs the local search on one random child per generation.
 - **BRKGA** keeps the elite, breeds each child from an elite and a non-elite parent, adds random mutants, and runs the local search on one random individual per generation.
 - GA and BRKGA restart their population after more than `MaxGenerationNoImprovement` generations without improvement, keeping the best solution.
@@ -47,6 +47,7 @@ Every metaheuristic calls `Register` once per iteration (see the [`logger` packa
 | GA, BRKGA | `restart` | string `limit generations without improvement` | When the population restarts. |
 | SA | `temperature` | float | After every temperature step, with the new temperature. |
 | SA | `reheat` | int | At each reheat, with the reheat number (`1` for the first). |
+| SA | `restart` | group: `iteration` (int) | At each restart (with `Restart`), with the outer-loop iteration. From then on, the best cost SA passes to `Register` is the best of the new run, so it can go up. |
 | VNS | `improved` | group: `iteration` (int), `local` (int) | When a neighbour beats the best solution. |
 
 MultiStart, ILS and LNS emit no events. A group prints as `stalled=[generation=152 no-improvement=3]`.
@@ -64,7 +65,7 @@ defer log.Close()
 pool := solution.NewPool(env, rg, log)
 
 ilsConfig := ils.DefaultConfig()
-ilsConfig.MetropolisCriterion = []bool{true}
+ilsConfig.MetropolisCriterion = new(true)
 
 brkgaConfig := brkga.DefaultConfig()
 brkgaConfig.PopulationSize = []int{100}
@@ -111,7 +112,7 @@ New(env, rg, pool, log, opts...)
 
 ### Configuration structs
 
-`sa`, `ga`, `brkga`, `ils`, `vns` and `lns` each have a `Config` struct with exactly the fields of the YAML sections, with the same names and element types; `DefaultConfig()` returns it at its defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Every field is a `metaheuristic.List[T]` (a `[]T`) of the values to use; `DefaultConfig()` gives each one a single value. Fields are used as is: change them on a default configuration rather than starting from a zero struct, and keep every list non-empty.
+`sa`, `ga`, `brkga`, `ils`, `vns` and `lns` each have a `Config` struct with exactly the fields of the YAML sections, with the same names and element types; `DefaultConfig()` returns it at its defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Every field is a `metaheuristic.List[T]` (a `[]T`) of the values to use; `DefaultConfig()` gives each one a single value. The exceptions are `sa.Config.Restart` and `ils.Config.MetropolisCriterion`, plain `*bool` fields set with `new(true)` or `new(false)`. Fields are used as is: change them on a default configuration rather than starting from a zero struct, keep every list non-empty and never set those two to nil.
 
 ```go
 cfg := brkga.DefaultConfig()
@@ -121,25 +122,26 @@ cfg.EliteRatio = []float64{0.1, 0.2}           // several values: tuned
 
 ## Parameter tuning
 
-When any field of a `Config` has more than one value, `New` creates a Q-learning tuner (`tuning.NewQLearning`, from the [`tuning` package](tuning/README.md)) over every combination of the values. Otherwise there is no tuner: the first value of each list is used, and a fixed seed gives the same results. Q-learning is the only tuner for now.
+When any tunable field of a `Config` has more than one value, `New` creates a Q-learning tuner (`tuning.NewQLearning`, from the [`tuning` package](tuning/README.md)) over every combination of the values. Otherwise there is no tuner: the first value of each list is used, and a fixed seed gives the same results. Q-learning is the only tuner for now.
 
 Each cycle, the tuner chooses the configuration; after the cycle it learns from a reward (higher is better):
 
-| Metaheuristic | Tunable fields | Single value only | Cycle | Reward |
-|---|---|---|---|---|
-| BRKGA | `PopulationSize`, `EliteRatio`, `MutantRatio`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` | none | generation | `1 + 1/PopulationSize` if the best improved, else `(best - best of the generation) / abs(best)` |
-| GA | `PopulationSize`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` | none | generation | same as BRKGA |
-| SA | `Alpha`, `TemperatureInitial`, `TemperatureReheat`, `ShakeMin`, `ShakeMax`, `QtdReheat`, `Iterations` | `TemperatureGoal` | temperature step | `1` if the best improved, else `(best - current) / abs(best)` |
-| ILS | `ShakeMin`, `ShakeMax` | `MetropolisCriterion` | iteration | same as SA |
-| VNS | `Rate` | none | outer iteration | `1` if the best improved, else `(best - last neighbour) / abs(best)` |
-| LNS | `BetaMin`, `BetaMax` | none | iteration | same as SA |
+| Metaheuristic | Tunable fields | Cycle | Reward |
+|---|---|---|---|
+| BRKGA | `PopulationSize`, `EliteRatio`, `MutantRatio`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` | generation | `1 + 1/PopulationSize` if the best improved, else `(best - best of the generation) / abs(best)` |
+| GA | `PopulationSize`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` | generation | same as BRKGA |
+| SA | `Alpha`, `TemperatureInitial`, `TemperatureGoal`, `TemperatureReheat`, `ShakeMin`, `ShakeMax`, `QtdReheat`, `Iterations` | temperature step | `1` if the best improved, else `(best - current) / abs(best)` |
+| ILS | `ShakeMin`, `ShakeMax` | iteration | same as SA |
+| VNS | `Rate` | outer iteration | `1` if the best improved, else `(best - last neighbour) / abs(best)` |
+| LNS | `BetaMin`, `BetaMax` | iteration | same as SA |
 
 `abs(best)` is taken as `1` when the best cost is `0`.
 
-Only `config.NewSolver` rejects several values for a "single value only" field. `sa.New` and `ils.New` accept them but use only the first `TemperatureGoal` or `MetropolisCriterion`, while the extra values still create a tuner and multiply its states: give these fields a single value when you build by hand.
+SA's `Restart` and ILS's `MetropolisCriterion` are plain bools, not lists, and are never tuned.
 
 - GA and BRKGA allocate the population at the largest `PopulationSize`; when the size grows, new random individuals are added.
-- SA starts at the first `TemperatureInitial`; a tuned `TemperatureInitial` applies at the reheats.
+- SA starts at the first `TemperatureInitial`; a tuned `TemperatureInitial` applies at the reheats and the restarts.
+- Only `config.NewSolver` checks that every `TemperatureGoal` is below every `TemperatureInitial`. `sa.New` does not: with a hand-built `Config` whose goal is at or above the initial temperature, SA with `Restart` restarts at every temperature step.
 - The tuner explores less as the run advances; see [Progress](#progress).
 - `New` panics if BRKGA has an `EliteRatio` and `PopulationSize` combination whose elite size, `int(EliteRatio * PopulationSize)`, is outside `1` to `PopulationSize - 1`, or if LNS has a `BetaMin` and `BetaMax` combination with `int(BetaMin * NumKeys) >= int(BetaMax * NumKeys)`.
 
@@ -178,7 +180,7 @@ L = ln(1 + i / States())
 progress = L / (1 + L)
 ```
 
-`i` is the number of cycles completed so far. `States()` is the number of value combinations: the product of the list lengths of the `Config` fields.
+`i` is the number of cycles completed so far. `States()` is the number of value combinations: the product of the list lengths of the tunable `Config` fields.
 
 This curve applies only to runs with no limit. Progress starts at `0`, rises fast at first and then more and more slowly, and never reaches `1`. Because `i` is divided by `States()`, a larger space keeps exploring for more cycles:
 
@@ -197,14 +199,14 @@ For example, with 8 combinations, progress is 0.50 after about 14 cycles and 0.8
 
 ### Learned policy
 
-When tuned, the metaheuristic records the learned policy with its solver logger at the end of the run. After the run, print it with the logger's `PrintPolicies` or save it with `SavePoliciesCSV` (see [Policies](../logger/README.md#policies)). The policy columns `p0`, `p1`, ... follow the field order of the `Config` struct, counting every field, including the single-valued ones:
+When tuned, the metaheuristic records the learned policy with its solver logger at the end of the run. After the run, print it with the logger's `PrintPolicies` or save it with `SavePoliciesCSV` (see [Policies](../logger/README.md#policies)). The policy columns `p0`, `p1`, ... are the tunable fields, in the field order of the `Config` struct; a tunable field with a single value still has its column. SA's `Restart` and ILS's `MetropolisCriterion` are not tuned, so they have none:
 
 | Metaheuristic | `p0`, `p1`, ... |
 |---|---|
 | BRKGA | `PopulationSize`, `EliteRatio`, `MutantRatio`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` |
 | GA | `PopulationSize`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` |
 | SA | `Alpha`, `TemperatureInitial`, `TemperatureGoal`, `TemperatureReheat`, `ShakeMin`, `ShakeMax`, `QtdReheat`, `Iterations` |
-| ILS | `ShakeMin`, `ShakeMax`, `MetropolisCriterion` |
+| ILS | `ShakeMin`, `ShakeMax` |
 | VNS | `Rate` |
 | LNS | `BetaMin`, `BetaMax` |
 
