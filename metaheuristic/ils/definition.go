@@ -17,22 +17,21 @@ const name = "ILS"
 type Config struct {
 	ShakeMin            metaheuristic.List[float64] `yaml:"ShakeMin"`
 	ShakeMax            metaheuristic.List[float64] `yaml:"ShakeMax"`
-	MetropolisCriterion metaheuristic.List[bool]    `yaml:"MetropolisCriterion"`
+	MetropolisCriterion *bool                       `yaml:"MetropolisCriterion"`
 }
 
 // ILS is an Iterated Local Search solver.
 type ILS struct {
-	env                 definition.Environment
-	configuration       *Config
-	logger              logger.SolverLogger
-	search              search.Local
-	rg                  *random.Generator
-	solutionPool        *solution.Pool
-	tuner               tuning.Tuner
-	states              int
-	shakeMin            tuning.Param[float64]
-	shakeMax            tuning.Param[float64]
-	metropolisCriterion tuning.Param[bool]
+	env           definition.Environment
+	configuration *Config
+	logger        logger.SolverLogger
+	search        search.Local
+	rg            *random.Generator
+	solutionPool  *solution.Pool
+	tuner         tuning.Tuner
+	states        int
+	shakeMin      tuning.Param[float64]
+	shakeMax      tuning.Param[float64]
 }
 
 func (ils *ILS) Print() {

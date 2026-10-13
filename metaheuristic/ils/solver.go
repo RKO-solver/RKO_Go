@@ -23,7 +23,7 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	tuner := ils.tuner
 	shakeMin, shakeMax := configuration.ShakeMin[0], configuration.ShakeMax[0]
 	_, hasTimeOut := ctx.Deadline()
-	metropolisCriterion := configuration.MetropolisCriterion[0] && hasTimeOut
+	metropolisCriterion := *configuration.MetropolisCriterion && hasTimeOut
 
 	historyInformation := &history{
 		defaultMin:         shakeMin,
@@ -95,10 +95,8 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 		} else {
 			historyInformation.timesNoImprovement++
 			if metropolisCriterion {
-				deadline, _ := ctx.Deadline()
 				elapsed := time.Since(start).Seconds()
-				total := time.Until(deadline).Seconds() + elapsed
-				prob := math.Exp(-(float64(delta) + 0.00001) / (1000.0 - 1000.0*(elapsed/total)))
+				prob := math.Exp(-(float64(delta) + 0.00001) / (1000.0 - 1000.0*(elapsed/total.Seconds())))
 				if rg.Float64() < prob {
 					localSolution, neighbour = neighbour, localSolution
 				}

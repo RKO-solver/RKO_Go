@@ -196,9 +196,6 @@ func (p *Parameters) validate() []error {
 	if len(p.SA.TemperatureGoal) > 1 {
 		errs = append(errs, fmt.Errorf("config: Parameters.SA.TemperatureGoal: %w: only one value is allowed", ErrInvalidValue))
 	}
-	if len(p.ILS.MetropolisCriterion) > 1 {
-		errs = append(errs, fmt.Errorf("config: Parameters.ILS.MetropolisCriterion: %w: only one value is allowed", ErrInvalidValue))
-	}
 	return errs
 }
 

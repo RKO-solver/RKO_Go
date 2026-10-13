@@ -46,7 +46,6 @@ func TestNewSolverParameterListErrors(t *testing.T) {
 		want   string
 	}{
 		{"duplicate", func(p *config.Parameters) { p.GA.PopulationSize = []int{10, 20, 10} }, "config: Parameters.GA.PopulationSize: invalid value: repeated value"},
-		{"duplicate bool", func(p *config.Parameters) { p.ILS.MetropolisCriterion = []bool{true, true} }, "config: Parameters.ILS.MetropolisCriterion: invalid value: only one value is allowed"},
 		{"ILS shake", func(p *config.Parameters) { p.ILS.ShakeMin = []float64{0.1, 0.5}; p.ILS.ShakeMax = []float64{0.4, 0.6} }, "config: Parameters.ILS.ShakeMin: invalid value: 0.5 is greater than the maximum 0.4"},
 		{"SA shake", func(p *config.Parameters) { p.SA.ShakeMin = []float64{0.9} }, "config: Parameters.SA.ShakeMin: invalid value: 0.9 is greater than the maximum 0.3"},
 		{"LNS beta", func(p *config.Parameters) { p.LNS.BetaMax = []float64{0.001} }, "config: Parameters.LNS.BetaMin: invalid value: 0.01 is greater than the maximum 0.001"},

@@ -145,7 +145,7 @@ Parameters:
 
 		assert.Equal(t, metaheuristic.List[float64]{2.0}, p.ILS.ShakeMin)
 		assert.Equal(t, metaheuristic.List[float64]{8.0}, p.ILS.ShakeMax)
-		assert.Equal(t, metaheuristic.List[bool]{true}, p.ILS.MetropolisCriterion)
+		assert.Equal(t, new(true), p.ILS.MetropolisCriterion)
 
 		assert.Equal(t, metaheuristic.List[float64]{0.95}, p.SA.Alpha)
 		assert.Equal(t, metaheuristic.List[float64]{1000.0}, p.SA.TemperatureInitial)
@@ -218,7 +218,7 @@ func TestDecodeParametersSections(t *testing.T) {
 			check: func(t *testing.T, p *config.Parameters) {
 				assert.Equal(t, metaheuristic.List[float64]{2.0}, p.ILS.ShakeMin)
 				assert.Equal(t, metaheuristic.List[float64]{8.0}, p.ILS.ShakeMax)
-				assert.Equal(t, metaheuristic.List[bool]{true}, p.ILS.MetropolisCriterion)
+				assert.Equal(t, new(true), p.ILS.MetropolisCriterion)
 			},
 		},
 		{

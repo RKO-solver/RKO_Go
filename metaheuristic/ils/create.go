@@ -16,7 +16,7 @@ func DefaultConfig() *Config {
 	return &Config{
 		ShakeMin:            metaheuristic.List[float64]{constants.DefaultShakeMin},
 		ShakeMax:            metaheuristic.List[float64]{constants.DefaultShakeMax},
-		MetropolisCriterion: metaheuristic.List[bool]{false},
+		MetropolisCriterion: new(false),
 	}
 }
 
@@ -51,11 +51,10 @@ func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, 
 	if s.search == nil {
 		s.search = search.NewDefault(env, pool, rg)
 	}
-	if c := s.configuration; len(c.ShakeMin) > 1 || len(c.ShakeMax) > 1 || len(c.MetropolisCriterion) > 1 {
+	if c := s.configuration; len(c.ShakeMin) > 1 || len(c.ShakeMax) > 1 {
 		space := tuning.NewSpace()
 		s.shakeMin = tuning.Add(space, c.ShakeMin)
 		s.shakeMax = tuning.Add(space, c.ShakeMax)
-		s.metropolisCriterion = tuning.Add(space, c.MetropolisCriterion)
 		s.states = space.States()
 		s.tuner = tuning.NewQLearning(space, rg)
 	}

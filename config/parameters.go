@@ -127,7 +127,7 @@ func withILS(cfg *ils.Config) parameterOption {
 		if len(cfg.ShakeMax) > 0 {
 			c.ILS.ShakeMax = cfg.ShakeMax
 		}
-		if len(cfg.MetropolisCriterion) > 0 {
+		if cfg.MetropolisCriterion != nil {
 			c.ILS.MetropolisCriterion = cfg.MetropolisCriterion
 		}
 	}
