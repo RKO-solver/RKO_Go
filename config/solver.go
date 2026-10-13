@@ -133,7 +133,6 @@ func (cfg *Config) validate() error {
 	return errors.Join(errs...)
 }
 
-// merged returns the default parameters overridden by the non-empty lists of p.
 func (p *Parameters) merged() *Parameters {
 	m := DefaultParameters()
 	for _, opt := range []parameterOption{
@@ -149,7 +148,6 @@ func (p *Parameters) merged() *Parameters {
 	return m
 }
 
-// validate checks the lists of p, which must have every section and no empty list.
 func (p *Parameters) validate() []error {
 	var errs []error
 	for _, c := range []struct {

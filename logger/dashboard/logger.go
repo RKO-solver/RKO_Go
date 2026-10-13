@@ -13,7 +13,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger/internal/spill"
 )
 
-// Log is the channel-based Logger.
+// Log draws a live terminal dashboard and keeps every solver's history.
 type Log struct {
 	updateChan chan message
 	bufferSize int
@@ -25,6 +25,7 @@ type Log struct {
 	hist       spill.Config // spill settings shared by every solver
 }
 
+// AddSolutionPool records a new best solution in the pool.
 func (l *Log) AddSolutionPool(cost int, elapsed time.Duration) {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()
@@ -32,12 +33,14 @@ func (l *Log) AddSolutionPool(cost int, elapsed time.Duration) {
 	l.data.pool = append(l.data.pool, logger.PoolEntry{Cost: cost, Elapsed: elapsed})
 }
 
+// WorkerStarted prints that worker id has started, unless the level is LevelSilent.
 func (l *Log) WorkerStarted(id int, name string) {
 	if l.level > logger.LevelSilent {
 		fmt.Fprintf(l.out, "(%d) %s started\n", id, name)
 	}
 }
 
+// WorkerDone records the result of a finished worker.
 func (l *Log) WorkerDone(r logger.WorkerResult) {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()
@@ -96,6 +99,7 @@ func (l *Log) Start() (stop func()) {
 	}
 }
 
+// SolverLogger registers a new solver and returns its logger.
 func (l *Log) SolverLogger(name string) logger.SolverLogger {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()

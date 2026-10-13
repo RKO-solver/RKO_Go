@@ -35,8 +35,9 @@ type Environment interface {
 	ProblemName() string
 }
 
-// Cloner is an Environment that gives each solver its own copy.
+// Cloner is implemented by an Environment that gives each solver a copy.
 type Cloner interface {
+	// Clone returns an independent copy of the Environment.
 	Clone() Environment
 }
 

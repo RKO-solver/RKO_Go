@@ -7,6 +7,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger"
 )
 
+// SolverLogger sends the progress of one solver to the dashboard.
 type SolverLogger struct {
 	id    int
 	name  string

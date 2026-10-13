@@ -9,8 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/random"
 )
 
-// DefaultDiscount is the discount factor gamma used by [NewQLearning] unless
-// [WithDiscount] is given.
+// DefaultDiscount is the gamma used by [NewQLearning] unless [WithDiscount] is given.
 const DefaultDiscount = 0.8
 
 const (
@@ -31,13 +30,12 @@ const (
 	learningRateDecay = 0.9 // learning rate decrease up to progress 1
 )
 
-// Option configures a [QLearning] created by [NewQLearning]. Options are
-// applied after the random draws, so they do not change the random sequence.
+// Option configures a [QLearning] created by [NewQLearning].
 type Option func(*QLearning)
 
-// WithDiscount sets the discount factor gamma. It panics, when called, if
-// discount is outside [0, 1) or NaN.
+// WithDiscount sets the discount factor gamma; it panics outside [0, 1) or NaN.
 func WithDiscount(discount float64) Option {
+	// It panics when called, not when the option is applied.
 	// Negated range check, so NaN, which fails every comparison, is rejected.
 	if !(discount >= 0 && discount < 1) {
 		panic(fmt.Sprintf("tuning: discount must be in [0, 1), got %v", discount))
@@ -45,13 +43,15 @@ func WithDiscount(discount float64) Option {
 	return func(q *QLearning) { q.discount = discount }
 }
 
-// QLearning is a [Tuner] using tabular Q-learning with epsilon-greedy
-// exploration over the configurations of a [Space]. Each action keeps the
-// configuration or changes one parameter to another of its values.
-//
-// A QLearning is not safe for concurrent use: use one per goroutine, each with
-// its own [random.Generator].
+// QLearning is a [Tuner] using tabular Q-learning over a [Space].
 type QLearning struct {
+	// It uses epsilon-greedy exploration over the configurations of the Space.
+	// Each action keeps the configuration or changes one parameter to another of
+	// its values.
+	//
+	// A QLearning is not safe for concurrent use: use one per goroutine, each
+	// with its own [random.Generator].
+
 	// transitions[state*actions+action] is the state reached by taking
 	// action in state, precomputed so moving is a lookup.
 	transitions []int
@@ -85,10 +85,9 @@ var (
 	_ Reporter = (*QLearning)(nil)
 )
 
-// NewQLearning creates a QLearning over the configurations of space, drawing
-// randomness from generator and applying options in order. Its tables are
-// sized from space now, so add every parameter first.
+// NewQLearning creates a QLearning over the configurations of space, drawing from generator.
 func NewQLearning(space *Space, generator *random.Generator, options ...Option) *QLearning {
+	// The tables are sized from space now, so add every parameter first.
 	states := space.States()
 	// Action 0 (stay), plus one action per other value of each parameter.
 	actions := 1
@@ -134,16 +133,18 @@ func NewQLearning(space *Space, generator *random.Generator, options ...Option) 
 		q.bestActions[state] = q.scan(state)
 	}
 	q.state = generator.IntN(states)
+	// Options are applied in order, after the random draws, so they do not
+	// change the random sequence.
 	for _, option := range options {
 		option(q)
 	}
 	return q
 }
 
-// Choose implements [Tuner]. It takes a random action with probability
-// epsilon(progress), otherwise the best one, and returns the state it reaches.
-// It does not move the current state; Learn does.
+// Choose implements [Tuner] with an epsilon-greedy action and returns the state it reaches.
 func (q *QLearning) Choose(progress float64) int {
+	// It takes a random action with probability epsilon(progress), otherwise
+	// the best one. It does not move the current state; Learn does.
 	if q.generator.Float64() < epsilon(progress) {
 		q.action = q.generator.IntN(q.actions)
 	} else {
@@ -153,14 +154,14 @@ func (q *QLearning) Choose(progress float64) int {
 	return q.next
 }
 
-// Learn implements [Tuner]. It updates the estimate of the last choice, with
-// s the current state, a the chosen action and s' the state it reached,
-//
-//	Q(s, a) += alpha * (reward + gamma*max Q(s', .) - Q(s, a))
-//
-// where alpha = learningRate(progress) and gamma is the discount, and then
-// makes s' the current state.
+// Learn implements [Tuner] by updating the estimate of the last choice.
 func (q *QLearning) Learn(reward float64, progress float64) {
+	// With s the current state, a the chosen action and s' the state it reached,
+	//
+	//	Q(s, a) += alpha * (reward + gamma*max Q(s', .) - Q(s, a))
+	//
+	// where alpha = learningRate(progress) and gamma is the discount; then s'
+	// becomes the current state.
 	// max Q(s', .), read through the cached best action of s'. When s' is s
 	// (stay), this is the value before the update below.
 	future := q.qValues[q.next*q.actions+q.bestActions[q.next]]
@@ -186,10 +187,10 @@ func (q *QLearning) scan(state int) int {
 	return best
 }
 
-// Policy implements [Reporter]. It returns one row per state: the state, its
-// value of each parameter, its best action as a move, the state that move
-// reaches and the action's Q-value.
+// Policy implements [Reporter], returning one row per state with its best move.
 func (q *QLearning) Policy() logger.Table {
+	// Each row holds the state, its value of each parameter, its best action as
+	// a move, the state that move reaches and the action's Q-value.
 	params := len(q.space.counts)
 	header := make([]string, 0, params+4)
 	header = append(header, "state")

@@ -23,6 +23,7 @@ type Log struct {
 	solvers  []*SolverLogger
 }
 
+// AddSolutionPool records a new best pool solution, printing it at LevelVerbose.
 func (l *Log) AddSolutionPool(cost int, elapsed time.Duration) {
 	l.pool = append(l.pool, logger.PoolEntry{Cost: cost, Elapsed: elapsed})
 
@@ -31,18 +32,21 @@ func (l *Log) AddSolutionPool(cost int, elapsed time.Duration) {
 	}
 }
 
+// WorkerStarted prints that worker id has started, unless the level is LevelSilent.
 func (l *Log) WorkerStarted(id int, name string) {
 	if l.level > logger.LevelSilent {
 		fmt.Fprintf(l.w, "(%d) %s started\n", id, name)
 	}
 }
 
+// WorkerDone prints the result of a finished worker, unless the level is LevelSilent.
 func (l *Log) WorkerDone(r logger.WorkerResult) {
 	if l.level > logger.LevelSilent {
 		fmt.Fprintf(l.w, "(%d) %s done cost=%d time=%.3fs\n", r.ID, r.Name, r.Cost, r.Elapsed.Seconds())
 	}
 }
 
+// SolverLogger registers a new solver and returns its logger.
 func (l *Log) SolverLogger(name string) logger.SolverLogger {
 	id := len(l.solvers)
 
@@ -78,6 +82,7 @@ func (l *Log) Close() error {
 	return err
 }
 
+// Report returns the history of every registered solver.
 func (l *Log) Report() []logger.SolverReport {
 	report := make([]logger.SolverReport, 0, len(l.solvers))
 
@@ -92,6 +97,7 @@ func (l *Log) Report() []logger.SolverReport {
 	return report
 }
 
+// Pool returns a copy of the recorded pool solutions.
 func (l *Log) Pool() []logger.PoolEntry {
 	return slices.Clone(l.pool)
 }

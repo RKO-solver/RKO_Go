@@ -2,11 +2,12 @@ package tuning
 
 import "fmt"
 
-// Space is the set of configurations a tuner chooses from: every combination
-// of the values of the parameters registered with [Add], each numbered by a
-// state in [0, States()). Create it with [NewSpace] and add every parameter
-// before creating a tuner on it.
+// Space is the set of configurations a tuner chooses from.
 type Space struct {
+	// Every combination of the values of the parameters registered with [Add],
+	// each numbered by a state in [0, States()). Create it with [NewSpace] and
+	// add every parameter before creating a tuner on it.
+
 	// A state is a mixed-radix number with one digit per parameter, parameter
 	// 0 least significant: state = sum(index[i] * strides[i]).
 
@@ -27,34 +28,34 @@ func NewSpace() *Space {
 	return &Space{states: 1}
 }
 
-// States returns the number of configurations, or 1 if no parameter was
-// added.
+// States returns the number of configurations, or 1 if no parameter was added.
 func (s *Space) States() int {
 	return s.states
 }
 
 // Param is a typed handle to one parameter of a [Space], returned by [Add].
-// It is cheap to copy and stays valid as more parameters are added. The zero
-// Param is not usable.
 type Param[T comparable] struct {
+	// It is cheap to copy and stays valid as more parameters are added. The zero
+	// Param is not usable.
+
 	values []T // candidate values; a state stores an index into it
 	stride int // weight of this parameter in the state number
 }
 
-// At returns the parameter's value in state, which must be in [0, States())
-// of its Space; it is not checked.
+// At returns the parameter's value in state, in [0, States()) of its Space.
 func (p Param[T]) At(state int) T {
+	// state is not checked.
 	// Dividing by the stride drops the less significant digits; the remainder
 	// by the count drops the more significant ones.
 	return p.values[state/p.stride%len(p.values)]
 }
 
-// Add registers a parameter with the given candidate values in space and
-// returns its handle. Value index i in a state stands for values[i]. Add keeps
-// values without copying it, so do not modify it afterwards.
-//
-// Add panics if values is empty or holds duplicates (compared with ==).
+// Add registers a parameter with the given values in space and returns its handle.
 func Add[T comparable](space *Space, values []T) Param[T] {
+	// Value index i in a state stands for values[i]. Add keeps values without
+	// copying it, so do not modify it afterwards.
+	//
+	// Add panics if values is empty or holds duplicates (compared with ==).
 	// param is the index the new parameter gets; it is used in panic messages.
 	param := len(space.counts)
 	if len(values) == 0 {

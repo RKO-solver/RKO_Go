@@ -22,7 +22,7 @@ func Default(problem string) *Log {
 	return New(os.Stdout, problem, nil)
 }
 
-// New returns a Log writing to w, which must be safe for concurrent use; nil means os.Stdout.
+// New returns a Log writing to w (safe for concurrent use; nil is os.Stdout).
 func New(w io.Writer, problem string, opts *Options) *Log {
 	var o Options
 	if opts != nil {

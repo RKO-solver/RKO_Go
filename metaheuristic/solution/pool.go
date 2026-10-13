@@ -31,7 +31,7 @@ type Pool struct {
 	logger  logger.Logger
 }
 
-// NewPoolSize creates a Pool of initialSize random solutions; maxSize <= 0 means no cap, else it is at least initialSize.
+// NewPoolSize creates a Pool of initialSize solutions; maxSize <= 0 means no cap, else at least initialSize.
 func NewPoolSize(env definition.Environment, rg *random.Generator, logger logger.Logger, maxSize int, initialSize int) *Pool {
 	pool := &Pool{
 		maxSize:   maxSize,
@@ -66,7 +66,7 @@ func NewPool(env definition.Environment, rg *random.Generator, logger logger.Log
 	return NewPoolSize(env, rg, logger, DefaultSize, DefaultSize)
 }
 
-// Add adds a copy of solution only if its cost is below the best; start sets the logged elapsed time.
+// Add inserts a copy of solution if it beats the best; start sets the logged elapsed time.
 func (p *Pool) Add(solution *metaheuristic.RandomKeyValue, start time.Time) {
 	if int64(solution.Cost) >= p.best.Load() {
 		return

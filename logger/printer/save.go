@@ -32,7 +32,6 @@ func (l *Log) SavePoliciesCSV(prefix string) error {
 	return policyio.Save(cmp.Or(prefix, spill.NamePart(l.problem), "rko"), l.policies())
 }
 
-// policies returns the solvers that recorded a policy, in id order.
 func (l *Log) policies() []policyio.Solver {
 	var solvers []policyio.Solver
 	for _, s := range l.solvers {

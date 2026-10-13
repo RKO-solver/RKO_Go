@@ -11,7 +11,8 @@ Most programs never import these packages: [`rko.New`](../README.md#quick-start)
 | `metaheuristic/solution` | The solution pool shared by every metaheuristic. |
 | `metaheuristic/rk` | `Generate`, `Reset`, `Copy` and `Shake` for random keys. |
 | `metaheuristic/constants` | Default parameter values and `DefaultTimeLimit` (150 s). |
-| `metaheuristic` | `RandomKeyValue` (a key and its cost), `Sort` and the `Worker` used by `rko.Solver`. |
+| [`metaheuristic/tuning`](tuning/README.md) | The Q-learning tuner that chooses parameter values while a metaheuristic runs. |
+| `metaheuristic` | `RandomKeyValue` (a key and its cost) and `NewRandomKeyValue`, `List[T]` (a parameter's values), `Sort` and the `Worker` used by `rko.Solver`. |
 
 ## Metaheuristics
 
@@ -110,7 +111,7 @@ New(env, rg, pool, log, opts...)
 
 ### Configuration structs
 
-`sa`, `ga`, `brkga`, `ils`, `vns` and `lns` each have a `Config` struct with exactly the fields of the YAML sections, with the same names and types; `DefaultConfig()` returns it at its defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Every field is a `metaheuristic.List[T]` (a `[]T`) of the values to use; `DefaultConfig()` gives each one a single value. Fields are used as is: change them on a default configuration rather than starting from a zero struct, and keep every list non-empty.
+`sa`, `ga`, `brkga`, `ils`, `vns` and `lns` each have a `Config` struct with exactly the fields of the YAML sections, with the same names and element types; `DefaultConfig()` returns it at its defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Every field is a `metaheuristic.List[T]` (a `[]T`) of the values to use; `DefaultConfig()` gives each one a single value. Fields are used as is: change them on a default configuration rather than starting from a zero struct, and keep every list non-empty.
 
 ```go
 cfg := brkga.DefaultConfig()
@@ -120,7 +121,7 @@ cfg.EliteRatio = []float64{0.1, 0.2}           // several values: tuned
 
 ## Parameter tuning
 
-When any field of a `Config` has more than one value, `New` creates a Q-learning tuner (`tuning.NewQLearning`, from the [`tuning` package](tuning/README.md)) over every combination of the values. Otherwise nothing changes: the first value of each list is used, and a fixed seed gives the same results as before. Q-learning is the only tuner for now.
+When any field of a `Config` has more than one value, `New` creates a Q-learning tuner (`tuning.NewQLearning`, from the [`tuning` package](tuning/README.md)) over every combination of the values. Otherwise there is no tuner: the first value of each list is used, and a fixed seed gives the same results. Q-learning is the only tuner for now.
 
 Each cycle, the tuner chooses the configuration; after the cycle it learns from a reward (higher is better):
 
@@ -135,9 +136,11 @@ Each cycle, the tuner chooses the configuration; after the cycle it learns from 
 
 `abs(best)` is taken as `1` when the best cost is `0`.
 
+Only `config.NewSolver` rejects several values for a "single value only" field. `sa.New` and `ils.New` accept them but use only the first `TemperatureGoal` or `MetropolisCriterion`, while the extra values still create a tuner and multiply its states: give these fields a single value when you build by hand.
+
 - GA and BRKGA allocate the population at the largest `PopulationSize`; when the size grows, new random individuals are added.
 - SA starts at the first `TemperatureInitial`; a tuned `TemperatureInitial` applies at the reheats.
-- The tuner explores less as the run advances. The progress is the elapsed time over the time limit; with no time limit (or only `MaxIterations`) it is `L / (1 + L)`, with `L = ln(1 + cycles / States())`, where `States()` is the number of value combinations.
+- The tuner explores less as the run advances. The progress is the elapsed time over the time from the run's start to the context's deadline (the time limit, or your `ctx`'s deadline if earlier); with no deadline (for example with only `MaxIterations`) it is `L / (1 + L)`, with `L = ln(1 + cycles / States())`, where `States()` is the number of value combinations.
 - `New` panics if BRKGA has an `EliteRatio` and `PopulationSize` combination whose elite size, `int(EliteRatio * PopulationSize)`, is outside `1` to `PopulationSize - 1`, or if LNS has a `BetaMin` and `BetaMax` combination with `int(BetaMin * NumKeys) >= int(BetaMax * NumKeys)`.
 
 ### Learned policy

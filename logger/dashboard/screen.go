@@ -19,7 +19,6 @@ func setFixedLength(s string, length int, pad bool) string {
 	return s + cleanLineCode
 }
 
-// printShell redraws the dashboard in the alternate screen, entering it on the first frame.
 func (d *information) printShell(w io.Writer) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -35,7 +34,6 @@ func (d *information) printShell(w io.Writer) {
 	io.WriteString(w, b.String())
 }
 
-// printFinal leaves the alternate screen, if entered, and prints the frame and the done lines once on the normal screen.
 func (d *information) printFinal(w io.Writer) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -52,7 +50,6 @@ func (d *information) printFinal(w io.Writer) {
 	io.WriteString(w, b.String())
 }
 
-// writeFrame appends the dashboard lines to b, one per line; the caller must hold d.mu.
 func (d *information) writeFrame(b *strings.Builder) {
 	lines := make([]string, 0)
 

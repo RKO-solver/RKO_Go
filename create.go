@@ -28,7 +28,7 @@ func WithTimeLimit(d time.Duration) Option { return func(s *Solver) { s.timeLimi
 // WithMaxIterations sets the iteration limit; zero or negative means no limit.
 func WithMaxIterations(n int) Option { return func(s *Solver) { s.maxIterations = n } }
 
-// New creates a Solver that runs the metaheuristics in mhs with default parameters; without options the time limit is constants.DefaultTimeLimit.
+// New creates a Solver running mhs with default parameters and a constants.DefaultTimeLimit limit.
 func New(env definition.Environment, log logger.Logger, mhs []Metaheuristic, opts ...Option) *Solver {
 	rg := random.NewRandom()
 	solutionPool := solution.NewPool(env, rg, log)
@@ -81,7 +81,6 @@ func NewFromSolvers(env definition.Environment, log logger.Logger, pool *solutio
 	return build(&Solver{l: log, env: env, solutionPool: pool, solvers: solvers}, opts)
 }
 
-// build applies opts to s and prints NoLimitWarning when s ends up with neither limit.
 func build(s *Solver, opts []Option) *Solver {
 	for _, opt := range opts {
 		opt(s)

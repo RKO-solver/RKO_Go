@@ -27,7 +27,17 @@ import (
 	"log"
 
 	"github.com/RKO-solver/rko-go/config"
+	"github.com/RKO-solver/rko-go/definition"
 )
+
+// MyEnvironment stands for your problem (see the definition package).
+type MyEnvironment struct{}
+
+func (MyEnvironment) NumKeys() int                      { return 10 }
+func (MyEnvironment) Cost(r definition.RandomKey) int   { return int(100 * r[0]) }
+func (MyEnvironment) Decode(r definition.RandomKey) any { return r.SortedIndex() }
+func (MyEnvironment) SwapSearch() [][2]int              { return [][2]int{{0, 10}} }
+func (MyEnvironment) ProblemName() string               { return "my-problem" }
 
 func main() {
 	cfgs, err := config.ReadFile("config.yaml")
@@ -35,7 +45,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// MyEnvironment implements definition.Environment
 	solver, rkoLog, err := cfgs[0].NewSolver(MyEnvironment{})
 	if err != nil {
 		log.Fatal(err)
@@ -183,7 +192,7 @@ Every section and key is optional, and must sit under `Parameters:`. The Type co
 
 A key replaces its default when it has at least one value; a missing or empty key keeps the default. Values are used as written, including `0`, negative numbers and `ILS.MetropolisCriterion: false`.
 
-Every key accepts a single value or a list. With a list in any key, the metaheuristic tunes its parameters while it runs (see [Parameter tuning](../metaheuristic/README.md#parameter-tuning)):
+Every key accepts a single value or a list. With two or more values in any key, the metaheuristic tunes its parameters while it runs (see [Parameter tuning](../metaheuristic/README.md#parameter-tuning)):
 
 ```yaml
 Parameters:
@@ -217,7 +226,7 @@ A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r`
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `PopulationSize` | int | `200` | Individuals per generation. |
-| `EliteRatio` | float | `0.2` | Fraction of the population kept as elite. `int(EliteRatio × PopulationSize)` must be from `1` to `PopulationSize - 1`, or the run panics. |
+| `EliteRatio` | float | `0.2` | Fraction of the population kept as elite. `int(EliteRatio × PopulationSize)` must be from `1` to `PopulationSize - 1` for every pair of listed values, or `NewSolver` panics. |
 | `MutantRatio` | float | `0.05` | Fraction of the population replaced by random individuals each generation. |
 | `CrossoverAlpha` | float | `0.95` | Per-key probability that a child inherits the elite parent's key. |
 | `MutationAlpha` | float | `0.005` | Per-key probability that a child gets a random key. |
@@ -255,7 +264,7 @@ A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r`
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `BetaMin` | float | `0.01` | Each iteration rebuilds a number of keys drawn from `[int(BetaMin × NumKeys), int(BetaMax × NumKeys))`. |
-| `BetaMax` | float | `0.05` | See `BetaMin`. `int(BetaMax × NumKeys)` must be greater than `int(BetaMin × NumKeys)`, or the run panics; with the defaults, LNS needs at least 20 keys. |
+| `BetaMax` | float | `0.05` | See `BetaMin`. `int(BetaMax × NumKeys)` must be greater than `int(BetaMin × NumKeys)` for every pair of listed values, or `NewSolver` panics; with the defaults, LNS needs at least 20 keys. |
 
 ## Building a solver
 
@@ -264,8 +273,9 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 ```
 
 - Returns an error, before creating anything, for an invalid `LogLevel` or `LogType`, an invalid or unimplemented metaheuristic `Type`, a nil section inside a non-nil `Parameters`, or invalid lists (see [`Parameters` section](#parameters-section)). All problems are joined; test them with `errors.Is`.
+- Panics, instead of returning an error, on a bad BRKGA `EliteRatio` and `PopulationSize` or LNS `BetaMin` and `BetaMax` combination (see [`BRKGA`](#brkga) and [`LNS`](#lns)): `brkga.New` and `lns.New` check them while the solvers are built.
 - A nil `Parameters` means `DefaultParameters()`. In a non-nil `Parameters`, an empty list means the default, as in YAML.
-- `NewSolver` never modifies `cfg`, and each metaheuristic gets its own copy of its parameters. One `Config` can be reused for several solvers and shared across goroutines.
+- `NewSolver` never modifies `cfg`, and each metaheuristic gets its own copy of its `Config` struct. The lists inside are not copied: they are shared with `cfg.Parameters` and kept by the solver and its tuner, so don't modify them after `NewSolver`. One `Config` can be reused for several solvers and shared across goroutines.
 - If `env` implements [`definition.Cloner`](../definition/README.md#environment), each metaheuristic and its local search get their own `env.Clone()`.
 - The logger is named from `env.ProblemName()`. Neither `NewSolver` nor `Solve` closes it: `defer` its `Close`, which deletes the run's history files, once you have read the results. To read or save them, see the [`logger` package](../logger/README.md).
 - `WithSeed(seed uint64)` seeds the random generator. Without it, each `NewSolver` call uses a randomly seeded generator.

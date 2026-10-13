@@ -40,7 +40,6 @@ func Print(w io.Writer, solvers []Solver) error {
 	return bw.Flush()
 }
 
-// writeRow writes cells as one tab-separated line.
 func writeRow(w io.Writer, cells []string) {
 	io.WriteString(w, strings.Join(cells, "\t")+"\n")
 }

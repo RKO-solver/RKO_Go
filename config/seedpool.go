@@ -6,7 +6,6 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 )
 
-// seedPoolSizes resolves the seed pool max and initial sizes, applying defaults and the unlimited sentinel.
 func seedPoolSizes(maxSize, initialSize int) (int, int) {
 	if initialSize < 1 {
 		initialSize = solution.DefaultSize

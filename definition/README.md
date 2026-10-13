@@ -1,6 +1,6 @@
 # `definition` Package
 
-The interfaces and types that connect your problem to RKO-Go: `Environment` (your problem), `RandomKey` (a solution), `Solver` and `Result` (a metaheuristic), and the context helpers that apply the iteration limit.
+The interfaces and types that connect your problem to RKO-Go: `Environment` (your problem) and `Cloner` (a copy of it per metaheuristic), `RandomKey` (a solution), `Solver` and `Result` (a metaheuristic), and the context helpers that apply the iteration limit.
 
 ## Random keys
 
@@ -34,7 +34,7 @@ type Cloner interface {
 }
 ```
 
-`rko.New` and `config.NewSolver` then give each metaheuristic its own `Clone()`.
+`rko.New` and `config.NewSolver` then give each metaheuristic its own `Clone()`. `rko.NewFromSolvers` does not: when you build the solvers yourself, clone the environment for each one (see [Building a solver by hand](../metaheuristic/README.md#building-a-solver-by-hand)).
 
 For ordering problems, decode with `r.SortedIndex()`: the indices of `r` in ascending order of their keys, a permutation. The [root README](../README.md#quick-start) solves a travelling salesman problem this way.
 
@@ -45,7 +45,7 @@ package knapsack
 
 import "github.com/RKO-solver/rko-go/definition"
 
-// Knapsack selects items to maximise value without exceeding Capacity.
+// Knapsack selects items to maximize value without exceeding Capacity.
 type Knapsack struct {
 	Values, Weights []int
 	Capacity        int

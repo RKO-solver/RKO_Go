@@ -249,25 +249,25 @@ if err := log.SavePoliciesCSV(""); err != nil { // MyProblem-<solver>-<id>-polic
 }
 ```
 
-`PrintPolicies(w)` writes, for each solver that recorded a policy and in id order, a `(id) name policy` heading and then the table in aligned columns, with a blank line between solvers. `printer` and `dashboard` use the same format:
+`PrintPolicies(w)` writes, for each solver that recorded a policy and in id order, a `(id) name policy` heading and then the table in aligned columns, with a blank line between solvers. `printer` and `dashboard` use the same format. Here GA tunes `PopulationSize: [100, 200]` and `MutationAlpha: [0.005, 0.01]`, and BRKGA `PopulationSize: [100, 200]` and `EliteRatio: [0.1, 0.2]`:
 
 ```text
 (0) GA policy
-state  p0   p1   move       next  q
-0      100  0.1  p0 -> 500  1     3.210823971109405
-1      500  0.1  p1 -> 0.2  3     4.972708303598935
-2      100  0.2  p0 -> 500  3     4.979529508899864
-3      500  0.2  stay       3     4.99976147366455
+state  p0   p1    p2     p3   move       next  q
+0      100  0.95  0.005  100  stay       0     -0.05672288500153648
+1      200  0.95  0.005  100  p0 -> 100  0     -0.07584516941366984
+2      100  0.95  0.01   100  stay       2     -0.03486735460061637
+3      200  0.95  0.01   100  p0 -> 100  2     -0.06383021884968096
 
-(2) BRKGA policy
-state  p0   p1   move       next  q
-0      100  0.1  p1 -> 0.2  2     4.998149833211987
-1      500  0.1  p0 -> 100  0     3.7536664626485927
-2      100  0.2  stay       2     4.9999812874147525
-3      500  0.2  p0 -> 100  2     4.98732873922277
+(1) BRKGA policy
+state  p0   p1   p2    p3    p4     p5   move       next  q
+0      100  0.1  0.05  0.95  0.005  100  p0 -> 200  1     0.14475877694232625
+1      200  0.1  0.05  0.95  0.005  100  p0 -> 100  0     0.04066887036137811
+2      100  0.2  0.05  0.95  0.005  100  p0 -> 200  3     0.040684180716951374
+3      200  0.2  0.05  0.95  0.005  100  p0 -> 100  2     0.040708076771112024
 ```
 
-The columns depend on the tuner; see [Reading the learned policy](../metaheuristic/tuning/README.md#reading-the-learned-policy) for these ones.
+The columns depend on the tuner; for `QLearning`, see [Reading the learned policy](../metaheuristic/tuning/README.md#reading-the-learned-policy). The built-in metaheuristics give one `p` column per `Config` field, single-valued ones included, in the order listed in [Learned policy](../metaheuristic/README.md#learned-policy).
 
 `SavePoliciesCSV(prefix)` writes `<prefix>-<solver>-<id>-policy.csv` for each solver that recorded a policy: the header row, then one row per table row. `prefix` and the solver part are handled as in `SaveCSV`, and an empty `prefix` uses the problem name.
 

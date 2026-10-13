@@ -6,6 +6,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger"
 )
 
+// Report returns the history of every registered solver.
 func (l *Log) Report() []logger.SolverReport {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()
@@ -22,6 +23,7 @@ func (l *Log) Report() []logger.SolverReport {
 	return report
 }
 
+// Pool returns a copy of the recorded pool solutions.
 func (l *Log) Pool() []logger.PoolEntry {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()

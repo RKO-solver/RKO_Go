@@ -9,6 +9,7 @@ Based on [A Random-Key optimizer for combinatorial optimization](https://doi.org
 - **Seven metaheuristics:** MultiStart, Simulated Annealing (SA), Iterated Local Search (ILS), Variable Neighbourhood Search (VNS), Genetic Algorithm (GA), Biased Random-Key Genetic Algorithm (BRKGA) and Large Neighbourhood Search (LNS).
 - **Problem-agnostic:** every metaheuristic works on any `Environment`.
 - **Parallel:** each selected metaheuristic runs in its own goroutine; they exchange solutions through a thread-safe pool.
+- **Online parameter tuning:** give a parameter two or more values and the metaheuristic picks among them while it runs, with Q-learning. See [Parameter tuning](metaheuristic/README.md#parameter-tuning).
 - **Stopping rules:** a time limit, an iteration limit and your own `context.Context`.
 - **Configurable** from Go or from a YAML file, with a terminal dashboard or plain-text logging.
 
@@ -93,6 +94,8 @@ tour: [4 0 1 3 2] cost: 26
 
 `Solve` returns the best solution found, already passed through your `Decode`. The [`definition` package](definition/README.md) explains each `Environment` method and shows a non-permutation example.
 
+The metaheuristics call your `Environment` concurrently. To give each one its own copy, also implement `definition.Cloner` (see [`Environment`](definition/README.md#environment)).
+
 ## Run from a YAML file
 
 The [`config` package](config/README.md) builds the same solver from a file, including each metaheuristic's local search and tuning parameters.
@@ -126,6 +129,8 @@ defer rkoLog.Close()
 
 tour := solver.Solve(context.Background()).([]int)
 ```
+
+A parameter can also be a list of values, such as `PopulationSize: [100, 200]`, for the metaheuristic to tune while it runs (see [`Parameters` section](config/README.md#parameters-section)).
 
 See the [`config` package](config/README.md) for every key and its default.
 
@@ -172,7 +177,7 @@ result := solver.Solve(ctx)
 | `rko.VNS` | Variable Neighbourhood Search |
 | `rko.LNS` | Large Neighbourhood Search |
 
-Listing a constant twice runs two independent instances. `GRASP`, `VLNS`, `ALNS` and `IPR` are declared but not implemented; they are skipped with a `not implemented yet` message.
+Listing a constant twice runs two independent instances. `GRASP`, `VLNS`, `ALNS` and `IPR` are declared but not implemented; they are skipped with a `not implemented yet` message. With the default parameters, `rko.LNS` makes `rko.New` panic on problems with fewer than 20 keys; leave it out of the slice or set its parameters in a [YAML file](config/README.md#lns).
 
 To change parameters or local searches, use a [YAML file](config/README.md), or build each solver yourself and pass them to `rko.NewFromSolvers` (see the [`metaheuristic` package](metaheuristic/README.md)).
 
@@ -185,7 +190,7 @@ Every constructor takes a [`logger.Logger`](logger/README.md). Two ship with the
 | `logger/printer` | `printer.Default(name)`, `printer.New(w, name, opts)` | Plain lines: a solver's progress when its best cost improves, otherwise at most every 500 ms (`Options.PrintInterval`). Suits batch jobs and CI. |
 | `logger/dashboard` | `dashboard.New(name, opts)` | A live dashboard in the terminal's alternate screen; the final frame stays in the scrollback. Suits interactive runs. |
 
-Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelVerbose`. `Solve` resets the logger at the start of every run, so `Report` and `Pool` describe the last run. Both loggers can save the run to CSV (`SaveCSV`), and spill each solver's history to [temporary files](logger/README.md#history-files-and-close) on long runs. `Solve` never calls the logger's `Close`, which deletes those files: `defer` it after creating the logger. See the [`logger` package](logger/README.md).
+Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelVerbose`. `Solve` resets the logger at the start of every run, so `Report` and `Pool` describe the last run. Both loggers can save the run to CSV (`SaveCSV`), and spill each solver's history to [temporary files](logger/README.md#history-files-and-close) on long runs. `Solve` never calls the logger's `Close`, which deletes those files: `defer` it after creating the logger. After a run with tuned parameters, `PrintPolicies` and `SavePoliciesCSV` print or save the policy each tuner learned (see [Policies](logger/README.md#policies)). See the [`logger` package](logger/README.md).
 
 ## Packages
 
@@ -196,6 +201,7 @@ Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelV
 | [`config`](config/README.md) | Build a solver from a YAML file or a Go struct. |
 | [`logger`](logger/README.md) | Choose or implement a logger, and export results to CSV. |
 | [`metaheuristic`](metaheuristic/README.md) | Build metaheuristics, local searches and the solution pool by hand. |
+| [`metaheuristic/tuning`](metaheuristic/tuning/README.md) | Tune parameters while a metaheuristic runs, with the Q-learning tuner (`NewSpace`, `Add`, `NewQLearning`). |
 | `random` | Create random generators, seeded (`New`) or randomly seeded (`NewRandom`). |
 
 ## Maintainers

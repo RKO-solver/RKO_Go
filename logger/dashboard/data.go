@@ -29,7 +29,6 @@ type information struct {
 	workers      []logger.WorkerResult
 }
 
-// apply stores m.
 func (d *information) apply(m message) {
 	switch m.t {
 	case infoMessage:
@@ -54,7 +53,6 @@ func (d *information) registerInfo(id int, info solverInfo) {
 	}
 }
 
-// setPolicy keeps t as solver id's policy.
 func (d *information) setPolicy(id int, t logger.Table) {
 	d.mu.Lock()
 	defer d.mu.Unlock()

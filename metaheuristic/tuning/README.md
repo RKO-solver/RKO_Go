@@ -26,12 +26,14 @@ func main() {
 	for cycle := range cycles {
 		state := tuner.Choose(float64(cycle) / cycles)
 
-		// runCycle is your code: one generation with these values, returning its reward.
 		reward := runCycle(popSize.At(state), elite.At(state), mutant.At(state))
 
 		tuner.Learn(reward, float64(cycle+1)/cycles)
 	}
 }
+
+// runCycle stands for your code: one generation with these values, returning its reward.
+func runCycle(popSize int, elite, mutant float64) float64 { return 0 }
 ```
 
 1. Register every parameter with `Add`, then create the tuner. The tuner sizes its tables when it is created and does not see parameters added later.
@@ -187,7 +189,7 @@ A tuner that implements `Reporter` returns what it learned as a `logger.Table`. 
 | Column | Holds |
 |---|---|
 | `state` | The state number. |
-| `p0`, `p1`, ... | Each parameter's value in that state, in the order the parameters were added, printed with `fmt.Sprint` (so `0.10` shows as `0.1`). Parameters have no names, only these numbers. |
+| `p0`, `p1`, ... | Each parameter's value in that state, in the order the parameters were added, printed with `fmt.Sprint` (so `0.10` shows as `0.1`). Parameters have no names, only these numbers; for the built-in metaheuristics, [Learned policy](../README.md#learned-policy) maps them to `Config` fields. |
 | `move` | The action with the highest `Q` from that state: `stay`, or `p<d> -> <value>` for the one parameter it changes. |
 | `next` | The state that move reaches. |
 | `q` | That action's Q-value, as the shortest decimal that reads back exactly. |

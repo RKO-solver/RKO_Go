@@ -11,6 +11,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger/internal/spill"
 )
 
+// SolverLogger prints and records the progress of one solver.
 type SolverLogger struct {
 	id       int
 	name     string

@@ -23,7 +23,9 @@ type Logger interface {
 	SolverLogger(name string) SolverLogger
 	// AddSolutionPool records a new best solution in the pool.
 	AddSolutionPool(cost int, elapsed time.Duration)
+	// WorkerStarted records that worker id has started.
 	WorkerStarted(id int, name string)
+	// WorkerDone records the result of a finished worker.
 	WorkerDone(r WorkerResult)
 	// Reset clears the previous run; Solve calls it.
 	Reset()
