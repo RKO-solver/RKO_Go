@@ -110,6 +110,7 @@ case errors.Is(err, config.ErrNotImplemented):
 | `ErrUnknownField` | A key is unknown or in the wrong place (strict only). |
 | `ErrUnknownValue` | A value is not recognised. `NewSolver` also returns it for an invalid `LogLevel`, `LogType` or metaheuristic. |
 | `ErrNotImplemented` | A recognised metaheuristic that is not implemented yet (`GRASP`, `VLNS`, `ALNS`, `IPR`). |
+| `ErrInvalidValue` | A value list breaks the [rules for lists](#parameters-section). Returned by `NewSolver` only. |
 
 ## Stopping
 
@@ -178,9 +179,27 @@ The search list sets the entry's local search:
 
 ### `Parameters` section
 
-Every section and key is optional, and must sit under `Parameters:`. Field names match the Go configuration structs of the [`metaheuristic` package](../metaheuristic/README.md#configuration-structs).
+Every section and key is optional, and must sit under `Parameters:`. The Type column gives the type of each value. Field names match the Go configuration structs of the [`metaheuristic` package](../metaheuristic/README.md#configuration-structs).
 
-A value replaces its default only when it is greater than `0`; `0` or a negative value keeps the default. `ILS.MetropolisCriterion` can only be switched on: `true` sets it, `false` keeps the default (`false`).
+A key replaces its default when it has at least one value; a missing or empty key keeps the default. Values are used as written, including `0`, negative numbers and `ILS.MetropolisCriterion: false`.
+
+Every key accepts a single value or a list. With a list in any key, the metaheuristic tunes its parameters while it runs (see [Parameter tuning](../metaheuristic/README.md#parameter-tuning)):
+
+```yaml
+Parameters:
+  BRKGA:
+    PopulationSize: [100, 200]
+    EliteRatio:
+      - 0.1
+      - 0.2
+    MutationAlpha: 0.005
+```
+
+Rules for lists, checked by `NewSolver`. A broken rule gives an error wrapping `ErrInvalidValue` (test with `errors.Is`), e.g. `config: Parameters.GA.PopulationSize: invalid value: repeated value`:
+
+- A list cannot repeat a value.
+- No `ShakeMin` value (ILS, SA) may be greater than any `ShakeMax` value, and no `BetaMin` value (LNS) greater than any `BetaMax` value.
+- `SA.TemperatureGoal` and `ILS.MetropolisCriterion` take a single value.
 
 A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r` drawn from the shake range. MultiStart has no parameters.
 
@@ -198,7 +217,7 @@ A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r`
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `PopulationSize` | int | `200` | Individuals per generation. |
-| `EliteRatio` | float | `0.2` | Fraction of the population kept as elite. `int(EliteRatio × PopulationSize)` must be at least `1`, or the run panics. |
+| `EliteRatio` | float | `0.2` | Fraction of the population kept as elite. `int(EliteRatio × PopulationSize)` must be from `1` to `PopulationSize - 1`, or the run panics. |
 | `MutantRatio` | float | `0.05` | Fraction of the population replaced by random individuals each generation. |
 | `CrossoverAlpha` | float | `0.95` | Per-key probability that a child inherits the elite parent's key. |
 | `MutationAlpha` | float | `0.005` | Per-key probability that a child gets a random key. |
@@ -244,8 +263,8 @@ A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r`
 func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.Solver, logger.Recorder, error)
 ```
 
-- Returns an error, before creating anything, for an invalid `LogLevel` or `LogType`, an invalid or unimplemented metaheuristic `Type`, or a nil section inside a non-nil `Parameters`. All problems are joined; test them with `errors.Is`.
-- A nil `Parameters` means `DefaultParameters()`.
+- Returns an error, before creating anything, for an invalid `LogLevel` or `LogType`, an invalid or unimplemented metaheuristic `Type`, a nil section inside a non-nil `Parameters`, or invalid lists (see [`Parameters` section](#parameters-section)). All problems are joined; test them with `errors.Is`.
+- A nil `Parameters` means `DefaultParameters()`. In a non-nil `Parameters`, an empty list means the default, as in YAML.
 - `NewSolver` never modifies `cfg`, and each metaheuristic gets its own copy of its parameters. One `Config` can be reused for several solvers and shared across goroutines.
 - If `env` implements [`definition.Cloner`](../definition/README.md#environment), each metaheuristic and its local search get their own `env.Clone()`.
 - The logger is named from `env.ProblemName()`. Neither `NewSolver` nor `Solve` closes it: `defer` its `Close`, which deletes the run's history files, once you have read the results. To read or save them, see the [`logger` package](../logger/README.md).
@@ -259,7 +278,7 @@ solver, rkoLog, err := cfg.NewSolver(env, config.WithSeed(42))
 
 ```go
 params := config.DefaultParameters()
-params.GA.PopulationSize = 100
+params.GA.PopulationSize = []int{100}
 
 cfg := config.Config{
 	LogLevel:      logger.LevelInfo,
@@ -287,7 +306,7 @@ A `Config` you build yourself skips the YAML defaults:
 
 - The zero `LogType` is `logger.TypePrint` and the zero `LogLevel` is `logger.LevelInfo`, the same as the YAML defaults.
 - `LogType` must be `logger.TypePrint` or `logger.TypeDashboard`, and `LogLevel` between `logger.LevelSilent` and `logger.LevelVerbose`.
-- `Parameters` is used as is, without the greater-than-zero rule. Start from `DefaultParameters()`: a zero field stays zero, and a nil section is an error.
+- `Parameters` fields are lists, e.g. `params.GA.PopulationSize = []int{100}`. An empty list means the default, and a nil section is an error.
 
 ## See also
 

@@ -63,10 +63,10 @@ defer log.Close()
 pool := solution.NewPool(env, rg, log)
 
 ilsConfig := ils.DefaultConfig()
-ilsConfig.MetropolisCriterion = true
+ilsConfig.MetropolisCriterion = []bool{true}
 
 brkgaConfig := brkga.DefaultConfig()
-brkgaConfig.PopulationSize = 100
+brkgaConfig.PopulationSize = []int{100}
 
 brkgaRG := rg.Split()
 solvers := []definition.Solver{
@@ -110,7 +110,48 @@ New(env, rg, pool, log, opts...)
 
 ### Configuration structs
 
-`sa`, `ga`, `brkga`, `ils`, `vns` and `lns` each have a `Config` struct with exactly the fields of the YAML sections, with the same names and types; `DefaultConfig()` returns it at its defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Fields are used as is: change them on a default configuration rather than starting from a zero struct.
+`sa`, `ga`, `brkga`, `ils`, `vns` and `lns` each have a `Config` struct with exactly the fields of the YAML sections, with the same names and types; `DefaultConfig()` returns it at its defaults. See the [`config` package](../config/README.md#parameters-section) for each field. Every field is a `metaheuristic.List[T]` (a `[]T`) of the values to use; `DefaultConfig()` gives each one a single value. Fields are used as is: change them on a default configuration rather than starting from a zero struct, and keep every list non-empty.
+
+```go
+cfg := brkga.DefaultConfig()
+cfg.PopulationSize = []int{100}                // one value: fixed
+cfg.EliteRatio = []float64{0.1, 0.2}           // several values: tuned
+```
+
+## Parameter tuning
+
+When any field of a `Config` has more than one value, `New` creates a Q-learning tuner (`tuning.NewQLearning`, from the [`tuning` package](tuning/README.md)) over every combination of the values. Otherwise nothing changes: the first value of each list is used, and a fixed seed gives the same results as before. Q-learning is the only tuner for now.
+
+Each cycle, the tuner chooses the configuration; after the cycle it learns from a reward (higher is better):
+
+| Metaheuristic | Tunable fields | Single value only | Cycle | Reward |
+|---|---|---|---|---|
+| BRKGA | `PopulationSize`, `EliteRatio`, `MutantRatio`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` | none | generation | `1 + 1/PopulationSize` if the best improved, else `(best - best of the generation) / abs(best)` |
+| GA | `PopulationSize`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` | none | generation | same as BRKGA |
+| SA | `Alpha`, `TemperatureInitial`, `TemperatureReheat`, `ShakeMin`, `ShakeMax`, `QtdReheat`, `Iterations` | `TemperatureGoal` | temperature step | `1` if the best improved, else `(best - current) / abs(best)` |
+| ILS | `ShakeMin`, `ShakeMax` | `MetropolisCriterion` | iteration | same as SA |
+| VNS | `Rate` | none | outer iteration | `1` if the best improved, else `(best - last neighbour) / abs(best)` |
+| LNS | `BetaMin`, `BetaMax` | none | iteration | same as SA |
+
+`abs(best)` is taken as `1` when the best cost is `0`.
+
+- GA and BRKGA allocate the population at the largest `PopulationSize`; when the size grows, new random individuals are added.
+- SA starts at the first `TemperatureInitial`; a tuned `TemperatureInitial` applies at the reheats.
+- The tuner explores less as the run advances. The progress is the elapsed time over the time limit; with no time limit (or only `MaxIterations`) it is `L / (1 + L)`, with `L = ln(1 + cycles / States())`, where `States()` is the number of value combinations.
+- `New` panics if BRKGA has an `EliteRatio` and `PopulationSize` combination whose elite size, `int(EliteRatio * PopulationSize)`, is outside `1` to `PopulationSize - 1`, or if LNS has a `BetaMin` and `BetaMax` combination with `int(BetaMin * NumKeys) >= int(BetaMax * NumKeys)`.
+
+### Learned policy
+
+When tuned, the metaheuristic records the learned policy with its solver logger at the end of the run. After the run, print it with the logger's `PrintPolicies` or save it with `SavePoliciesCSV` (see [Policies](../logger/README.md#policies)). The policy columns `p0`, `p1`, ... follow the field order of the `Config` struct, counting every field, including the single-valued ones:
+
+| Metaheuristic | `p0`, `p1`, ... |
+|---|---|
+| BRKGA | `PopulationSize`, `EliteRatio`, `MutantRatio`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` |
+| GA | `PopulationSize`, `CrossoverAlpha`, `MutationAlpha`, `MaxGenerationNoImprovement` |
+| SA | `Alpha`, `TemperatureInitial`, `TemperatureGoal`, `TemperatureReheat`, `ShakeMin`, `ShakeMax`, `QtdReheat`, `Iterations` |
+| ILS | `ShakeMin`, `ShakeMax`, `MetropolisCriterion` |
+| VNS | `Rate` |
+| LNS | `BetaMin`, `BetaMax` |
 
 ## Local searches
 

@@ -228,6 +228,10 @@ A `QLearning` is not safe for concurrent use: create one per solver goroutine, e
 | `Add` | `values` is empty, or holds the same value twice (compared with `==`), since two states would then share one configuration. |
 | `WithDiscount` | The discount is outside `[0, 1)` or NaN. It panics when called, not when `NewQLearning` applies it. |
 
+## Use in the metaheuristics
+
+BRKGA, GA, SA, ILS, VNS and LNS use this package when a field of their `Config` has several values. See [Parameter tuning](../README.md#parameter-tuning).
+
 ## See also
 
 - [Project README](../../README.md)
