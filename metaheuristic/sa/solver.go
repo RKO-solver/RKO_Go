@@ -29,6 +29,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 	shakeMin, shakeMax := configuration.ShakeMin[0], configuration.ShakeMax[0]
 	qtdReheat := configuration.QtdReheat[0]
 	iterations := configuration.Iterations[0]
+	restart := *configuration.Restart
 	temperatureLocal := temperatureInitial
 	timesReHeat := 1
 
@@ -74,12 +75,24 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 
 	bestSolutionCost := localSolution.Cost
 
-	for ; temperatureLocal > temperatureGoal && ctx.Err() == nil; ctxAction.Step() {
+	for ; ctx.Err() == nil && (restart || temperatureLocal > temperatureGoal); ctxAction.Step() {
+		if temperatureLocal <= temperatureGoal {
+			temperatureLocal = temperatureInitial
+			rk.Reset(localSolution.RK, rg)
+			localSolution.Cost = env.Cost(localSolution.RK)
+			solutionPool.Add(localSolution, start)
+
+			timesReHeat = 1
+			bestSolutionCost = localSolution.Cost
+			sa.logger.Event(slog.Attr{Key: "restart", Value: slog.GroupValue(slog.Int("iteration", ctxAction.Iteration()))}, time.Since(start))
+		}
+
 		previousBest := bestSolutionCost
 		if tuner != nil {
 			state := tuner.Choose(progress())
 			alpha = 1.0 - sa.alpha.At(state)
 			temperatureInitial = sa.temperatureInitial.At(state)
+			temperatureGoal = sa.temperatureGoal.At(state)
 			temperatureReheat = sa.temperatureReheat.At(state)
 			shakeMin, shakeMax = sa.shakeMin.At(state), sa.shakeMax.At(state)
 			qtdReheat = sa.qtdReheat.At(state)

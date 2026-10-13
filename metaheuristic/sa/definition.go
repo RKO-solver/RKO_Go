@@ -23,6 +23,7 @@ type Config struct {
 	ShakeMax           metaheuristic.List[float64] `yaml:"ShakeMax"`
 	QtdReheat          metaheuristic.List[uint8]   `yaml:"QtdReheat"`
 	Iterations         metaheuristic.List[int]     `yaml:"Iterations"`
+	Restart            *bool                       `yaml:"Restart"`
 }
 
 // SimulatedAnnealing is a Simulated Annealing solver.

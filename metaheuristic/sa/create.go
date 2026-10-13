@@ -22,6 +22,7 @@ func DefaultConfig() *Config {
 		ShakeMax:           metaheuristic.List[float64]{constants.DefaultShakeMaxSimulationAnnealing},
 		QtdReheat:          metaheuristic.List[uint8]{constants.DefaultPreheat},
 		Iterations:         metaheuristic.List[int]{constants.DefaultIterationsSimulationAnnealing},
+		Restart:            new(constants.DefaultRestart),
 	}
 }
 

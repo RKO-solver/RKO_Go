@@ -168,6 +168,7 @@ func (p *Parameters) validate() []error {
 		{"ILS.ShakeMax", hasDuplicates(p.ILS.ShakeMax)},
 		{"SA.Alpha", hasDuplicates(p.SA.Alpha)},
 		{"SA.TemperatureInitial", hasDuplicates(p.SA.TemperatureInitial)},
+		{"SA.TemperatureGoal", hasDuplicates(p.SA.TemperatureGoal)},
 		{"SA.TemperatureReheat", hasDuplicates(p.SA.TemperatureReheat)},
 		{"SA.ShakeMin", hasDuplicates(p.SA.ShakeMin)},
 		{"SA.ShakeMax", hasDuplicates(p.SA.ShakeMax)},
@@ -193,8 +194,8 @@ func (p *Parameters) validate() []error {
 			errs = append(errs, fmt.Errorf("config: Parameters.%s: %w: %v is greater than the maximum %v", c.name, ErrInvalidValue, lo, hi))
 		}
 	}
-	if len(p.SA.TemperatureGoal) > 1 {
-		errs = append(errs, fmt.Errorf("config: Parameters.SA.TemperatureGoal: %w: only one value is allowed", ErrInvalidValue))
+	if lo, hi := slices.Max(p.SA.TemperatureGoal), slices.Min(p.SA.TemperatureInitial); lo >= hi {
+		errs = append(errs, fmt.Errorf("config: Parameters.SA.TemperatureGoal: %w: %v is not below the minimum TemperatureInitial %v", ErrInvalidValue, lo, hi))
 	}
 	return errs
 }

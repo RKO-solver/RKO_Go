@@ -112,6 +112,9 @@ func withSA(cfg *sa.Config) parameterOption {
 		if len(cfg.Iterations) > 0 {
 			c.SA.Iterations = cfg.Iterations
 		}
+		if cfg.Restart != nil {
+			c.SA.Restart = cfg.Restart
+		}
 	}
 }
 

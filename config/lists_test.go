@@ -49,7 +49,9 @@ func TestNewSolverParameterListErrors(t *testing.T) {
 		{"ILS shake", func(p *config.Parameters) { p.ILS.ShakeMin = []float64{0.1, 0.5}; p.ILS.ShakeMax = []float64{0.4, 0.6} }, "config: Parameters.ILS.ShakeMin: invalid value: 0.5 is greater than the maximum 0.4"},
 		{"SA shake", func(p *config.Parameters) { p.SA.ShakeMin = []float64{0.9} }, "config: Parameters.SA.ShakeMin: invalid value: 0.9 is greater than the maximum 0.3"},
 		{"LNS beta", func(p *config.Parameters) { p.LNS.BetaMax = []float64{0.001} }, "config: Parameters.LNS.BetaMin: invalid value: 0.01 is greater than the maximum 0.001"},
-		{"SA goal", func(p *config.Parameters) { p.SA.TemperatureGoal = []float64{1, 2} }, "config: Parameters.SA.TemperatureGoal: invalid value: only one value is allowed"},
+		{"SA goal duplicate", func(p *config.Parameters) { p.SA.TemperatureGoal = []float64{0.1, 0.1} }, "config: Parameters.SA.TemperatureGoal: invalid value: repeated value"},
+		{"SA goal above initial", func(p *config.Parameters) { p.SA.TemperatureGoal = []float64{0.1, 2e7} }, "config: Parameters.SA.TemperatureGoal: invalid value: 2e+07 is not below the minimum TemperatureInitial 1e+07"},
+		{"SA goal equal to initial", func(p *config.Parameters) { p.SA.TemperatureGoal = []float64{1e7} }, "config: Parameters.SA.TemperatureGoal: invalid value: 1e+07 is not below the minimum TemperatureInitial 1e+07"},
 		{"empty list uses default", func(p *config.Parameters) { p.ILS.ShakeMax = nil; p.ILS.ShakeMin = []float64{0.04} }, ""},
 	}
 	for _, tt := range tests {

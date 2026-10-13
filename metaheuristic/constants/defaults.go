@@ -39,6 +39,9 @@ const DefaultPreheat = 0
 // DefaultIterationsSimulationAnnealing is the default SA Iterations.
 const DefaultIterationsSimulationAnnealing = 1000
 
+// DefaultRestart is the default SA Restart.
+const DefaultRestart = true
+
 // DefaultPopulationSize is the default GA and BRKGA PopulationSize.
 const DefaultPopulationSize = 200
 

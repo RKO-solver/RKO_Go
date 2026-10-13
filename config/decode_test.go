@@ -222,6 +222,20 @@ func TestDecodeParametersSections(t *testing.T) {
 			},
 		},
 		{
+			name: "SA restart false",
+			src:  "Parameters:\n  SA:\n    Restart: false\n",
+			check: func(t *testing.T, p *config.Parameters) {
+				assert.Equal(t, new(false), p.SA.Restart)
+			},
+		},
+		{
+			name: "SA restart omitted",
+			src:  "Parameters:\n  SA:\n    Alpha: 0.9\n",
+			check: func(t *testing.T, p *config.Parameters) {
+				assert.Equal(t, new(true), p.SA.Restart)
+			},
+		},
+		{
 			name: "LNS",
 			src:  "Parameters:\n  LNS:\n    BetaMin: 2.0\n    BetaMax: 8.0\n",
 			check: func(t *testing.T, p *config.Parameters) {
