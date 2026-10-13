@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
 )
 
 func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristic.RandomKeyValue, time.Duration) {
@@ -19,20 +20,40 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	env := ils.env
 	rg := ils.rg
 	local := ils.search
+	tuner := ils.tuner
+	shakeMin, shakeMax := configuration.ShakeMin[0], configuration.ShakeMax[0]
 	_, hasTimeOut := ctx.Deadline()
-	metropolisCriterion := configuration.MetropolisCriterion && hasTimeOut
+	metropolisCriterion := configuration.MetropolisCriterion[0] && hasTimeOut
 
 	historyInformation := &history{
-		defaultMin:         configuration.ShakeMin,
-		defaultMax:         configuration.ShakeMax,
-		min:                configuration.ShakeMin,
-		max:                configuration.ShakeMax,
+		defaultMin:         shakeMin,
+		defaultMax:         shakeMax,
+		min:                shakeMin,
+		max:                shakeMax,
 		timesNoImprovement: 0,
 	}
 
 	var localSolution, bestSolution, neighbour *metaheuristic.RandomKeyValue
 
 	start := definition.StartTime(ctx)
+
+	progress := func() float64 {
+		if deadline, ok := ctx.Deadline(); ok {
+			if total := deadline.Sub(start); total > 0 {
+				return min(1, float64(time.Since(start))/float64(total))
+			}
+			return 1
+		}
+		l := math.Log1p(float64(ctxAction.Iteration()) / float64(ils.states))
+		return l / (1 + l)
+	}
+	if tuner != nil {
+		defer func() {
+			if r, ok := tuner.(tuning.Reporter); ok {
+				ils.logger.Policy(r.Policy())
+			}
+		}()
+	}
 
 	bestSolution = metaheuristic.NewRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
@@ -47,6 +68,11 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	}
 
 	for ; ctx.Err() == nil; ctxAction.Step() {
+		previousBest := bestSolution.Cost
+		if tuner != nil {
+			state := tuner.Choose(progress())
+			historyInformation.defaultMin, historyInformation.defaultMax = ils.shakeMin.At(state), ils.shakeMax.At(state)
+		}
 
 		copy(neighbour.RK, localSolution.RK)
 		shake(neighbour, historyInformation, rg, env)
@@ -74,6 +100,14 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 				}
 			}
 
+		}
+
+		if tuner != nil {
+			reward := 1.0
+			if bestSolution.Cost >= previousBest {
+				reward = float64(bestSolution.Cost-localSolution.Cost) / math.Max(1, math.Abs(float64(bestSolution.Cost)))
+			}
+			tuner.Learn(reward, progress())
 		}
 
 		elapsedTime := time.Since(start)

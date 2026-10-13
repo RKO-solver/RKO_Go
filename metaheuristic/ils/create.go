@@ -3,18 +3,20 @@ package ils
 import (
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/constants"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 // DefaultConfig returns the default ILS parameters.
 func DefaultConfig() *Config {
 	return &Config{
-		ShakeMin:            constants.DefaultShakeMin,
-		ShakeMax:            constants.DefaultShakeMax,
-		MetropolisCriterion: false,
+		ShakeMin:            metaheuristic.List[float64]{constants.DefaultShakeMin},
+		ShakeMax:            metaheuristic.List[float64]{constants.DefaultShakeMax},
+		MetropolisCriterion: metaheuristic.List[bool]{false},
 	}
 }
 
@@ -48,6 +50,14 @@ func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, 
 	}
 	if s.search == nil {
 		s.search = search.NewDefault(env, pool, rg)
+	}
+	if c := s.configuration; len(c.ShakeMin) > 1 || len(c.ShakeMax) > 1 || len(c.MetropolisCriterion) > 1 {
+		space := tuning.NewSpace()
+		s.shakeMin = tuning.Add(space, c.ShakeMin)
+		s.shakeMax = tuning.Add(space, c.ShakeMax)
+		s.metropolisCriterion = tuning.Add(space, c.MetropolisCriterion)
+		s.states = space.States()
+		s.tuner = tuning.NewQLearning(space, rg)
 	}
 	return s
 }

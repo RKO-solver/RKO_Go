@@ -19,6 +19,8 @@ var (
 	ErrUnknownValue = errors.New("unknown value")
 	// ErrNotImplemented marks a recognised metaheuristic that is not implemented yet.
 	ErrNotImplemented = errors.New("not implemented")
+	// ErrInvalidValue marks a parameter list that breaks a validation rule.
+	ErrInvalidValue = errors.New("invalid value")
 )
 
 // Config describes one solver: logging, limits, seed pool and metaheuristics.

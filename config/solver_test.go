@@ -15,6 +15,7 @@ import (
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/logger/printer"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/stretchr/testify/assert"
@@ -122,7 +123,7 @@ func allMetaheuristics() []config.Metaheuristic {
 func TestNewSolverMaxIterationsStopsEveryMetaheuristic(t *testing.T) {
 	const maxIterations = 5
 	params := config.DefaultParameters()
-	params.SA.Iterations = 10
+	params.SA.Iterations = metaheuristic.List[int]{10}
 	cfg := silentConfig()
 	cfg.MaxIterations = maxIterations
 	cfg.Metaheuristics = allMetaheuristics()
@@ -323,10 +324,10 @@ func TestNewSolverCopiesParameters(t *testing.T) {
 	assert.NotEqual(t, confs[0].Pointer(), confs[1].Pointer())
 	assert.NotEqual(t, saPtr, confs[2].Pointer())
 
-	want := config.DefaultParameters().ILS.ShakeMax
-	cfg.Parameters.ILS.ShakeMax = 99
-	assert.Equal(t, want, confs[0].Elem().FieldByName("ShakeMax").Float())
-	assert.Equal(t, want, confs[1].Elem().FieldByName("ShakeMax").Float())
+	want := config.DefaultParameters().ILS.ShakeMax[0]
+	cfg.Parameters.ILS.ShakeMax = metaheuristic.List[float64]{99}
+	assert.Equal(t, want, confs[0].Elem().FieldByName("ShakeMax").Index(0).Float())
+	assert.Equal(t, want, confs[1].Elem().FieldByName("ShakeMax").Index(0).Float())
 }
 
 func TestNewSolverConcurrent(t *testing.T) {
@@ -371,8 +372,8 @@ func TestNewSolverConcurrent(t *testing.T) {
 			}
 			if cfg.Parameters != nil {
 				for i := range 50 {
-					cfg.Parameters.ILS.ShakeMax = float64(i)
-					cfg.Parameters.SA.Alpha = float64(i)
+					cfg.Parameters.ILS.ShakeMax = metaheuristic.List[float64]{float64(i)}
+					cfg.Parameters.SA.Alpha = metaheuristic.List[float64]{float64(i)}
 				}
 			}
 			wg.Wait()

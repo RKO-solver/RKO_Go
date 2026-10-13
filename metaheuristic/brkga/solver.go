@@ -3,6 +3,8 @@ package brkga
 import (
 	"context"
 	"log/slog"
+	"math"
+	"slices"
 	"time"
 
 	"github.com/RKO-solver/rko-go/definition"
@@ -10,6 +12,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristic/internal/genetic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
 )
 
 func (brkga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristic.RandomKeyValue, time.Duration) {
@@ -21,11 +24,18 @@ func (brkga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*me
 	rg := brkga.rg
 	local := brkga.search
 	numKeys := env.NumKeys()
-	populationSize := configuration.PopulationSize
+	tuner := brkga.tuner
+	populationSize := configuration.PopulationSize[0]
+	eliteRatio := configuration.EliteRatio[0]
+	mutantRatio := configuration.MutantRatio[0]
+	crossoverAlpha := configuration.CrossoverAlpha[0]
+	mutationAlpha := configuration.MutationAlpha[0]
+	maxGenerationNoImprovement := configuration.MaxGenerationNoImprovement[0]
+	maxSize := slices.Max(configuration.PopulationSize)
 
-	population := make([]*metaheuristic.RandomKeyValue, populationSize)
-	populationIntermediary := make([]*metaheuristic.RandomKeyValue, populationSize)
-	for i := range populationSize {
+	population := make([]*metaheuristic.RandomKeyValue, maxSize)
+	populationIntermediary := make([]*metaheuristic.RandomKeyValue, maxSize)
+	for i := range maxSize {
 		population[i] = metaheuristic.NewRandomKeyValue(numKeys)
 		populationIntermediary[i] = metaheuristic.NewRandomKeyValue(numKeys)
 	}
@@ -33,12 +43,50 @@ func (brkga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*me
 	generationNoImprovement := 0
 
 	start := definition.StartTime(ctx)
-	bestPerson := genetic.InitialPopulation(population, env, true, rg)
+	bestPerson := genetic.InitialPopulation(population[:populationSize], env, true, rg)
 	solutionPool.Add(bestPerson, start)
 
-	eliteSize := int(configuration.EliteRatio * float64(populationSize))
-	mutantSize := int(configuration.MutantRatio * float64(populationSize))
+	progress := func() float64 {
+		if deadline, ok := ctx.Deadline(); ok {
+			if total := deadline.Sub(start); total > 0 {
+				return min(1, float64(time.Since(start))/float64(total))
+			}
+			return 1
+		}
+		l := math.Log1p(float64(ctxAction.Iteration()) / float64(brkga.states))
+		return l / (1 + l)
+	}
+	if tuner != nil {
+		defer func() {
+			if r, ok := tuner.(tuning.Reporter); ok {
+				brkga.logger.Policy(r.Policy())
+			}
+		}()
+	}
+
+	eliteSize := int(eliteRatio * float64(populationSize))
+	mutantSize := int(mutantRatio * float64(populationSize))
 	for ; ctx.Err() == nil; ctxAction.Step() {
+		if tuner != nil {
+			state := tuner.Choose(progress())
+			previousSize := populationSize
+			populationSize = brkga.populationSize.At(state)
+			eliteRatio = brkga.eliteRatio.At(state)
+			mutantRatio = brkga.mutantRatio.At(state)
+			crossoverAlpha = brkga.crossoverAlpha.At(state)
+			mutationAlpha = brkga.mutationAlpha.At(state)
+			maxGenerationNoImprovement = brkga.maxGenerationNoImprovement.At(state)
+			for i := previousSize; i < populationSize; i++ {
+				rk.Reset(population[i].RK, rg)
+				population[i].Cost = env.Cost(population[i].RK)
+			}
+			if populationSize > previousSize {
+				metaheuristic.Sort(population[:populationSize])
+			}
+			eliteSize = int(eliteRatio * float64(populationSize))
+			mutantSize = int(mutantRatio * float64(populationSize))
+		}
+
 		for i := range eliteSize {
 			rk.Copy(populationIntermediary[i], population[i])
 		}
@@ -52,10 +100,10 @@ func (brkga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*me
 			copy(populationIntermediary[i].RK, population[eliteParentId].RK)
 
 			for j := range numKeys {
-				if rg.Float64() < configuration.MutationAlpha {
+				if rg.Float64() < mutationAlpha {
 					populationIntermediary[i].RK[j] = rg.Float64()
 				} else {
-					if rg.Float64() >= configuration.CrossoverAlpha {
+					if rg.Float64() >= crossoverAlpha {
 						populationIntermediary[i].RK[j] = population[nonEliteParentId].RK[j]
 					}
 				}
@@ -76,7 +124,7 @@ func (brkga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*me
 		k := rg.IntN(populationSize)
 		local.Search(ctx, population[k])
 
-		metaheuristic.Sort(population)
+		metaheuristic.Sort(population[:populationSize])
 
 		if ctx.Err() != nil {
 			if population[0].Cost < bestPerson.Cost {
@@ -100,9 +148,17 @@ func (brkga *BRKGA) solve(ctx context.Context, solutionPool *solution.Pool) (*me
 		solutionPool.Add(bestPerson, start)
 		brkga.logger.Register(population[0].Cost, bestPerson.Cost, ctxAction.Iteration(), elapsed)
 
-		if generationNoImprovement > configuration.MaxGenerationNoImprovement {
+		if tuner != nil {
+			reward := 1 + 1/float64(populationSize)
+			if generationNoImprovement > 0 {
+				reward = float64(bestPerson.Cost-population[0].Cost) / math.Max(1, math.Abs(float64(bestPerson.Cost)))
+			}
+			tuner.Learn(reward, progress())
+		}
+
+		if generationNoImprovement > maxGenerationNoImprovement {
 			brkga.logger.Event(slog.String("restart", "limit generations without improvement"), time.Since(start))
-			restartBest := genetic.InitialPopulation(population, env, true, rg)
+			restartBest := genetic.InitialPopulation(population[:populationSize], env, true, rg)
 			if restartBest.Cost < bestPerson.Cost {
 				rk.Copy(bestPerson, restartBest)
 			}

@@ -13,6 +13,7 @@ import (
 	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/config"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/stretchr/testify/assert"
@@ -130,35 +131,35 @@ Parameters:
 		p := cfg.Parameters
 		require.NotNil(t, p)
 
-		assert.Equal(t, 300, p.BRKGA.PopulationSize)
-		assert.Equal(t, 0.25, p.BRKGA.EliteRatio)
-		assert.Equal(t, 0.1, p.BRKGA.MutantRatio)
-		assert.Equal(t, 0.6, p.BRKGA.CrossoverAlpha)
-		assert.Equal(t, 0.15, p.BRKGA.MutationAlpha)
-		assert.Equal(t, 20, p.BRKGA.MaxGenerationNoImprovement)
+		assert.Equal(t, metaheuristic.List[int]{300}, p.BRKGA.PopulationSize)
+		assert.Equal(t, metaheuristic.List[float64]{0.25}, p.BRKGA.EliteRatio)
+		assert.Equal(t, metaheuristic.List[float64]{0.1}, p.BRKGA.MutantRatio)
+		assert.Equal(t, metaheuristic.List[float64]{0.6}, p.BRKGA.CrossoverAlpha)
+		assert.Equal(t, metaheuristic.List[float64]{0.15}, p.BRKGA.MutationAlpha)
+		assert.Equal(t, metaheuristic.List[int]{20}, p.BRKGA.MaxGenerationNoImprovement)
 
-		assert.Equal(t, 123, p.GA.PopulationSize)
-		assert.Equal(t, 0.7, p.GA.CrossoverAlpha)
-		assert.Equal(t, 0.2, p.GA.MutationAlpha)
-		assert.Equal(t, 10, p.GA.MaxGenerationNoImprovement)
+		assert.Equal(t, metaheuristic.List[int]{123}, p.GA.PopulationSize)
+		assert.Equal(t, metaheuristic.List[float64]{0.7}, p.GA.CrossoverAlpha)
+		assert.Equal(t, metaheuristic.List[float64]{0.2}, p.GA.MutationAlpha)
+		assert.Equal(t, metaheuristic.List[int]{10}, p.GA.MaxGenerationNoImprovement)
 
-		assert.Equal(t, 2.0, p.ILS.ShakeMin)
-		assert.Equal(t, 8.0, p.ILS.ShakeMax)
-		assert.True(t, p.ILS.MetropolisCriterion)
+		assert.Equal(t, metaheuristic.List[float64]{2.0}, p.ILS.ShakeMin)
+		assert.Equal(t, metaheuristic.List[float64]{8.0}, p.ILS.ShakeMax)
+		assert.Equal(t, metaheuristic.List[bool]{true}, p.ILS.MetropolisCriterion)
 
-		assert.Equal(t, 0.95, p.SA.Alpha)
-		assert.Equal(t, 1000.0, p.SA.TemperatureInitial)
-		assert.Equal(t, 10.0, p.SA.TemperatureGoal)
-		assert.Equal(t, 200.0, p.SA.TemperatureReheat)
-		assert.Equal(t, 2.0, p.SA.ShakeMin)
-		assert.Equal(t, 5.0, p.SA.ShakeMax)
-		assert.Equal(t, uint8(3), p.SA.QtdReheat)
-		assert.Equal(t, 100, p.SA.Iterations)
+		assert.Equal(t, metaheuristic.List[float64]{0.95}, p.SA.Alpha)
+		assert.Equal(t, metaheuristic.List[float64]{1000.0}, p.SA.TemperatureInitial)
+		assert.Equal(t, metaheuristic.List[float64]{10.0}, p.SA.TemperatureGoal)
+		assert.Equal(t, metaheuristic.List[float64]{200.0}, p.SA.TemperatureReheat)
+		assert.Equal(t, metaheuristic.List[float64]{2.0}, p.SA.ShakeMin)
+		assert.Equal(t, metaheuristic.List[float64]{5.0}, p.SA.ShakeMax)
+		assert.Equal(t, metaheuristic.List[uint8]{3}, p.SA.QtdReheat)
+		assert.Equal(t, metaheuristic.List[int]{100}, p.SA.Iterations)
 
-		assert.Equal(t, 0.33, p.VNS.Rate)
+		assert.Equal(t, metaheuristic.List[float64]{0.33}, p.VNS.Rate)
 
-		assert.Equal(t, 0.5, p.LNS.BetaMin)
-		assert.Equal(t, 0.9, p.LNS.BetaMax)
+		assert.Equal(t, metaheuristic.List[float64]{0.5}, p.LNS.BetaMin)
+		assert.Equal(t, metaheuristic.List[float64]{0.9}, p.LNS.BetaMax)
 	}
 }
 
@@ -172,60 +173,60 @@ func TestDecodeParametersSections(t *testing.T) {
 			name: "GA",
 			src:  "Parameters:\n  GA:\n    PopulationSize: 123\n    CrossoverAlpha: 0.7\n    MutationAlpha: 0.2\n    MaxGenerationNoImprovement: 10\n",
 			check: func(t *testing.T, p *config.Parameters) {
-				assert.Equal(t, 123, p.GA.PopulationSize)
-				assert.Equal(t, 0.7, p.GA.CrossoverAlpha)
-				assert.Equal(t, 0.2, p.GA.MutationAlpha)
-				assert.Equal(t, 10, p.GA.MaxGenerationNoImprovement)
+				assert.Equal(t, metaheuristic.List[int]{123}, p.GA.PopulationSize)
+				assert.Equal(t, metaheuristic.List[float64]{0.7}, p.GA.CrossoverAlpha)
+				assert.Equal(t, metaheuristic.List[float64]{0.2}, p.GA.MutationAlpha)
+				assert.Equal(t, metaheuristic.List[int]{10}, p.GA.MaxGenerationNoImprovement)
 			},
 		},
 		{
 			name: "BRKGA",
 			src:  "Parameters:\n  BRKGA:\n    PopulationSize: 300\n    EliteRatio: 0.25\n    MutantRatio: 0.1\n    CrossoverAlpha: 0.6\n    MutationAlpha: 0.15\n    MaxGenerationNoImprovement: 20\n",
 			check: func(t *testing.T, p *config.Parameters) {
-				assert.Equal(t, 300, p.BRKGA.PopulationSize)
-				assert.Equal(t, 0.25, p.BRKGA.EliteRatio)
-				assert.Equal(t, 0.1, p.BRKGA.MutantRatio)
-				assert.Equal(t, 0.6, p.BRKGA.CrossoverAlpha)
-				assert.Equal(t, 0.15, p.BRKGA.MutationAlpha)
-				assert.Equal(t, 20, p.BRKGA.MaxGenerationNoImprovement)
+				assert.Equal(t, metaheuristic.List[int]{300}, p.BRKGA.PopulationSize)
+				assert.Equal(t, metaheuristic.List[float64]{0.25}, p.BRKGA.EliteRatio)
+				assert.Equal(t, metaheuristic.List[float64]{0.1}, p.BRKGA.MutantRatio)
+				assert.Equal(t, metaheuristic.List[float64]{0.6}, p.BRKGA.CrossoverAlpha)
+				assert.Equal(t, metaheuristic.List[float64]{0.15}, p.BRKGA.MutationAlpha)
+				assert.Equal(t, metaheuristic.List[int]{20}, p.BRKGA.MaxGenerationNoImprovement)
 			},
 		},
 		{
 			name: "SA",
 			src:  "Parameters:\n  SA:\n    Alpha: 0.95\n    TemperatureInitial: 1000\n    TemperatureGoal: 10\n    TemperatureReheat: 200\n    ShakeMin: 2.0\n    ShakeMax: 5.0\n    QtdReheat: 3\n    Iterations: 100\n",
 			check: func(t *testing.T, p *config.Parameters) {
-				assert.Equal(t, 0.95, p.SA.Alpha)
-				assert.Equal(t, 1000.0, p.SA.TemperatureInitial)
-				assert.Equal(t, 10.0, p.SA.TemperatureGoal)
-				assert.Equal(t, 200.0, p.SA.TemperatureReheat)
-				assert.Equal(t, 2.0, p.SA.ShakeMin)
-				assert.Equal(t, 5.0, p.SA.ShakeMax)
-				assert.Equal(t, uint8(3), p.SA.QtdReheat)
-				assert.Equal(t, 100, p.SA.Iterations)
+				assert.Equal(t, metaheuristic.List[float64]{0.95}, p.SA.Alpha)
+				assert.Equal(t, metaheuristic.List[float64]{1000.0}, p.SA.TemperatureInitial)
+				assert.Equal(t, metaheuristic.List[float64]{10.0}, p.SA.TemperatureGoal)
+				assert.Equal(t, metaheuristic.List[float64]{200.0}, p.SA.TemperatureReheat)
+				assert.Equal(t, metaheuristic.List[float64]{2.0}, p.SA.ShakeMin)
+				assert.Equal(t, metaheuristic.List[float64]{5.0}, p.SA.ShakeMax)
+				assert.Equal(t, metaheuristic.List[uint8]{3}, p.SA.QtdReheat)
+				assert.Equal(t, metaheuristic.List[int]{100}, p.SA.Iterations)
 			},
 		},
 		{
 			name: "VNS",
 			src:  "Parameters:\n  VNS:\n    Rate: 0.33\n",
 			check: func(t *testing.T, p *config.Parameters) {
-				assert.Equal(t, 0.33, p.VNS.Rate)
+				assert.Equal(t, metaheuristic.List[float64]{0.33}, p.VNS.Rate)
 			},
 		},
 		{
 			name: "ILS",
 			src:  "Parameters:\n  ILS:\n    ShakeMin: 2.0\n    ShakeMax: 8.0\n    MetropolisCriterion: true\n",
 			check: func(t *testing.T, p *config.Parameters) {
-				assert.Equal(t, 2.0, p.ILS.ShakeMin)
-				assert.Equal(t, 8.0, p.ILS.ShakeMax)
-				assert.True(t, p.ILS.MetropolisCriterion)
+				assert.Equal(t, metaheuristic.List[float64]{2.0}, p.ILS.ShakeMin)
+				assert.Equal(t, metaheuristic.List[float64]{8.0}, p.ILS.ShakeMax)
+				assert.Equal(t, metaheuristic.List[bool]{true}, p.ILS.MetropolisCriterion)
 			},
 		},
 		{
 			name: "LNS",
 			src:  "Parameters:\n  LNS:\n    BetaMin: 2.0\n    BetaMax: 8.0\n",
 			check: func(t *testing.T, p *config.Parameters) {
-				assert.Equal(t, 2.0, p.LNS.BetaMin)
-				assert.Equal(t, 8.0, p.LNS.BetaMax)
+				assert.Equal(t, metaheuristic.List[float64]{2.0}, p.LNS.BetaMin)
+				assert.Equal(t, metaheuristic.List[float64]{8.0}, p.LNS.BetaMax)
 			},
 		},
 	}
@@ -244,12 +245,12 @@ func TestDecodePartialSectionKeepsDefaults(t *testing.T) {
 	defaults := config.DefaultParameters()
 
 	expectedSA := *defaults.SA
-	expectedSA.Alpha = 0.9
-	expectedSA.Iterations = 7
+	expectedSA.Alpha = metaheuristic.List[float64]{0.9}
+	expectedSA.Iterations = metaheuristic.List[int]{7}
 	assert.Equal(t, expectedSA, *cfg.Parameters.SA)
 
 	expectedILS := *defaults.ILS
-	expectedILS.ShakeMax = 0.4
+	expectedILS.ShakeMax = metaheuristic.List[float64]{0.4}
 	assert.Equal(t, expectedILS, *cfg.Parameters.ILS)
 
 	assert.Equal(t, defaults.BRKGA, cfg.Parameters.BRKGA)
@@ -258,8 +259,8 @@ func TestDecodePartialSectionKeepsDefaults(t *testing.T) {
 	assert.Equal(t, defaults.LNS, cfg.Parameters.LNS)
 }
 
-func TestDecodeNonPositiveValuesKeepDefaults(t *testing.T) {
-	cfg := mustDecode(t, "Parameters:\n  VNS:\n    Rate: -1\n  ILS:\n    MetropolisCriterion: false\n", false)
+func TestDecodeEmptyValuesKeepDefaults(t *testing.T) {
+	cfg := mustDecode(t, "Parameters:\n  VNS:\n    Rate: []\n  ILS:\n    MetropolisCriterion: false\n", false)
 	defaults := config.DefaultParameters()
 
 	assert.Equal(t, defaults.VNS, cfg.Parameters.VNS)

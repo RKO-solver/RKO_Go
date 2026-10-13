@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/definition"
@@ -33,9 +34,9 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 		opt(&o)
 	}
 
-	params := cfg.Parameters
-	if params == nil {
-		params = DefaultParameters()
+	params := DefaultParameters()
+	if cfg.Parameters != nil {
+		params = cfg.Parameters.merged()
 	}
 
 	maxSize, initialSize := seedPoolSizes(cfg.SeedPool.MaxSize, cfg.SeedPool.InitialSize)
@@ -125,6 +126,89 @@ func (cfg *Config) validate() error {
 				errs = append(errs, fmt.Errorf("config: Parameters.%s is nil", s.name))
 			}
 		}
+		if len(errs) == 0 {
+			errs = append(errs, p.merged().validate()...)
+		}
 	}
 	return errors.Join(errs...)
+}
+
+// merged returns the default parameters overridden by the non-empty lists of p.
+func (p *Parameters) merged() *Parameters {
+	m := DefaultParameters()
+	for _, opt := range []parameterOption{
+		withGA(p.GA),
+		withBRKGA(p.BRKGA),
+		withSA(p.SA),
+		withVNS(p.VNS),
+		withILS(p.ILS),
+		withLNS(p.LNS),
+	} {
+		opt(m)
+	}
+	return m
+}
+
+// validate checks the lists of p, which must have every section and no empty list.
+func (p *Parameters) validate() []error {
+	var errs []error
+	for _, c := range []struct {
+		name string
+		dup  bool
+	}{
+		{"BRKGA.PopulationSize", hasDuplicates(p.BRKGA.PopulationSize)},
+		{"BRKGA.EliteRatio", hasDuplicates(p.BRKGA.EliteRatio)},
+		{"BRKGA.MutantRatio", hasDuplicates(p.BRKGA.MutantRatio)},
+		{"BRKGA.CrossoverAlpha", hasDuplicates(p.BRKGA.CrossoverAlpha)},
+		{"BRKGA.MutationAlpha", hasDuplicates(p.BRKGA.MutationAlpha)},
+		{"BRKGA.MaxGenerationNoImprovement", hasDuplicates(p.BRKGA.MaxGenerationNoImprovement)},
+		{"GA.PopulationSize", hasDuplicates(p.GA.PopulationSize)},
+		{"GA.CrossoverAlpha", hasDuplicates(p.GA.CrossoverAlpha)},
+		{"GA.MutationAlpha", hasDuplicates(p.GA.MutationAlpha)},
+		{"GA.MaxGenerationNoImprovement", hasDuplicates(p.GA.MaxGenerationNoImprovement)},
+		{"ILS.ShakeMin", hasDuplicates(p.ILS.ShakeMin)},
+		{"ILS.ShakeMax", hasDuplicates(p.ILS.ShakeMax)},
+		{"SA.Alpha", hasDuplicates(p.SA.Alpha)},
+		{"SA.TemperatureInitial", hasDuplicates(p.SA.TemperatureInitial)},
+		{"SA.TemperatureReheat", hasDuplicates(p.SA.TemperatureReheat)},
+		{"SA.ShakeMin", hasDuplicates(p.SA.ShakeMin)},
+		{"SA.ShakeMax", hasDuplicates(p.SA.ShakeMax)},
+		{"SA.QtdReheat", hasDuplicates(p.SA.QtdReheat)},
+		{"SA.Iterations", hasDuplicates(p.SA.Iterations)},
+		{"VNS.Rate", hasDuplicates(p.VNS.Rate)},
+		{"LNS.BetaMin", hasDuplicates(p.LNS.BetaMin)},
+		{"LNS.BetaMax", hasDuplicates(p.LNS.BetaMax)},
+	} {
+		if c.dup {
+			errs = append(errs, fmt.Errorf("config: Parameters.%s: %w: repeated value", c.name, ErrInvalidValue))
+		}
+	}
+	for _, c := range []struct {
+		name     string
+		min, max []float64
+	}{
+		{"ILS.ShakeMin", p.ILS.ShakeMin, p.ILS.ShakeMax},
+		{"SA.ShakeMin", p.SA.ShakeMin, p.SA.ShakeMax},
+		{"LNS.BetaMin", p.LNS.BetaMin, p.LNS.BetaMax},
+	} {
+		if lo, hi := slices.Max(c.min), slices.Min(c.max); lo > hi {
+			errs = append(errs, fmt.Errorf("config: Parameters.%s: %w: %v is greater than the maximum %v", c.name, ErrInvalidValue, lo, hi))
+		}
+	}
+	if len(p.SA.TemperatureGoal) > 1 {
+		errs = append(errs, fmt.Errorf("config: Parameters.SA.TemperatureGoal: %w: only one value is allowed", ErrInvalidValue))
+	}
+	if len(p.ILS.MetropolisCriterion) > 1 {
+		errs = append(errs, fmt.Errorf("config: Parameters.ILS.MetropolisCriterion: %w: only one value is allowed", ErrInvalidValue))
+	}
+	return errs
+}
+
+func hasDuplicates[T comparable](values []T) bool {
+	for i := range values {
+		if slices.Contains(values[:i], values[i]) {
+			return true
+		}
+	}
+	return false
 }

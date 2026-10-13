@@ -9,6 +9,7 @@ import (
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
 )
 
 var fareySequence = []float64{
@@ -41,10 +42,30 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	rg := lns.rg
 	local := lns.search
 	env := lns.env
+	tuner := lns.tuner
+	betaMin, betaMax := configuration.BetaMin[0], configuration.BetaMax[0]
 
 	var bestSolution, localSolution *metaheuristic.RandomKeyValue
 
 	start := definition.StartTime(ctx)
+
+	progress := func() float64 {
+		if deadline, ok := ctx.Deadline(); ok {
+			if total := deadline.Sub(start); total > 0 {
+				return min(1, float64(time.Since(start))/float64(total))
+			}
+			return 1
+		}
+		l := math.Log1p(float64(ctxAction.Iteration()) / float64(lns.states))
+		return l / (1 + l)
+	}
+	if tuner != nil {
+		defer func() {
+			if r, ok := tuner.(tuning.Reporter); ok {
+				lns.logger.Policy(r.Policy())
+			}
+		}()
+	}
 
 	bestSolution = metaheuristic.NewRandomKeyValue(env.NumKeys())
 	rk.Reset(bestSolution.RK, rg)
@@ -57,8 +78,12 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	}
 
 	for ; ctx.Err() == nil; ctxAction.Step() {
-		// Future Q-Learning
-		intensityMin, intensityMax := int(configuration.BetaMin*float64(env.NumKeys())), int(configuration.BetaMax*float64(env.NumKeys()))
+		previousBest := bestSolution.Cost
+		if tuner != nil {
+			state := tuner.Choose(progress())
+			betaMin, betaMax = lns.betaMin.At(state), lns.betaMax.At(state)
+		}
+		intensityMin, intensityMax := int(betaMin*float64(env.NumKeys())), int(betaMax*float64(env.NumKeys()))
 
 		rk.Copy(localSolution, bestSolution)
 
@@ -97,6 +122,14 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 			rk.Copy(bestSolution, localSolution)
 
 			solutionPool.Add(bestSolution, start)
+		}
+
+		if tuner != nil {
+			reward := 1.0
+			if bestSolution.Cost >= previousBest {
+				reward = float64(bestSolution.Cost-localSolution.Cost) / math.Max(1, math.Abs(float64(bestSolution.Cost)))
+			}
+			tuner.Learn(reward, progress())
 		}
 
 		lns.logger.Register(localSolution.Cost, bestSolution.Cost, ctxAction.Iteration(), time.Since(start))

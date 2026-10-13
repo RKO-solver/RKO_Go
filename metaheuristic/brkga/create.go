@@ -1,23 +1,27 @@
 package brkga
 
 import (
+	"fmt"
+
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/constants"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 // DefaultConfig returns the default BRKGA parameters.
 func DefaultConfig() *Config {
 	return &Config{
-		PopulationSize:             constants.DefaultPopulationSize,
-		EliteRatio:                 constants.DefaultEliteRatio,
-		MutantRatio:                constants.DefaultMutantRatio,
-		CrossoverAlpha:             constants.DefaultCrossoverAlpha,
-		MutationAlpha:              constants.DefaultMutationAlpha,
-		MaxGenerationNoImprovement: constants.DefaultMaxGenerationNoImprovement,
+		PopulationSize:             metaheuristic.List[int]{constants.DefaultPopulationSize},
+		EliteRatio:                 metaheuristic.List[float64]{constants.DefaultEliteRatio},
+		MutantRatio:                metaheuristic.List[float64]{constants.DefaultMutantRatio},
+		CrossoverAlpha:             metaheuristic.List[float64]{constants.DefaultCrossoverAlpha},
+		MutationAlpha:              metaheuristic.List[float64]{constants.DefaultMutationAlpha},
+		MaxGenerationNoImprovement: metaheuristic.List[int]{constants.DefaultMaxGenerationNoImprovement},
 	}
 }
 
@@ -51,6 +55,24 @@ func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, 
 	}
 	if s.search == nil {
 		s.search = search.NewDefault(env, pool, rg)
+	}
+	for _, p := range s.configuration.PopulationSize {
+		for _, e := range s.configuration.EliteRatio {
+			if size := int(e * float64(p)); size < 1 || size >= p {
+				panic(fmt.Sprintf("brkga: EliteRatio %v with PopulationSize %d gives elite size %d; need 1 to %d", e, p, size, p-1))
+			}
+		}
+	}
+	if c := s.configuration; len(c.PopulationSize) > 1 || len(c.EliteRatio) > 1 || len(c.MutantRatio) > 1 || len(c.CrossoverAlpha) > 1 || len(c.MutationAlpha) > 1 || len(c.MaxGenerationNoImprovement) > 1 {
+		space := tuning.NewSpace()
+		s.populationSize = tuning.Add(space, c.PopulationSize)
+		s.eliteRatio = tuning.Add(space, c.EliteRatio)
+		s.mutantRatio = tuning.Add(space, c.MutantRatio)
+		s.crossoverAlpha = tuning.Add(space, c.CrossoverAlpha)
+		s.mutationAlpha = tuning.Add(space, c.MutationAlpha)
+		s.maxGenerationNoImprovement = tuning.Add(space, c.MaxGenerationNoImprovement)
+		s.states = space.States()
+		s.tuner = tuning.NewQLearning(space, rg)
 	}
 	return s
 }

@@ -3,23 +3,25 @@ package sa
 import (
 	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/constants"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 // DefaultConfig returns the default SA parameters.
 func DefaultConfig() *Config {
 	return &Config{
-		Alpha:              constants.DefaultAlphaSimulationAnnealing,
-		TemperatureInitial: constants.DefaultTemperatureInitial,
-		TemperatureGoal:    constants.DefaultTemperatureGoal,
-		TemperatureReheat:  constants.DefaultReheat,
-		ShakeMin:           constants.DefaultShakeMinSimulationAnnealing,
-		ShakeMax:           constants.DefaultShakeMaxSimulationAnnealing,
-		QtdReheat:          constants.DefaultPreheat,
-		Iterations:         constants.DefaultIterationsSimulationAnnealing,
+		Alpha:              metaheuristic.List[float64]{constants.DefaultAlphaSimulationAnnealing},
+		TemperatureInitial: metaheuristic.List[float64]{constants.DefaultTemperatureInitial},
+		TemperatureGoal:    metaheuristic.List[float64]{constants.DefaultTemperatureGoal},
+		TemperatureReheat:  metaheuristic.List[float64]{constants.DefaultReheat},
+		ShakeMin:           metaheuristic.List[float64]{constants.DefaultShakeMinSimulationAnnealing},
+		ShakeMax:           metaheuristic.List[float64]{constants.DefaultShakeMaxSimulationAnnealing},
+		QtdReheat:          metaheuristic.List[uint8]{constants.DefaultPreheat},
+		Iterations:         metaheuristic.List[int]{constants.DefaultIterationsSimulationAnnealing},
 	}
 }
 
@@ -53,6 +55,19 @@ func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, 
 	}
 	if s.search == nil {
 		s.search = search.NewDefault(env, pool, rg)
+	}
+	if c := s.configuration; len(c.Alpha) > 1 || len(c.TemperatureInitial) > 1 || len(c.TemperatureGoal) > 1 || len(c.TemperatureReheat) > 1 || len(c.ShakeMin) > 1 || len(c.ShakeMax) > 1 || len(c.QtdReheat) > 1 || len(c.Iterations) > 1 {
+		space := tuning.NewSpace()
+		s.alpha = tuning.Add(space, c.Alpha)
+		s.temperatureInitial = tuning.Add(space, c.TemperatureInitial)
+		s.temperatureGoal = tuning.Add(space, c.TemperatureGoal)
+		s.temperatureReheat = tuning.Add(space, c.TemperatureReheat)
+		s.shakeMin = tuning.Add(space, c.ShakeMin)
+		s.shakeMax = tuning.Add(space, c.ShakeMax)
+		s.qtdReheat = tuning.Add(space, c.QtdReheat)
+		s.iterations = tuning.Add(space, c.Iterations)
+		s.states = space.States()
+		s.tuner = tuning.NewQLearning(space, rg)
 	}
 	return s
 }
