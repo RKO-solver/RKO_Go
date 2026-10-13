@@ -37,25 +37,26 @@ func run(t *testing.T, cfg *lns.Config, deadline bool) string {
 	t.Helper()
 
 	env := tinyEnv{}
-	l := printer.New(io.Discard, env.ProblemName(), nil)
+	var buf bytes.Buffer
+	l := printer.New(&buf, env.ProblemName(), nil)
 	rg := random.New(1)
 	pool := solution.NewPool(env, rg, l)
 	solver := lns.New(env, rg.Split(), pool, l, lns.WithConfig(cfg))
 
 	ctx := definition.WithMaxIterations(context.Background(), 40)
+	var timeLimit time.Duration
 	if deadline {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
-		defer cancel()
+		timeLimit = 10 * time.Second
 	}
-	ctx = definition.WithStartTime(ctx, time.Now())
+	ctx, cancel := definition.WithStartTime(ctx, timeLimit)
+	defer cancel()
 	res := solver.Solve(ctx)
 
 	assert.Equal(t, env.Cost(res.Solution.(definition.RandomKey)), res.Cost)
 	assert.LessOrEqual(t, pool.BestCost(), res.Cost)
 
-	var buf bytes.Buffer
-	require.NoError(t, l.PrintPolicies(&buf))
+	buf.Reset()
+	require.NoError(t, l.PrintPolicies())
 	return buf.String()
 }
 

@@ -37,12 +37,16 @@ func (ils *ILS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 	start := definition.StartTime(ctx)
 
+	deadline, ok := ctx.Deadline()
+	total := deadline.Sub(start)
+	ok = ok && total > 0
+	n := ctxAction.Limit()
 	progress := func() float64 {
-		if deadline, ok := ctx.Deadline(); ok {
-			if total := deadline.Sub(start); total > 0 {
-				return min(1, float64(time.Since(start))/float64(total))
-			}
-			return 1
+		if ok {
+			return min(1, float64(time.Since(start))/float64(total))
+		}
+		if n > 0 {
+			return min(1, float64(ctxAction.Iteration())/float64(n))
 		}
 		l := math.Log1p(float64(ctxAction.Iteration()) / float64(ils.states))
 		return l / (1 + l)

@@ -61,7 +61,7 @@ A `Param` is a small value that can be copied freely, and it stays valid when mo
 
 ## Progress and reward
 
-**Progress** is the fraction of the run already done, in `[0, 1]`: `0` at the start, `1` at the end. Compute it however suits the metaheuristic, for example elapsed time over the time limit, or iterations over the iteration limit. Pass the progress before the cycle to `Choose` and after it to `Learn`. Tuners trust it: it is neither clamped nor checked. `QLearning` uses it to explore less and learn more slowly as the run advances.
+**Progress** is the fraction of the run already done, in `[0, 1]`: `0` at the start, `1` at the end. Compute it however suits the metaheuristic, for example elapsed time over the time limit, or iterations over the iteration limit. Pass the progress before the cycle to `Choose` and after it to `Learn`. Tuners trust it: it is neither clamped nor checked. `QLearning` uses it to explore less and learn more slowly as the run advances. For the progress the built-in metaheuristics compute, see [Progress](../README.md#progress) in the `metaheuristic` package.
 
 **Reward** says how well the cycle went; higher is better. The metaheuristic defines it. For example: `1` when the cycle found a new best solution, otherwise the relative gap to the best solution, which is at most `0`.
 
@@ -217,7 +217,7 @@ if r, ok := tuner.(tuning.Reporter); ok {
 }
 ```
 
-Then, after `Solve`, call `log.PrintPolicies(os.Stdout)` or `log.SavePoliciesCSV("")` on the logger. See [Policies](../../logger/README.md#policies) in the `logger` package.
+Then, after `Solve`, call `log.PrintPolicies()` or `log.SavePoliciesCSV("")` on the logger. See [Policies](../../logger/README.md#policies) in the `logger` package.
 
 ## Concurrency
 

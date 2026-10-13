@@ -23,6 +23,11 @@ func (l *IterationCounter) Iteration() int {
 	return l.iteration
 }
 
+// Limit returns the iteration limit, or -1 if there is none.
+func (l *IterationCounter) Limit() int {
+	return l.max
+}
+
 // Step counts one iteration and cancels the context when the limit is reached.
 func (l *IterationCounter) Step() {
 	l.iteration++
@@ -38,9 +43,14 @@ func (l *IterationCounter) Stop() {
 	}
 }
 
-// WithStartTime returns a context carrying the given start time.
-func WithStartTime(ctx context.Context, t time.Time) context.Context {
-	return context.WithValue(ctx, startTimeKey, t)
+// WithStartTime stores the start time and, if timeLimit > 0, a deadline timeLimit later.
+func WithStartTime(ctx context.Context, timeLimit time.Duration) (context.Context, context.CancelFunc) {
+	start := time.Now()
+	ctx = context.WithValue(ctx, startTimeKey, start)
+	if timeLimit > 0 {
+		return context.WithDeadline(ctx, start.Add(timeLimit))
+	}
+	return ctx, func() {}
 }
 
 // StartTime returns the start time stored in ctx, or time.Now().
@@ -67,7 +77,7 @@ func maxIterations(ctx context.Context) (int, bool) {
 func NewSolverContext(ctx context.Context) (context.Context, *IterationCounter) {
 	maxIteration, hasLimit := maxIterations(ctx)
 	if !hasLimit {
-		return ctx, &IterationCounter{}
+		return ctx, &IterationCounter{max: maxIteration}
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	return ctx, &IterationCounter{max: maxIteration, cancel: cancel}

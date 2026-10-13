@@ -140,8 +140,60 @@ Only `config.NewSolver` rejects several values for a "single value only" field. 
 
 - GA and BRKGA allocate the population at the largest `PopulationSize`; when the size grows, new random individuals are added.
 - SA starts at the first `TemperatureInitial`; a tuned `TemperatureInitial` applies at the reheats.
-- The tuner explores less as the run advances. The progress is the elapsed time over the time from the run's start to the context's deadline (the time limit, or your `ctx`'s deadline if earlier); with no deadline (for example with only `MaxIterations`) it is `L / (1 + L)`, with `L = ln(1 + cycles / States())`, where `States()` is the number of value combinations.
+- The tuner explores less as the run advances; see [Progress](#progress).
 - `New` panics if BRKGA has an `EliteRatio` and `PopulationSize` combination whose elite size, `int(EliteRatio * PopulationSize)`, is outside `1` to `PopulationSize - 1`, or if LNS has a `BetaMin` and `BetaMax` combination with `int(BetaMin * NumKeys) >= int(BetaMax * NumKeys)`.
+
+### Progress
+
+Before and after each cycle, the metaheuristic gives the tuner the run's **progress**, a number in `[0, 1]`. It is measured by time when the metaheuristic's context has a deadline, by cycles against `MaxIterations` when only that is set, and by cycles on a curve with no fixed end otherwise:
+
+| Limits | Progress by |
+|---|---|
+| A time limit (including the 150 s default of `rko.New`) | time, up to the time limit |
+| A deadline on the `ctx` given to `Solve`, with or without a time limit | time, up to the earlier of the two |
+| A time limit and `MaxIterations` | time; `MaxIterations` is not used in the progress, but it may still end the run first |
+| `MaxIterations` only, and no deadline on `ctx` | cycles over `MaxIterations` |
+| No limit and no deadline on `ctx` (the run continues until `ctx` is cancelled) | cycles, on a curve with no fixed end |
+
+**By time**, progress grows linearly from `0` at the start to `1` at the deadline:
+
+```text
+progress = min(1, (now − start) / (deadline − start))
+```
+
+`start` is the run's start time (`definition.StartTime(ctx)`) and `deadline` the context's deadline. If `ctx` has no deadline, or the deadline is not after `start` (for example, it has already passed), the run is treated as having no deadline and progress follows the `MaxIterations` or no-limit rows.
+
+**By cycles over `MaxIterations`**, progress grows linearly from `0` to `1` at the last iteration:
+
+```text
+progress = min(1, i / MaxIterations)
+```
+
+`i` is the number of cycles completed so far. One cycle is one iteration of the metaheuristic (see [Metaheuristics](#metaheuristics)), the same count that `MaxIterations` limits.
+
+**By cycles with no limit**, the length of the run is unknown, so progress follows a curve with no fixed end:
+
+```text
+L = ln(1 + i / States())
+progress = L / (1 + L)
+```
+
+`i` is the number of cycles completed so far. `States()` is the number of value combinations: the product of the list lengths of the `Config` fields.
+
+This curve applies only to runs with no limit. Progress starts at `0`, rises fast at first and then more and more slowly, and never reaches `1`. Because `i` is divided by `States()`, a larger space keeps exploring for more cycles:
+
+| `i / States()` | Progress |
+|---|---|
+| 0 | 0.00 |
+| 1 | 0.41 |
+| e − 1 ≈ 1.72 | 0.50 |
+| 10 | 0.71 |
+| 100 | 0.82 |
+| 1000 | 0.87 |
+
+For example, with 8 combinations, progress is 0.50 after about 14 cycles and 0.82 after 800.
+
+`QLearning` lowers its exploration rate and its learning rate as progress rises; see [Exploration rate](tuning/README.md#exploration-rate) and [Learning rate](tuning/README.md#learning-rate). Its exploration rate settles at its floor of `0.1` at progress `0.9`: at `0.9 × MaxIterations` cycles with `MaxIterations`, but only after about `8100 × States()` cycles with no limit.
 
 ### Learned policy
 

@@ -31,18 +31,14 @@ func (s *Solver) Solve(ctx context.Context) any {
 	if s.maxIterations > 0 {
 		ctx = definition.WithMaxIterations(ctx, s.maxIterations)
 	}
-	if s.timeLimit > 0 {
-		ctx_, cancel := context.WithTimeout(ctx, s.timeLimit)
-		ctx = ctx_
-		defer cancel()
-	}
 
 	stop := func() {}
 	if r, ok := s.l.(logger.Runner); ok {
 		stop = r.Start()
 	}
 
-	ctxStartTime := definition.WithStartTime(ctx, time.Now())
+	ctxStartTime, cancel := definition.WithStartTime(ctx, s.timeLimit)
+	defer cancel()
 	for i, sv := range s.solvers {
 		wg.Add(1)
 		go metaheuristic.Worker(ctxStartTime, sv, i, s.l, &wg)

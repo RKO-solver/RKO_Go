@@ -131,7 +131,7 @@ The run's best solution is the one in the shared solution pool, which is what `r
 
 | Function | Does |
 |---|---|
-| `WithStartTime(ctx, t) context.Context` | Returns a context carrying the run's start time. |
+| `WithStartTime(ctx, timeLimit) (context.Context, context.CancelFunc)` | Returns a context carrying the current time as the run's start time. If `timeLimit > 0`, it also sets a deadline `timeLimit` after that start (an earlier deadline on `ctx` is kept). Call `defer cancel()`. |
 | `StartTime(ctx) time.Time` | Returns the stored start time, or `time.Now()` if there is none. |
 | `WithMaxIterations(ctx, n) context.Context` | Returns a context carrying the iteration limit of each metaheuristic. Zero or negative means no limit. |
 | `NewSolverContext(ctx) (context.Context, *IterationCounter)` | Returns a context for one metaheuristic and the counter that cancels it at the limit. Without a limit, it returns `ctx` itself. |
@@ -142,6 +142,7 @@ The run's best solution is the one in the shared solution pool, which is what `r
 |---|---|
 | `Step()` | Counts one iteration and cancels the metaheuristic's context when the limit is reached. |
 | `Iteration() int` | Returns the number of completed iterations. |
+| `Limit() int` | Returns the iteration limit, or `-1` if there is none. |
 | `Stop()` | Releases the context. Call it with `defer`. |
 
 ## Writing a metaheuristic
