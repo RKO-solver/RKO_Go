@@ -3,7 +3,6 @@ package printer
 import (
 	"io"
 	"os"
-	"time"
 
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/logger/internal/spill"
@@ -11,10 +10,10 @@ import (
 
 // Options configures a Log; the zero value is valid.
 type Options struct {
-	Level         logger.Level  // zero: LevelInfo
-	PrintInterval time.Duration // 0: 500ms; below 10ms raised to 10ms
-	HistoryBuffer int           // bytes per metaheuristic; 0: 512 KiB; negative: keep all history in memory
-	HistoryDir    string        // "": system temp dir
+	Level         logger.Level // zero: LevelInfo
+	PrintInterval int          // Registers skipped between prints; 0: 5; negative: print every Register
+	HistoryBuffer int          // bytes per metaheuristic; 0: 512 KiB; negative: keep all history in memory
+	HistoryDir    string       // "": system temp dir
 }
 
 // Default creates a Log that writes to os.Stdout with default options.
@@ -39,7 +38,7 @@ func New(w io.Writer, problem string, opts *Options) *Log {
 	}
 	return &Log{
 		level:    o.Level,
-		interval: max(o.PrintInterval, minPrintInterval),
+		interval: max(o.PrintInterval, 0),
 		w:        w,
 		problem:  problem,
 		hist:     spill.Config{Dir: o.HistoryDir, Bytes: o.HistoryBuffer, Problem: problem},

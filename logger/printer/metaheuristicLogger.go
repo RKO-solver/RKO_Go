@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math"
 	"time"
 
 	"github.com/RKO-solver/rko-go/logger"
@@ -16,10 +15,9 @@ type MetaheuristicLogger struct {
 	id       int
 	name     string
 	level    logger.Level
-	interval time.Duration
+	interval int
+	count    int
 	w        io.Writer
-	next     time.Duration
-	lastBest int
 	history  []logger.Sample // records not yet spilled to the file
 	file     spill.File
 	policy   *logger.Table // the tuner's learned policy; nil until Policy
@@ -33,11 +31,11 @@ func (s *MetaheuristicLogger) Register(local, best, iteration int, elapsed time.
 		s.history = s.history[:0]
 	}
 
-	if s.level > logger.LevelSilent && (best < s.lastBest || elapsed >= s.next) {
-		s.next = elapsed + s.interval
-		s.lastBest = best
+	if s.level > logger.LevelSilent && s.count <= 0 {
+		s.count = s.interval + 1
 		fmt.Fprintf(s.w, "(%d) %s iteration=%d local=%d best=%d time=%.3fs\n", s.id, s.name, iteration, local, best, elapsed.Seconds())
 	}
+	s.count--
 }
 
 func (s *MetaheuristicLogger) Event(a slog.Attr, elapsed time.Duration) {
@@ -54,8 +52,7 @@ func (s *MetaheuristicLogger) Policy(t logger.Table) {
 
 // reset deletes the spill file, applies c for this metaheuristic, empties the history and restores the initial print state.
 func (s *MetaheuristicLogger) reset(c spill.Config) {
-	s.next = 0
-	s.lastBest = math.MaxInt
+	s.count = 0
 	s.policy = nil
 	c.Metaheuristic, c.ID = s.name, s.id
 	s.file.Reset(c)

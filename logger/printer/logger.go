@@ -15,7 +15,7 @@ import (
 // Log prints progress lines to a writer and keeps every metaheuristic's history.
 type Log struct {
 	level          logger.Level
-	interval       time.Duration
+	interval       int
 	w              io.Writer // not locked: the caller's writer must be safe for concurrent use
 	problem        string
 	hist           spill.Config // spill settings shared by every metaheuristic
@@ -54,7 +54,7 @@ func (l *Log) MetaheuristicLogger(name string) logger.MetaheuristicLogger {
 		id:       id,
 		name:     name,
 		level:    l.level,
-		interval: l.interval,
+		interval: max(l.interval, 0),
 		w:        l.w,
 	}
 	metaheuristicLogger.reset(l.hist) // sizes the buffer; the file is created on the first spill

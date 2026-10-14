@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"log/slog"
-	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,21 +19,21 @@ func ms(n int) time.Duration { return time.Duration(n) * time.Millisecond }
 
 func newLog(level logger.Level) (*Log, *bytes.Buffer) {
 	var out bytes.Buffer
-	return New(&out, "test", &Options{Level: level, PrintInterval: time.Second}), &out
+	return New(&out, "test", &Options{Level: level, PrintInterval: 1000}), &out
 }
 
-func TestRegisterPrintsOnImprovementOrInterval(t *testing.T) {
-	l, out := newLog(logger.LevelInfo)
+func TestRegisterPrintsEveryIntervalPlusOne(t *testing.T) {
+	var out bytes.Buffer
+	l := New(&out, "test", &Options{Level: logger.LevelInfo, PrintInterval: 2})
 	ml := l.MetaheuristicLogger("metaheuristic")
 
-	ml.Register(10, 10, 1, 0)       // first call: printed
-	ml.Register(12, 10, 2, ms(100)) // skipped
-	ml.Register(9, 9, 3, ms(200))   // improvement: printed
-	ml.Register(11, 9, 4, ms(800))  // 0.6s < 1s: skipped
-	ml.Register(11, 9, 5, ms(1300)) // interval elapsed: printed
+	for i := 1; i <= 7; i++ {
+		ml.Register(i, i, i, 0) // printed on calls 1, 4 and 7
+	}
 
 	require.Equal(t, 3, strings.Count(out.String(), "\n"))
-	require.Len(t, l.Report()[0].Samples, 5)
+	require.Contains(t, out.String(), "iteration=4 ")
+	require.Len(t, l.Report()[0].Samples, 7)
 }
 
 func TestRegisterLineFormat(t *testing.T) {
@@ -90,7 +89,7 @@ func TestSilentPrintsNothing(t *testing.T) {
 	ml.Register(1, 1, 1, ms(100))
 	ml.Event(slog.Int("a", 1), ms(100))
 	require.Empty(t, out.String())
-	require.Equal(t, math.MaxInt, ml.lastBest)
+	require.Equal(t, -1, ml.count) // never armed by a print
 	require.Len(t, ml.history, 1)
 }
 
@@ -105,8 +104,7 @@ func TestResetStartsFreshRun(t *testing.T) {
 	require.NotNil(t, l.Pool())
 	require.Len(t, l.Report(), 1)
 	require.Empty(t, l.Report()[0].Samples)
-	require.Equal(t, time.Duration(0), ml.next)
-	require.Equal(t, math.MaxInt, ml.lastBest)
+	require.Zero(t, ml.count)
 
 	out.Reset()
 	ml.Register(9, 9, 1, ms(100)) // first Register of the run: printed
@@ -116,12 +114,12 @@ func TestResetStartsFreshRun(t *testing.T) {
 func TestOptionsDefaults(t *testing.T) {
 	l := New(nil, "test", nil)
 	require.Equal(t, logger.LevelInfo, l.level)
-	require.Equal(t, 500*time.Millisecond, l.interval)
+	require.Equal(t, defaultPrintInterval, l.interval)
 	require.Equal(t, os.Stdout, l.w)
 	ml := l.MetaheuristicLogger("metaheuristic").(*MetaheuristicLogger)
 	require.Equal(t, 512*1024/24, cap(ml.history))
 
-	require.Equal(t, 10*time.Millisecond, New(io.Discard, "t", &Options{PrintInterval: 1}).interval)
+	require.Zero(t, New(io.Discard, "t", &Options{PrintInterval: -3}).interval)
 }
 
 func TestHistoryBufferNegativeKeepsEverythingInMemory(t *testing.T) {
@@ -266,7 +264,7 @@ func (lw *lockedWriter) Write(p []byte) (int, error) {
 
 func TestConcurrentUse(t *testing.T) {
 	var out lockedWriter
-	l := New(&out, "test", &Options{Level: logger.LevelVerbose, PrintInterval: time.Millisecond})
+	l := New(&out, "test", &Options{Level: logger.LevelVerbose, PrintInterval: 0})
 	a, b := l.MetaheuristicLogger("a"), l.MetaheuristicLogger("b")
 
 	var wg sync.WaitGroup
