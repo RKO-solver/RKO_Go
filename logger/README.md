@@ -73,7 +73,7 @@ Select one by name with `logger.Type`, as the [`config` package](../config/READM
 
 ### `printer`
 
-Prints a metaheuristic's progress line when its best cost improves, otherwise at most once per `PrintInterval`. Events and pool improvements are printed immediately (at `LevelVerbose`). 
+Prints a metaheuristic's progress line on its first iteration, then skips `PrintInterval` iterations after each printed line. Events and pool improvements are printed immediately (at `LevelVerbose`). 
 
 > **Warning:** the `printer` does not lock. Metaheuristic goroutines write to `w` directly, so `w` must be safe for concurrent use. `os.Stdout` and `os.Stderr` are. A `bytes.Buffer`, a `bufio.Writer` and most custom writers are not: wrap them with a mutex.
 >
@@ -172,7 +172,7 @@ Pass `nil` or a zero `Options` for the defaults. A zero field means the default;
 | Field | Default | Minimum | Meaning |
 |---|---|---|---|
 | `Level` | `LevelInfo` | | What to print. |
-| `PrintInterval` | 500 ms | 10 ms | Minimum time between two prints of the same metaheuristic, unless its best cost improved. |
+| `PrintInterval` | 5 | 0 | Iterations skipped after each printed progress line; `0` selects the default, negative values print every iteration. |
 | `HistoryBuffer` | 512 KiB | | Bytes of history kept in memory per metaheuristic before it spills to a file. Negative keeps all history in memory. |
 | `HistoryDir` | system temp directory | | Where history files are created. |
 

@@ -201,7 +201,7 @@ Every constructor takes a [`logger.Logger`](logger/README.md). Two ship with the
 
 | Logger | Constructor | Output |
 |---|---|---|
-| `logger/printer` | `printer.Default(name)`, `printer.New(w, name, opts)` | Plain lines: a metaheuristic's progress when its best cost improves, otherwise at most every 500 ms (`Options.PrintInterval`). Suits batch jobs and CI. |
+| `logger/printer` | `printer.Default(name)`, `printer.New(w, name, opts)` | Plain lines: a metaheuristic's progress, skipping `Options.PrintInterval` iterations between lines. Suits batch jobs and CI. |
 | `logger/dashboard` | `dashboard.New(name, opts)` | A live dashboard in the terminal's alternate screen; the final frame stays in the scrollback. Suits interactive runs. |
 
 Levels are `logger.LevelSilent`, `logger.LevelInfo` (default) and `logger.LevelVerbose`. `Solve` resets the logger at the start of every run, so `Report` and `Pool` describe the last run. Both loggers can save the run to CSV (`SaveCSV`), and spill each metaheuristic's history to [temporary files](logger/README.md#history-files-and-close) on long runs. `Solve` never calls the logger's `Close`, which deletes those files: `defer` it after creating the logger. After a run with tuned parameters, `PrintPolicies` and `SavePoliciesCSV` print or save the policy each tuner learned (see [Policies](logger/README.md#policies)). See the [`logger` package](logger/README.md).
