@@ -1,6 +1,6 @@
 # `config` Package
 
-Builds an `rko.Solver` from a YAML file or a Go struct: the logger, the stopping limits, the metaheuristics to run in parallel, their local searches and their tuning parameters. You supply a [`definition.Environment`](../definition/README.md).
+Builds an `rko.Solver` from a YAML file or a Go struct: the logger, the stopping limits, the metaheuristics to run in parallel, their local searches and their tuning parameters. You supply a [`problem.Environment`](../problem/README.md).
 
 ## Quick start
 
@@ -27,15 +27,15 @@ import (
 	"log"
 
 	"github.com/RKO-solver/rko-go/config"
-	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/problem"
 )
 
-// MyEnvironment stands for your problem (see the definition package).
+// MyEnvironment stands for your problem (see the problem package).
 type MyEnvironment struct{}
 
 func (MyEnvironment) NumKeys() int                      { return 10 }
-func (MyEnvironment) Cost(r definition.RandomKey) int   { return int(100 * r[0]) }
-func (MyEnvironment) Decode(r definition.RandomKey) any { return r.SortedIndex() }
+func (MyEnvironment) Cost(r problem.RandomKey) int   { return int(100 * r[0]) }
+func (MyEnvironment) Decode(r problem.RandomKey) any { return r.SortedIndex() }
 func (MyEnvironment) SwapSearch() [][2]int              { return [][2]int{{0, 10}} }
 func (MyEnvironment) ProblemName() string               { return "my-problem" }
 
@@ -270,14 +270,14 @@ A **shake** applies `int(NumKeys × r) + 1` random moves to a solution, with `r`
 ## Building a solver
 
 ```go
-func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.Solver, logger.Recorder, error)
+func (cfg *Config) NewSolver(env problem.Environment, opts ...Option) (*rko.Solver, logger.Recorder, error)
 ```
 
-- Returns an error, before creating anything, for an invalid `LogLevel` or `LogType`, an invalid or unimplemented metaheuristic `Type`, a nil section inside a non-nil `Parameters`, or invalid lists (see [`Parameters` section](#parameters-section)). All problems are joined; test them with `errors.Is`.
-- Panics, instead of returning an error, on a bad BRKGA `EliteRatio` and `PopulationSize` or LNS `BetaMin` and `BetaMax` combination (see [`BRKGA`](#brkga) and [`LNS`](#lns)): `brkga.New` and `lns.New` check them while the solvers are built.
+- Returns an error, before creating anything, for an empty `Metaheuristics` list (wrapping `rko.ErrNoMetaheuristics`; `Decode` and `ReadFile` accept it), an invalid `LogLevel` or `LogType`, an invalid or unimplemented metaheuristic `Type`, a nil section inside a non-nil `Parameters`, or invalid lists (see [`Parameters` section](#parameters-section)). All problems are joined; test them with `errors.Is`.
+- Panics, instead of returning an error, on a bad BRKGA `EliteRatio` and `PopulationSize` or LNS `BetaMin` and `BetaMax` combination (see [`BRKGA`](#brkga) and [`LNS`](#lns)): `brkga.New` and `lns.New` check them while the metaheuristics are built.
 - A nil `Parameters` means `DefaultParameters()`. In a non-nil `Parameters`, an empty list or a nil `Restart` or `MetropolisCriterion` means the default, as in YAML.
-- `NewSolver` never modifies `cfg`, and each metaheuristic gets its own copy of its `Config` struct. The lists and the `Restart` and `MetropolisCriterion` pointers inside are not copied: they are shared with `cfg.Parameters` and kept by the solver and its tuner, so don't modify them after `NewSolver`. One `Config` can be reused for several solvers and shared across goroutines.
-- If `env` implements [`definition.Cloner`](../definition/README.md#environment), each metaheuristic and its local search get their own `env.Clone()`.
+- `NewSolver` never modifies `cfg`, and each metaheuristic gets its own copy of its `Config` struct. The lists and the `Restart` and `MetropolisCriterion` pointers inside are not copied: they are shared with `cfg.Parameters` and kept by the metaheuristic and its tuner, so don't modify them after `NewSolver`. One `Config` can be reused for several solvers and shared across goroutines.
+- If `env` implements [`problem.Cloner`](../problem/README.md#environment), each metaheuristic and its local search get their own `env.Clone()`.
 - The logger is named from `env.ProblemName()`. Neither `NewSolver` nor `Solve` closes it: `defer` its `Close`, which deletes the run's history files, once you have read the results. To read or save them, see the [`logger` package](../logger/README.md).
 - `WithSeed(seed uint64)` seeds the random generator. Without it, each `NewSolver` call uses a randomly seeded generator.
 
@@ -288,6 +288,15 @@ solver, rkoLog, err := cfg.NewSolver(env, config.WithSeed(42))
 ## Building a `Config` in Go
 
 ```go
+import (
+	"time"
+
+	"github.com/RKO-solver/rko-go/config"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/metaheuristic/search"
+)
+
 params := config.DefaultParameters()
 params.GA.PopulationSize = []int{100}
 
@@ -297,8 +306,8 @@ cfg := config.Config{
 	TimeLimit:     30 * time.Second,
 	MaxIterations: 1000,
 	Metaheuristics: []config.Metaheuristic{
-		{Type: rko.ILS, Searches: []search.Type{search.Swap, search.Mirror}},
-		{Type: rko.GA}, // no searches: the default RVND
+		{Type: metaheuristic.ILS, Searches: []search.Type{search.Swap, search.Mirror}},
+		{Type: metaheuristic.GA}, // no searches: the default RVND
 	},
 	Parameters: params,
 }
@@ -310,7 +319,7 @@ solver, rkoLog, err := cfg.NewSolver(env)
 |---|---|
 | `Config` | `LogLevel`, `LogType`, `TimeLimit` (`0` or negative: no limit), `MaxIterations` (`0` or negative: no limit), `SeedPool`, `Metaheuristics`, `Parameters` |
 | `SeedPool` | `MaxSize` (`0`: `solution.DefaultSize`; negative: no cap), `InitialSize` (`0` or negative: `solution.DefaultSize`) |
-| `Metaheuristic` | `Type` (`rko.Metaheuristic`), `Searches` (`[]search.Type`, same rules as the YAML table above) |
+| `Metaheuristic` | `Type` (`metaheuristic.Type`), `Searches` (`[]search.Type`, same rules as the YAML table above) |
 | `Parameters` | `BRKGA`, `GA`, `ILS`, `SA`, `VNS`, `LNS`: pointers to the structs of the [`metaheuristic` package](../metaheuristic/README.md#configuration-structs) |
 
 A `Config` you build yourself skips the YAML defaults:
@@ -322,6 +331,6 @@ A `Config` you build yourself skips the YAML defaults:
 ## See also
 
 - [Project README](../README.md)
-- [`definition` package](../definition/README.md)
+- [`problem` package](../problem/README.md)
 - [`metaheuristic` package](../metaheuristic/README.md)
 - [`logger` package](../logger/README.md)

@@ -2,7 +2,7 @@
 
 The metaheuristic implementations and the pieces they share: local searches, the solution pool and random-key helpers.
 
-Most programs never import these packages: [`rko.New`](../README.md#quick-start) and the [`config` package](../config/README.md) build everything for you. Come here to build solvers by hand, combine local searches yourself, or add your own metaheuristic next to the built-in ones.
+Most programs never import these packages: [`rko.New`](../README.md#quick-start) and the [`config` package](../config/README.md) build everything for you. Come here to build a solver by hand, combine local searches yourself, or add your own metaheuristic next to the built-in ones.
 
 | Package | Contents |
 |---|---|
@@ -10,23 +10,24 @@ Most programs never import these packages: [`rko.New`](../README.md#quick-start)
 | `metaheuristic/search` | Local searches. |
 | `metaheuristic/solution` | The solution pool shared by every metaheuristic. |
 | `metaheuristic/rk` | `Generate`, `Reset`, `Copy` and `Shake` for random keys. |
-| `metaheuristic/constants` | Default parameter values and `DefaultTimeLimit` (150 s). |
 | [`metaheuristic/tuning`](tuning/README.md) | The Q-learning tuner that chooses parameter values while a metaheuristic runs. |
-| `metaheuristic` | `RandomKeyValue` (a key and its cost) and `NewRandomKeyValue`, `List[T]` (a parameter's values), `Sort` and the `Worker` used by `rko.Solver`. |
+| `metaheuristic` | `Type` (`ParseType`, `String`, `Short`, `Implemented`) to name a metaheuristic; `RandomKeyValue` (a key and its cost) and `NewRandomKeyValue`, `List[T]` (a parameter's values), `Sort`, the `Worker` used by `rko.Solver`; `Algorithm` and `Result` for [your own metaheuristic](#writing-a-metaheuristic); `LocalSearch` and `Print`; and the [context helpers](#context-helpers). |
 
 ## Metaheuristics
 
-| Metaheuristic | Type | `rko` constant | One iteration is |
+| Metaheuristic | Type | `metaheuristic.Type` constant | One iteration is |
 |---|---|---|---|
-| MultiStart | `*multistart.MultiStart` | `MultiStart` | a random solution improved by the local search |
-| Simulated Annealing | `*sa.SimulatedAnnealing` | `SA` | one temperature step of `Iterations` moves |
-| Genetic Algorithm | `*ga.GA` | `GA` | one generation |
-| BRKGA | `*brkga.BRKGA` | `BRKGA` | one generation |
-| Iterated Local Search | `*ils.ILS` | `ILS` | one shake followed by the local search |
-| Variable Neighbourhood Search | `*vns.VNS` | `VNS` | one pass through neighbourhoods 1 to 3, restarting at 1 after each improvement |
-| Large Neighbourhood Search | `*lns.LNS` | `LNS` | one rebuild of some keys followed by the local search |
+| MultiStart | `*multistart.MultiStart` | `metaheuristic.MultiStart` | a random solution improved by the local search |
+| Simulated Annealing | `*sa.SimulatedAnnealing` | `metaheuristic.SA` | one temperature step of `Iterations` moves |
+| Genetic Algorithm | `*ga.GA` | `metaheuristic.GA` | one generation |
+| BRKGA | `*brkga.BRKGA` | `metaheuristic.BRKGA` | one generation |
+| Iterated Local Search | `*ils.ILS` | `metaheuristic.ILS` | one shake followed by the local search |
+| Variable Neighbourhood Search | `*vns.VNS` | `metaheuristic.VNS` | one pass through neighbourhoods 1 to 3, restarting at 1 after each improvement |
+| Large Neighbourhood Search | `*lns.LNS` | `metaheuristic.LNS` | one rebuild of some keys followed by the local search |
 
 The iteration limit counts these iterations (see [Stopping](#stopping)). Every metaheuristic offers its improvements to the shared pool.
+
+`metaheuristic.Type` also declares `GRASP`, `VLNS`, `ALNS` and `IPR`, which are not implemented: `rko.New` and `config.NewSolver` reject them. `t.Implemented()` reports whether `rko.New` can build `t`. `t.String()` returns the full name (`"Simulated Annealing"`) and `t.Short()` the abbreviation (`"SA"`; `"MS"` for MultiStart). `ParseType(label)` accepts `"MultiStart"`, `"SA"`, `"GA"`, `"VNS"`, `"ILS"`, `"BRKGA"`, `"GRASP"`, `"LNS"`, `"VLNS"`, `"ALNS"` and `"IPR"` (case-insensitive) and returns `-1` for anything else.
 
 - **MultiStart** draws a random solution and improves it with the local search, over and over.
 - **SA** starts from the pool's best solution. Each move shakes the current solution and runs the local search on it; a worse result is accepted with probability `exp(-Δ / T)`. It reheats up to `QtdReheat` times. When the temperature reaches `TemperatureGoal`, SA ends, or, with `Restart`, starts over: the temperature goes back to `TemperatureInitial`, the current solution becomes a new random one and the `QtdReheat` reheats are available again. With `Restart`, SA runs until its context stops.
@@ -56,7 +57,7 @@ Parameters, their meaning and their defaults are in the [`config` package](../co
 
 ## Building a solver by hand
 
-Create one pool, then each metaheuristic with its configuration and local search, and pass them to `rko.NewFromSolvers`:
+Create one pool, then each metaheuristic with its configuration and local search, and pass them to `rko.NewFromMetaheuristics`. It returns `rko.ErrNoMetaheuristics` if the slice is empty (`rko.WithMetaheuristics` is ignored there):
 
 ```go
 rg := random.New(42)
@@ -71,7 +72,7 @@ brkgaConfig := brkga.DefaultConfig()
 brkgaConfig.PopulationSize = []int{100}
 
 brkgaRG := rg.Split()
-solvers := []definition.Solver{
+metaheuristics := []metaheuristic.Algorithm{
 	ils.New(env, rg.Split(), pool, log,
 		ils.WithConfig(ilsConfig),
 		ils.WithSearch(search.NewMirror(env))),
@@ -80,16 +81,20 @@ solvers := []definition.Solver{
 		brkga.WithSearch(search.NewRVND(env, pool, brkgaRG, []search.Type{search.Mirror, search.Farey}))),
 }
 
-solver := rko.NewFromSolvers(env, log, pool, solvers,
+solver, err := rko.NewFromMetaheuristics(env, log, pool, metaheuristics,
 	rko.WithTimeLimit(30*time.Second), rko.WithMaxIterations(1000))
+if err != nil {
+	fmt.Println(err)
+	return
+}
 items := solver.Solve(context.Background()).([]int)
 ```
 
-- Give every solver the pool and logger you pass to `NewFromSolvers`: `Solve` returns the best solution of that pool.
-- Give each solver its own generator with `rg.Split()`: a `random.Generator` is not safe for concurrent use. A local search that draws random numbers (`Farey`, `NelderMead`, RVND) should use the same generator as its metaheuristic.
-- If you need a dedicated `Environment` per solver (to handle concurrency), give each solver and its local search its own `env.Clone()` (see [`definition.Cloner`](../definition/README.md#environment)).
+- Give every metaheuristic the pool and logger you pass to `NewFromMetaheuristics`: `Solve` returns the best solution of that pool.
+- Give each metaheuristic its own generator with `rg.Split()`: a `random.Generator` is not safe for concurrent use. A local search that draws random numbers (`Farey`, `NelderMead`, RVND) should use the same generator as its metaheuristic.
+- If you need a dedicated `Environment` per metaheuristic (to handle concurrency), give each metaheuristic and its local search its own `env.Clone()` (see [`problem.Cloner`](../problem/README.md#environment)).
 - `rko.WithTimeLimit(d)` and `rko.WithMaxIterations(n)` set the limits; a zero or negative value means no limit, and with no option there is none.
-- Your own [`definition.Solver`](../definition/README.md#writing-a-metaheuristic) can go in the same slice.
+- Your own [`metaheuristic.Algorithm`](#writing-a-metaheuristic) can go in the same slice.
 
 ### Constructors
 
@@ -99,12 +104,12 @@ Each package has one constructor, `New`, that returns the concrete type (`*ils.I
 New(env, rg, pool, log, opts...)
 ```
 
-`env` is a `definition.Environment`, `rg` a `*random.Generator`, `pool` a `*solution.Pool` and `log` a `logger.Logger`. Without options it uses the package's `DefaultConfig()` and the default local search, `search.NewDefault` (RVND over all four searches). The options:
+`env` is a `problem.Environment`, `rg` a `*random.Generator`, `pool` a `*solution.Pool` and `log` a `logger.Logger`. Without options it uses the package's `DefaultConfig()` and the default local search, `search.NewDefault` (RVND over all four searches). The options:
 
 | Option | Sets |
 |---|---|
 | `WithConfig(cfg)` | The parameters. Not available in `multistart`. |
-| `WithSearch(local)` | A ready `search.Local`. |
+| `WithSearch(local)` | A ready `metaheuristic.LocalSearch`. |
 | `WithSearchType(t)` | The local search, built with `search.New(t, ...)`. |
 
 - If `WithSearch` and `WithSearchType` are both given, the last one wins.
@@ -151,7 +156,7 @@ Before and after each cycle, the metaheuristic gives the tuner the run's **progr
 
 | Limits | Progress by |
 |---|---|
-| A time limit (including the 150 s default of `rko.New`) | time, up to the time limit |
+| A time limit (including the `rko.DefaultTimeLimit` of 150 s that `rko.New` sets) | time, up to the time limit |
 | A deadline on the `ctx` given to `Solve`, with or without a time limit | time, up to the earlier of the two |
 | A time limit and `MaxIterations` | time; `MaxIterations` is not used in the progress, but it may still end the run first |
 | `MaxIterations` only, and no deadline on `ctx` | cycles over `MaxIterations` |
@@ -163,7 +168,7 @@ Before and after each cycle, the metaheuristic gives the tuner the run's **progr
 progress = min(1, (now − start) / (deadline − start))
 ```
 
-`start` is the run's start time (`definition.StartTime(ctx)`) and `deadline` the context's deadline. If `ctx` has no deadline, or the deadline is not after `start` (for example, it has already passed), the run is treated as having no deadline and progress follows the `MaxIterations` or no-limit rows.
+`start` is the run's start time (`metaheuristic.StartTime(ctx)`) and `deadline` the context's deadline. If `ctx` has no deadline, or the deadline is not after `start` (for example, it has already passed), the run is treated as having no deadline and progress follows the `MaxIterations` or no-limit rows.
 
 **By cycles over `MaxIterations`**, progress grows linearly from `0` to `1` at the last iteration:
 
@@ -199,7 +204,7 @@ For example, with 8 combinations, progress is 0.50 after about 14 cycles and 0.8
 
 ### Learned policy
 
-When tuned, the metaheuristic records the learned policy with its solver logger at the end of the run. After the run, print it with the logger's `PrintPolicies` or save it with `SavePoliciesCSV` (see [Policies](../logger/README.md#policies)). The policy columns `p0`, `p1`, ... are the tunable fields, in the field order of the `Config` struct; a tunable field with a single value still has its column. SA's `Restart` and ILS's `MetropolisCriterion` are not tuned, so they have none:
+When tuned, the metaheuristic records the learned policy with its metaheuristic logger at the end of the run. After the run, print it with the logger's `PrintPolicies` or save it with `SavePoliciesCSV` (see [Policies](../logger/README.md#policies)). The policy columns `p0`, `p1`, ... are the tunable fields, in the field order of the `Config` struct; a tunable field with a single value still has its column. SA's `Restart` and ILS's `MetropolisCriterion` are not tuned, so they have none:
 
 | Metaheuristic | `p0`, `p1`, ... |
 |---|---|
@@ -232,16 +237,16 @@ A local search improves a solution in place, never making it worse, and returns 
 | `NewDefault(env, pool, rg)` | RVND over `Swap`, `Mirror`, `Farey`, `NelderMead` |
 | `New(searchType, env, pool, rg)` | The single search for `Swap`, `Mirror`, `Farey` or `NelderMead`; RVND over `Swap`, `Mirror`, `Farey` for `RVND`; `NewDefault` for any other value |
 
-All return a `search.Local`:
+All return a `metaheuristic.LocalSearch`:
 
 ```go
-type Local interface {
+type LocalSearch interface {
     Search(ctx context.Context, rko *metaheuristic.RandomKeyValue)
     String() string
 }
 ```
 
-`ParseType(name)` parses `"Swap"`, `"Mirror"`, `"Farey"`, `"Nelder"` or `"RVND"` (case-insensitive; `-1` if unknown). `t.String()` returns the display name (`"Nelder-Mead"` for `NelderMead`).
+`ParseType(name)` parses `"Swap"`, `"Mirror"`, `"Farey"`, `"Nelder"` or `"RVND"` (case-insensitive; `-1` if unknown). `t.String()` returns the display name (`"Nelder-Mead"` for `NelderMead`). `metaheuristic.Print(name, local)` prints a metaheuristic's name and its local search; use it in `Print` when your metaheuristic has one.
 
 ## Solution pool
 
@@ -262,11 +267,122 @@ type Local interface {
 
 ## Stopping
 
-Each metaheuristic calls `definition.NewSolverContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.WithTimeLimit` and `rko.WithMaxIterations` or the [`config` package](../config/README.md#stopping). See the [`definition` package](../definition/README.md#context-helpers) for the helpers.
+Each metaheuristic calls `metaheuristic.NewSolverContext(ctx)` at the start of `Solve`, counts one iteration of its outer loop with `Step`, and stops when its context is done: at the time limit, at the iteration limit or on cancellation. The limits are set by `rko.WithTimeLimit` and `rko.WithMaxIterations` or the [`config` package](../config/README.md#stopping). See [Context helpers](#context-helpers).
+
+## Result
+
+Every metaheuristic implements the `metaheuristic.Algorithm` interface, and `Solve` returns a `metaheuristic.Result`. You only implement `Algorithm` to add your own metaheuristic.
+
+```go
+type Algorithm interface {
+    Solve(ctx context.Context) metaheuristic.Result
+    Name() string
+    Print()
+}
+
+type Result struct {
+    Solution any           // Decode of the metaheuristic's solution
+    Cost     int           // its cost
+    Elapsed  time.Duration // from the start of the run until Solve returned
+}
+```
+
+| Method | Does |
+|---|---|
+| `Solve(ctx)` | Searches until `ctx` is done and returns a `Result`. |
+| `Name()` | Returns the name used in logs. |
+| `Print()` | Prints the metaheuristic's configuration to stdout. |
+
+The run's best solution is the one in the shared solution pool, which is what `rko.Solver.Solve` returns.
+
+## Context helpers
+
+`rko.Solver.Solve` stores the run's start time and iteration limit in the context it passes to every metaheuristic. These helpers read them:
+
+| Function | Does |
+|---|---|
+| `WithStartTime(ctx, timeLimit) (context.Context, context.CancelFunc)` | Returns a context carrying the current time as the run's start time. If `timeLimit > 0`, it also sets a deadline `timeLimit` after that start (an earlier deadline on `ctx` is kept). Call `defer cancel()`. |
+| `StartTime(ctx) time.Time` | Returns the stored start time, or `time.Now()` if there is none. |
+| `WithMaxIterations(ctx, n) context.Context` | Returns a context carrying the iteration limit of each metaheuristic. Zero or negative means no limit. It is not the option `rko.WithMaxIterations`, which sets the limit on a `Solver`. |
+| `NewSolverContext(ctx) (context.Context, *IterationCounter)` | Returns a context for one metaheuristic and the counter that cancels it at the limit. Without a limit, it returns `ctx` itself. |
+
+`IterationCounter` methods:
+
+| Method | Does |
+|---|---|
+| `Step()` | Counts one iteration and cancels the metaheuristic's context when the limit is reached. |
+| `Iteration() int` | Returns the number of completed iterations. |
+| `Limit() int` | Returns the iteration limit, or `-1` if there is none. |
+| `Stop()` | Releases the context. Call it with `defer`. |
+
+## Writing a metaheuristic
+
+Call `NewSolverContext` first, count one iteration of your outer loop with `Step`, and stop when `ctx.Err()` is not nil. That single check covers the time limit, the iteration limit and cancellation. Offer improvements to the shared pool so the other metaheuristics can use them; it keeps only solutions that beat its best.
+
+```go
+package randomsearch
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/metaheuristic/rk"
+	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
+	"github.com/RKO-solver/rko-go/random"
+)
+
+// RandomSearch samples random keys and keeps the best one.
+type RandomSearch struct {
+	env  problem.Environment
+	pool *solution.Pool
+	rg   *random.Generator
+	log  logger.MetaheuristicLogger // from Logger.MetaheuristicLogger("RandomSearch")
+}
+
+var _ metaheuristic.Algorithm = (*RandomSearch)(nil)
+
+// NewRandomSearch receives its dependencies, including the generator, through the constructor.
+func NewRandomSearch(env problem.Environment, pool *solution.Pool, rg *random.Generator, log logger.MetaheuristicLogger) *RandomSearch {
+	return &RandomSearch{env: env, pool: pool, rg: rg, log: log}
+}
+
+func (s *RandomSearch) Name() string { return "RandomSearch" }
+func (s *RandomSearch) Print()       { fmt.Println(s.Name()) }
+
+func (s *RandomSearch) Solve(ctx context.Context) metaheuristic.Result {
+	ctx, counter := metaheuristic.NewSolverContext(ctx)
+	defer counter.Stop()
+	start := metaheuristic.StartTime(ctx)
+
+	key := rk.Generate(s.env, s.rg)
+	best := &metaheuristic.RandomKeyValue{RK: key, Cost: s.env.Cost(key)}
+
+	for ; ctx.Err() == nil; counter.Step() {
+		key := rk.Generate(s.env, s.rg)
+		if cost := s.env.Cost(key); cost < best.Cost {
+			best = &metaheuristic.RandomKeyValue{RK: key, Cost: cost}
+			s.pool.Add(best, start)
+		}
+		s.log.Register(best.Cost, best.Cost, counter.Iteration(), time.Since(start))
+	}
+
+	return metaheuristic.Result{
+		Solution: s.env.Decode(best.RK),
+		Cost:     best.Cost,
+		Elapsed:  time.Since(start),
+	}
+}
+```
+
+Pass it to `rko.NewFromMetaheuristics` with the other metaheuristics, as shown in [Building a solver by hand](#building-a-solver-by-hand). If your metaheuristic has a local search, `Print` can call `metaheuristic.Print(name, local)`. Report progress once per iteration with `Register` and occasional events with `Event`; see the [`logger` package](../logger/README.md).
 
 ## See also
 
 - [Project README](../README.md)
 - [`config` package](../config/README.md)
-- [`definition` package](../definition/README.md)
+- [`problem` package](../problem/README.md)
 - [`logger` package](../logger/README.md)

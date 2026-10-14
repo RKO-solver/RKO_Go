@@ -52,8 +52,8 @@ func runCycle(popSize int, elite, mutant float64) float64 { return 0 }
 | `QLearning` | The `Tuner` implemented here: tabular Q-learning with epsilon-greedy exploration. |
 | `NewQLearning(space, generator, options...)` | Creates a `QLearning`. |
 | `WithDiscount(d)` | Option that sets the discount (default `DefaultDiscount`, `0.8`). |
-| `Reporter` | Optional interface for tuners that can describe what they learned: `Policy() logger.Table`. A `Tuner` does not have to implement it. |
-| `QLearning.Policy()` | Implements `Reporter`: the best move from each state (see [Reading the learned policy](#reading-the-learned-policy)). |
+| `PolicyReporter` | Optional interface for tuners that can describe what they learned: `Policy() logger.Table`. A `Tuner` does not have to implement it. |
+| `QLearning.Policy()` | Implements `PolicyReporter`: the best move from each state (see [Reading the learned policy](#reading-the-learned-policy)). |
 
 Write metaheuristics against `Tuner` and `Param`, not `QLearning`, so another learning method can replace it without changing them.
 
@@ -184,7 +184,7 @@ All randomness comes from the generator passed to `NewQLearning`, so the same se
 
 ## Reading the learned policy
 
-A tuner that implements `Reporter` returns what it learned as a `logger.Table`. For `QLearning`, `Policy()` has one row per state, with these columns:
+A tuner that implements `PolicyReporter` returns what it learned as a `logger.Table`. For `QLearning`, `Policy()` has one row per state, with these columns:
 
 | Column | Holds |
 |---|---|
@@ -209,11 +209,11 @@ state  p0    p1   p2    move        next  q
 
 Following `next` from any row shows where the tuner would go if it stopped exploring; a `stay` row is a configuration it would keep.
 
-To print or save it, pass it to the solver's logger at the end of the run; check for `Reporter`, since a `Tuner` may not implement it:
+To print or save it, pass it to the metaheuristic's logger at the end of the run; check for `PolicyReporter`, since a `Tuner` may not implement it:
 
 ```go
-if r, ok := tuner.(tuning.Reporter); ok {
-	solverLogger.Policy(r.Policy())
+if r, ok := tuner.(tuning.PolicyReporter); ok {
+	metaheuristicLogger.Policy(r.Policy())
 }
 ```
 
@@ -221,7 +221,7 @@ Then, after `Solve`, call `log.PrintPolicies()` or `log.SavePoliciesCSV("")` on 
 
 ## Concurrency
 
-A `QLearning` is not safe for concurrent use: create one per solver goroutine, each with its own `random.Generator` (for example from `rg.Split()`). Once every parameter is added, a `Space` and its `Param`s are only read, so they can be shared.
+A `QLearning` is not safe for concurrent use: create one per metaheuristic goroutine, each with its own `random.Generator` (for example from `rg.Split()`). Once every parameter is added, a `Space` and its `Param`s are only read, so they can be shared.
 
 ## Panics
 
