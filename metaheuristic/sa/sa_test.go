@@ -4,12 +4,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/internal/testenv"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/sa"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +24,7 @@ func TestSolveBaseline(t *testing.T) {
 	}
 
 	env := testenv.NewTSP(40, 1)
-	newSolver := func(env definition.Environment, rg *random.Generator, pool *solution.Pool, l logger.Logger) definition.Solver {
+	newMetaheuristic := func(env problem.Environment, rg *random.Generator, pool *solution.Pool, l logger.Logger) metaheuristic.Algorithm {
 		// a low temperature and short inner loop make SA both accept and reject worse neighbours
 		c := sa.DefaultConfig()
 		c.Iterations = []int{10}
@@ -34,7 +35,7 @@ func TestSolveBaseline(t *testing.T) {
 	ctx := context.Background()
 
 	for i, w := range want {
-		got := testenv.Run(t, ctx, env, uint64(i+1), 30, newSolver)
+		got := testenv.Run(t, ctx, env, uint64(i+1), 30, newMetaheuristic)
 		assert.Equal(t, w, got, "seed %d: got %#v", i+1, got)
 	}
 }

@@ -14,7 +14,7 @@ type Options struct {
 	Refresh       time.Duration // 0: 500ms; below 300ms raised to 300ms
 	BufferSize    int           // update-channel slots; 0: 1024; below 1 raised to 1
 	PoolLines     int           // 0: 3; below 1 raised to 1 (Verbose)
-	HistoryBuffer int           // bytes per solver; 0: 128 KiB; negative: keep all history in memory
+	HistoryBuffer int           // bytes per metaheuristic; 0: 128 KiB; negative: keep all history in memory
 	HistoryDir    string        // "": system temp dir
 }
 
@@ -44,10 +44,10 @@ func New(problem string, opts *Options) *Log {
 
 	// The final data store
 	store := &information{
-		numLinesPool: o.PoolLines,
-		pool:         make([]logger.PoolEntry, 0, 100),
-		solvers:      make([]*solverHistory, 0),
-		workers:      make([]logger.WorkerResult, 0),
+		numLinesPool:   o.PoolLines,
+		pool:           make([]logger.PoolEntry, 0, 100),
+		metaheuristics: make([]*metaheuristicHistory, 0),
+		workers:        make([]logger.WorkerResult, 0),
 	}
 
 	return &Log{

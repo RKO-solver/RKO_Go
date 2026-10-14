@@ -13,7 +13,7 @@ import (
 type Options struct {
 	Level         logger.Level  // zero: LevelInfo
 	PrintInterval time.Duration // 0: 500ms; below 10ms raised to 10ms
-	HistoryBuffer int           // bytes per solver; 0: 512 KiB; negative: keep all history in memory
+	HistoryBuffer int           // bytes per metaheuristic; 0: 512 KiB; negative: keep all history in memory
 	HistoryDir    string        // "": system temp dir
 }
 

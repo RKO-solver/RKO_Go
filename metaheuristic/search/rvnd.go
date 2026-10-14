@@ -5,13 +5,13 @@ import (
 	"math"
 	"slices"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func rvnd(ctx context.Context, rko *metaheuristic.RandomKeyValue, env definition.Environment, pool *solution.Pool, rg *random.Generator, neighbourhood []Type) {
+func rvnd(ctx context.Context, rko *metaheuristic.RandomKeyValue, env problem.Environment, pool *solution.Pool, rg *random.Generator, neighbourhood []Type) {
 
 	initialNeighbourhood := make([]Type, len(neighbourhood))
 	copy(initialNeighbourhood, neighbourhood)
@@ -50,7 +50,7 @@ func rvnd(ctx context.Context, rko *metaheuristic.RandomKeyValue, env definition
 }
 
 type rvndLocalSearch struct {
-	env           definition.Environment
+	env           problem.Environment
 	rg            *random.Generator
 	pool          *solution.Pool
 	neighbourhood []Type
@@ -74,7 +74,7 @@ func (s rvndLocalSearch) Search(ctx context.Context, rko *metaheuristic.RandomKe
 }
 
 // NewRVND returns an RVND local search over neighbourhood.
-func NewRVND(env definition.Environment, pool *solution.Pool, rg *random.Generator, neighbourhood []Type) Local {
+func NewRVND(env problem.Environment, pool *solution.Pool, rg *random.Generator, neighbourhood []Type) metaheuristic.LocalSearch {
 	n := 0
 	for _, neighbour := range neighbourhood {
 		if neighbour != RVND {
@@ -88,4 +88,4 @@ func NewRVND(env definition.Environment, pool *solution.Pool, rg *random.Generat
 	return &rvndLocalSearch{env, rg, pool, neighbourhood}
 }
 
-var _ Local = (*rvndLocalSearch)(nil)
+var _ metaheuristic.LocalSearch = (*rvndLocalSearch)(nil)

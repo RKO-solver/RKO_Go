@@ -2,12 +2,11 @@
 package brkga
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -23,12 +22,12 @@ type Config struct {
 	MaxGenerationNoImprovement metaheuristic.List[int]     `yaml:"MaxGenerationNoImprovement"`
 }
 
-// BRKGA is a Biased Random-Key Genetic Algorithm solver.
+// BRKGA is a Biased Random-Key Genetic Algorithm metaheuristic.
 type BRKGA struct {
-	env                        definition.Environment
+	env                        problem.Environment
 	configuration              *Config
-	logger                     logger.SolverLogger
-	search                     search.Local
+	logger                     logger.MetaheuristicLogger
+	search                     metaheuristic.LocalSearch
 	rg                         *random.Generator
 	solutionPool               *solution.Pool
 	tuner                      tuning.Tuner
@@ -42,5 +41,5 @@ type BRKGA struct {
 }
 
 func (brkga *BRKGA) Print() {
-	search.PrintSolver(name, brkga.search)
+	metaheuristic.Print(name, brkga.search)
 }

@@ -7,7 +7,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/internal/genetic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
@@ -16,7 +15,7 @@ import (
 )
 
 func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristic.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.NewSolverContext(ctx)
+	ctx, ctxAction := metaheuristic.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	configuration := ga.configuration
@@ -42,7 +41,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 	isOdd := populationSize%2 == 1
 	generationNoImprovement := 0
 
-	start := definition.StartTime(ctx)
+	start := metaheuristic.StartTime(ctx)
 	bestPerson := genetic.InitialPopulation(population[:populationSize], env, false, rg)
 	solutionPool.Add(bestPerson, start)
 
@@ -62,7 +61,7 @@ func (ga *GA) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheur
 	}
 	if tuner != nil {
 		defer func() {
-			if r, ok := tuner.(tuning.Reporter); ok {
+			if r, ok := tuner.(tuning.PolicyReporter); ok {
 				ga.logger.Policy(r.Policy())
 			}
 		}()

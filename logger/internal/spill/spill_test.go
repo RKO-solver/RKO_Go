@@ -71,8 +71,8 @@ func TestWriteErrorKeepsWrittenRecords(t *testing.T) {
 
 // Checks the file name pattern and the skipping of empty parts.
 func TestPatternSanitizesNameParts(t *testing.T) {
-	require.Equal(t, "rko-history-tsp-BRKGA-2-*.bin", pattern(Config{Problem: "tsp", Solver: "BRKGA", ID: 2}))
-	require.Equal(t, "rko-history-BRKGA-0-*.bin", pattern(Config{Solver: "BRKGA"}))
+	require.Equal(t, "rko-history-tsp-BRKGA-2-*.bin", pattern(Config{Problem: "tsp", Metaheuristic: "BRKGA", ID: 2}))
+	require.Equal(t, "rko-history-BRKGA-0-*.bin", pattern(Config{Metaheuristic: "BRKGA"}))
 	require.Equal(t, "rko-history-0-*.bin", pattern(Config{}))
 }
 
@@ -80,7 +80,7 @@ func TestPatternSanitizesNameParts(t *testing.T) {
 func TestWriteCreatesNamedFile(t *testing.T) {
 	dir := t.TempDir()
 	var h File
-	h.Reset(Config{Dir: dir, Bytes: recordSize, Problem: "inst/a:b" + strings.Repeat("x", 100), Solver: "BRKGA", ID: 3})
+	h.Reset(Config{Dir: dir, Bytes: recordSize, Problem: "inst/a:b" + strings.Repeat("x", 100), Metaheuristic: "BRKGA", ID: 3})
 	t.Cleanup(func() { require.NoError(t, h.Remove()) })
 
 	require.True(t, h.Write([]logger.Sample{{Local: 1}}))

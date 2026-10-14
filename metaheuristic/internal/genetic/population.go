@@ -1,17 +1,17 @@
-// Package genetic holds helpers shared by the genetic algorithms.
+// Package genetic holds helpers and defaults shared by the genetic algorithms.
 package genetic
 
 import (
 	"math"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 // InitialPopulation resets and evaluates the population and returns a clone of its best individual.
-func InitialPopulation(population []*metaheuristic.RandomKeyValue, env definition.Environment, sorted bool, rg *random.Generator) *metaheuristic.RandomKeyValue {
+func InitialPopulation(population []*metaheuristic.RandomKeyValue, env problem.Environment, sorted bool, rg *random.Generator) *metaheuristic.RandomKeyValue {
 
 	populationSize := len(population)
 

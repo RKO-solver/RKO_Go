@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	rko "github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,7 +44,7 @@ func TestNewSolverValidateOrder(t *testing.T) {
 	cfg := &Config{
 		LogLevel:       9,
 		LogType:        7,
-		Metaheuristics: []Metaheuristic{{Type: rko.GA}, {Type: rko.GRASP}, {Type: 99}},
+		Metaheuristics: []Metaheuristic{{Type: metaheuristic.GA}, {Type: metaheuristic.GRASP}, {Type: 99}},
 		Parameters:     &Parameters{},
 	}
 	err := cfg.validate()
@@ -66,7 +66,7 @@ func TestNewSolverValidateOrder(t *testing.T) {
 }
 
 func TestNewSolverValidateValid(t *testing.T) {
-	cfg := &Config{LogType: logger.TypeDashboard, Parameters: DefaultParameters()}
+	cfg := &Config{LogType: logger.TypeDashboard, Parameters: DefaultParameters(), Metaheuristics: []Metaheuristic{{Type: metaheuristic.MultiStart}}}
 	assert.NoError(t, cfg.validate())
 	cfg.LogType = logger.TypePrint
 	cfg.Parameters = nil

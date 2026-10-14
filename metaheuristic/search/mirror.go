@@ -3,11 +3,11 @@ package search
 import (
 	"context"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/problem"
 )
 
-func mirrorSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env definition.Environment) {
+func mirrorSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env problem.Environment) {
 	n := rko.RK.Len()
 
 	for i := 0; i < n; i++ {
@@ -26,7 +26,7 @@ func mirrorSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env de
 }
 
 type mirrorLocalSearch struct {
-	env definition.Environment
+	env problem.Environment
 }
 
 func (s mirrorLocalSearch) String() string {
@@ -38,8 +38,8 @@ func (s mirrorLocalSearch) Search(ctx context.Context, rko *metaheuristic.Random
 }
 
 // NewMirror returns the Mirror local search.
-func NewMirror(env definition.Environment) Local {
+func NewMirror(env problem.Environment) metaheuristic.LocalSearch {
 	return mirrorLocalSearch{env}
 }
 
-var _ Local = (*mirrorLocalSearch)(nil)
+var _ metaheuristic.LocalSearch = (*mirrorLocalSearch)(nil)

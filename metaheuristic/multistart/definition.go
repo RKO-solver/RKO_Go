@@ -2,24 +2,24 @@
 package multistart
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/metaheuristic/search"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 const name = "MultiStart"
 
-// MultiStart is a multi-start local search solver.
+// MultiStart is a multi-start local search metaheuristic.
 type MultiStart struct {
-	env          definition.Environment
-	logger       logger.SolverLogger
-	search       search.Local
+	env          problem.Environment
+	logger       logger.MetaheuristicLogger
+	search       metaheuristic.LocalSearch
 	rg           *random.Generator
 	solutionPool *solution.Pool
 }
 
 func (m *MultiStart) Print() {
-	search.PrintSolver(name, m.search)
+	metaheuristic.Print(name, m.search)
 }

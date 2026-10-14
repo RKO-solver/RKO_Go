@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"go.yaml.in/yaml/v3"
 )
@@ -131,7 +131,7 @@ func parseMetaheuristics(entries []string) ([]Metaheuristic, []error) {
 	for i, e := range entries {
 		parts := strings.SplitN(e, "=", 2)
 		name := strings.TrimSpace(parts[0])
-		mt := rko.ParseMetaheuristic(name)
+		mt := metaheuristic.ParseType(name)
 
 		keep := true
 		if mt < 0 {

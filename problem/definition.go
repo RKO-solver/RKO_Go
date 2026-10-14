@@ -1,25 +1,13 @@
-// Package definition defines the problem Environment, the Solver interface and random keys.
-package definition
+// Package problem defines the Environment a user implements and its random keys.
+package problem
 
 import (
-	"context"
 	"math"
 	"sort"
-	"time"
 )
 
 // RandomKey is a solution encoded as keys in [0, 1).
 type RandomKey []float64
-
-// Solver is a metaheuristic that can be run by rko.Solver.
-type Solver interface {
-	// Solve runs the metaheuristic until it finishes or ctx is done and returns its Result.
-	Solve(ctx context.Context) Result
-	// Name returns the solver name.
-	Name() string
-	// Print prints the solver configuration.
-	Print()
-}
 
 // Environment describes the problem to optimize; the user implements it.
 type Environment interface {
@@ -35,17 +23,10 @@ type Environment interface {
 	ProblemName() string
 }
 
-// Cloner is implemented by an Environment that gives each solver a copy.
+// Cloner is implemented by an Environment that gives each metaheuristic a copy.
 type Cloner interface {
 	// Clone returns an independent copy of the Environment.
 	Clone() Environment
-}
-
-// Result is the outcome of one Solver.Solve call.
-type Result struct {
-	Solution any           // Solution decoded by Environment.Decode
-	Cost     int           // Cost of the solution
-	Elapsed  time.Duration // from the start of the run until Solve returned
 }
 
 // SortedIndex returns the indices that sort keys in ascending order (https://doi.org/10.48550/arXiv.2411.04293).

@@ -2,12 +2,11 @@
 package sa
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -26,12 +25,12 @@ type Config struct {
 	Restart            *bool                       `yaml:"Restart"`
 }
 
-// SimulatedAnnealing is a Simulated Annealing solver.
+// SimulatedAnnealing is a Simulated Annealing metaheuristic.
 type SimulatedAnnealing struct {
-	env                definition.Environment
+	env                problem.Environment
 	configuration      *Config
-	logger             logger.SolverLogger
-	search             search.Local
+	logger             logger.MetaheuristicLogger
+	search             metaheuristic.LocalSearch
 	rg                 *random.Generator
 	solutionPool       *solution.Pool
 	tuner              tuning.Tuner
@@ -47,5 +46,5 @@ type SimulatedAnnealing struct {
 }
 
 func (sa *SimulatedAnnealing) Print() {
-	search.PrintSolver(name, sa.search)
+	metaheuristic.Print(name, sa.search)
 }

@@ -9,10 +9,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -32,7 +32,7 @@ type Pool struct {
 }
 
 // NewPoolSize creates a Pool of initialSize solutions; maxSize <= 0 means no cap, else at least initialSize.
-func NewPoolSize(env definition.Environment, rg *random.Generator, logger logger.Logger, maxSize int, initialSize int) *Pool {
+func NewPoolSize(env problem.Environment, rg *random.Generator, logger logger.Logger, maxSize int, initialSize int) *Pool {
 	pool := &Pool{
 		maxSize:   maxSize,
 		logger:    logger,
@@ -62,7 +62,7 @@ func NewPoolSize(env definition.Environment, rg *random.Generator, logger logger
 }
 
 // NewPool creates a Pool of DefaultSize random solutions capped at DefaultSize.
-func NewPool(env definition.Environment, rg *random.Generator, logger logger.Logger) *Pool {
+func NewPool(env problem.Environment, rg *random.Generator, logger logger.Logger) *Pool {
 	return NewPoolSize(env, rg, logger, DefaultSize, DefaultSize)
 }
 

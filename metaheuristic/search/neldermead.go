@@ -4,17 +4,17 @@ import (
 	"context"
 	"math"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 const defaultRho = 0.5
 const defaultMu = 0.02
 
-func blend(keyA definition.RandomKey, keyB definition.RandomKey, factor bool, rho float64, mu float64, rg *random.Generator) definition.RandomKey {
-	blendedKey := make(definition.RandomKey, len(keyA))
+func blend(keyA problem.RandomKey, keyB problem.RandomKey, factor bool, rho float64, mu float64, rg *random.Generator) problem.RandomKey {
+	blendedKey := make(problem.RandomKey, len(keyA))
 
 	for i := range len(keyA) {
 		if rg.Float64() < mu {
@@ -35,7 +35,7 @@ func blend(keyA definition.RandomKey, keyB definition.RandomKey, factor bool, rh
 	return blendedKey
 }
 
-func computeBlend(keyA *metaheuristic.RandomKeyValue, keyB *metaheuristic.RandomKeyValue, factor bool, env definition.Environment, rg *random.Generator) *metaheuristic.RandomKeyValue {
+func computeBlend(keyA *metaheuristic.RandomKeyValue, keyB *metaheuristic.RandomKeyValue, factor bool, env problem.Environment, rg *random.Generator) *metaheuristic.RandomKeyValue {
 	auxRK := blend(keyA.RK, keyB.RK, factor, defaultRho, defaultMu, rg)
 
 	return &metaheuristic.RandomKeyValue{
@@ -56,7 +56,7 @@ func rank(x1, x2, p *metaheuristic.RandomKeyValue) (*metaheuristic.RandomKeyValu
 }
 
 type nelderMeadLocalSearch struct {
-	env           definition.Environment
+	env           problem.Environment
 	pool          *solution.Pool
 	rg            *random.Generator
 	maxIterations int
@@ -71,12 +71,12 @@ func (n nelderMeadLocalSearch) Search(ctx context.Context, rko *metaheuristic.Ra
 }
 
 // NewNelderMead returns the Nelder-Mead local search.
-func NewNelderMead(env definition.Environment, pool *solution.Pool, rg *random.Generator) Local {
+func NewNelderMead(env problem.Environment, pool *solution.Pool, rg *random.Generator) metaheuristic.LocalSearch {
 	maxIterations := int(float64(env.NumKeys()) * math.Exp(-2))
 	return &nelderMeadLocalSearch{env, pool, rg, maxIterations}
 }
 
-func nelderMeadSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, maxIterations int, env definition.Environment, pool *solution.Pool, rg *random.Generator) {
+func nelderMeadSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, maxIterations int, env problem.Environment, pool *solution.Pool, rg *random.Generator) {
 	var x1, x2, x3, x0, xR, xAux *metaheuristic.RandomKeyValue
 
 	poolSize := pool.Len()
@@ -139,4 +139,4 @@ func nelderMeadSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, ma
 	rko.Cost = x1.Cost
 }
 
-var _ Local = (*nelderMeadLocalSearch)(nil)
+var _ metaheuristic.LocalSearch = (*nelderMeadLocalSearch)(nil)

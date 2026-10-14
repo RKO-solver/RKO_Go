@@ -2,12 +2,11 @@
 package ils
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -20,12 +19,12 @@ type Config struct {
 	MetropolisCriterion *bool                       `yaml:"MetropolisCriterion"`
 }
 
-// ILS is an Iterated Local Search solver.
+// ILS is an Iterated Local Search metaheuristic.
 type ILS struct {
-	env           definition.Environment
+	env           problem.Environment
 	configuration *Config
-	logger        logger.SolverLogger
-	search        search.Local
+	logger        logger.MetaheuristicLogger
+	search        metaheuristic.LocalSearch
 	rg            *random.Generator
 	solutionPool  *solution.Pool
 	tuner         tuning.Tuner
@@ -35,5 +34,5 @@ type ILS struct {
 }
 
 func (ils *ILS) Print() {
-	search.PrintSolver(name, ils.search)
+	metaheuristic.Print(name, ils.search)
 }

@@ -3,21 +3,25 @@ package lns
 import (
 	"fmt"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/constants"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
+)
+
+const (
+	defaultBetaMin = 0.01
+	defaultBetaMax = 0.05
 )
 
 // DefaultConfig returns the default LNS parameters.
 func DefaultConfig() *Config {
 	return &Config{
-		BetaMin: metaheuristic.List[float64]{constants.DefaultShakeMin},
-		BetaMax: metaheuristic.List[float64]{constants.DefaultShakeMax},
+		BetaMin: metaheuristic.List[float64]{defaultBetaMin},
+		BetaMax: metaheuristic.List[float64]{defaultBetaMax},
 	}
 }
 
@@ -28,7 +32,7 @@ type Option func(*LNS)
 func WithConfig(cfg *Config) Option { return func(s *LNS) { s.configuration = cfg } }
 
 // WithSearch sets the local search; nil keeps the default.
-func WithSearch(local search.Local) Option { return func(s *LNS) { s.search = local } }
+func WithSearch(local metaheuristic.LocalSearch) Option { return func(s *LNS) { s.search = local } }
 
 // WithSearchType sets the local search to search.New(t, ...).
 func WithSearchType(t search.Type) Option {
@@ -36,10 +40,10 @@ func WithSearchType(t search.Type) Option {
 }
 
 // New creates an LNS; without options it uses DefaultConfig and search.NewDefault.
-func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *LNS {
+func New(env problem.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *LNS {
 	s := &LNS{
 		env:          env,
-		logger:       log.SolverLogger(name),
+		logger:       log.MetaheuristicLogger(name),
 		solutionPool: pool,
 		rg:           rg,
 	}

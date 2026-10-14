@@ -7,24 +7,24 @@ import (
 	"slices"
 
 	"github.com/RKO-solver/rko-go"
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/logger/dashboard"
 	"github.com/RKO-solver/rko-go/logger/printer"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/brkga"
 	"github.com/RKO-solver/rko-go/metaheuristic/ga"
 	"github.com/RKO-solver/rko-go/metaheuristic/ils"
 	"github.com/RKO-solver/rko-go/metaheuristic/lns"
 	"github.com/RKO-solver/rko-go/metaheuristic/multistart"
 	"github.com/RKO-solver/rko-go/metaheuristic/sa"
-	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/vns"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 // NewSolver builds a solver and its logger from cfg; the caller closes the logger.
-func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.Solver, logger.Recorder, error) {
+func (cfg *Config) NewSolver(env problem.Environment, opts ...Option) (*rko.Solver, logger.Recorder, error) {
 	if err := cfg.validate(); err != nil {
 		return nil, nil, err
 	}
@@ -52,11 +52,11 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 	rg := o.generator()
 	pool := solution.NewPoolSize(env, rg, log, maxSize, initialSize)
 
-	solvers := make([]definition.Solver, 0, len(cfg.Metaheuristics))
+	metaheuristics := make([]metaheuristic.Algorithm, 0, len(cfg.Metaheuristics))
 	for i, m := range cfg.Metaheuristics {
 		srg := rg.Split()
 		senv := env
-		if c, ok := env.(definition.Cloner); ok {
+		if c, ok := env.(problem.Cloner); ok {
 			senv = c.Clone()
 		}
 		se := getSearch(m.Searches, senv, pool, srg)
@@ -65,33 +65,38 @@ func (cfg *Config) NewSolver(env definition.Environment, opts ...Option) (*rko.S
 			_ = log.Close()
 			return nil, nil, metaheuristicError(i, m.Type)
 		}
-		solvers = append(solvers, s)
+		metaheuristics = append(metaheuristics, s)
 	}
 
-	return rko.NewFromSolvers(env, log, pool, solvers, rko.WithTimeLimit(cfg.TimeLimit), rko.WithMaxIterations(cfg.MaxIterations)), log, nil
+	solver, err := rko.NewFromMetaheuristics(env, log, pool, metaheuristics, rko.WithTimeLimit(cfg.TimeLimit), rko.WithMaxIterations(cfg.MaxIterations))
+	if err != nil {
+		_ = log.Close()
+		return nil, nil, err
+	}
+	return solver, log, nil
 }
 
-func newMetaheuristic(t rko.Metaheuristic, p *Parameters, env definition.Environment, se search.Local, rg *random.Generator, pool *solution.Pool, log logger.Logger) (definition.Solver, bool) {
+func newMetaheuristic(t metaheuristic.Type, p *Parameters, env problem.Environment, se metaheuristic.LocalSearch, rg *random.Generator, pool *solution.Pool, log logger.Logger) (metaheuristic.Algorithm, bool) {
 	switch t {
-	case rko.ILS:
+	case metaheuristic.ILS:
 		c := *p.ILS
 		return ils.New(env, rg, pool, log, ils.WithConfig(&c), ils.WithSearch(se)), true
-	case rko.VNS:
+	case metaheuristic.VNS:
 		c := *p.VNS
 		return vns.New(env, rg, pool, log, vns.WithConfig(&c), vns.WithSearch(se)), true
-	case rko.SA:
+	case metaheuristic.SA:
 		c := *p.SA
 		return sa.New(env, rg, pool, log, sa.WithConfig(&c), sa.WithSearch(se)), true
-	case rko.GA:
+	case metaheuristic.GA:
 		c := *p.GA
 		return ga.New(env, rg, pool, log, ga.WithConfig(&c), ga.WithSearch(se)), true
-	case rko.BRKGA:
+	case metaheuristic.BRKGA:
 		c := *p.BRKGA
 		return brkga.New(env, rg, pool, log, brkga.WithConfig(&c), brkga.WithSearch(se)), true
-	case rko.LNS:
+	case metaheuristic.LNS:
 		c := *p.LNS
 		return lns.New(env, rg, pool, log, lns.WithConfig(&c), lns.WithSearch(se)), true
-	case rko.MultiStart:
+	case metaheuristic.MultiStart:
 		return multistart.New(env, rg, pool, log, multistart.WithSearch(se)), true
 	}
 	return nil, false
@@ -104,6 +109,9 @@ func (cfg *Config) validate() error {
 	}
 	if cfg.LogType > logger.TypeDashboard {
 		errs = append(errs, fmt.Errorf("config: LogType: %w %d", ErrUnknownValue, cfg.LogType))
+	}
+	if len(cfg.Metaheuristics) == 0 {
+		errs = append(errs, fmt.Errorf("config: %w", rko.ErrNoMetaheuristics))
 	}
 	for i, m := range cfg.Metaheuristics {
 		if err := metaheuristicError(i, m.Type); err != nil {

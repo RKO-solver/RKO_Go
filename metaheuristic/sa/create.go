@@ -1,28 +1,39 @@
 package sa
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/constants"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
+)
+
+const (
+	defaultAlpha              = 0.0005
+	defaultTemperatureInitial = 10000000.0
+	defaultTemperatureGoal    = 0.0000000000000001
+	defaultTemperatureReheat  = 5.0
+	defaultShakeMin           = 0.1
+	defaultShakeMax           = 0.3
+	defaultQtdReheat          = 0
+	defaultIterations         = 1000
+	defaultRestart            = true
 )
 
 // DefaultConfig returns the default SA parameters.
 func DefaultConfig() *Config {
 	return &Config{
-		Alpha:              metaheuristic.List[float64]{constants.DefaultAlphaSimulationAnnealing},
-		TemperatureInitial: metaheuristic.List[float64]{constants.DefaultTemperatureInitial},
-		TemperatureGoal:    metaheuristic.List[float64]{constants.DefaultTemperatureGoal},
-		TemperatureReheat:  metaheuristic.List[float64]{constants.DefaultReheat},
-		ShakeMin:           metaheuristic.List[float64]{constants.DefaultShakeMinSimulationAnnealing},
-		ShakeMax:           metaheuristic.List[float64]{constants.DefaultShakeMaxSimulationAnnealing},
-		QtdReheat:          metaheuristic.List[uint8]{constants.DefaultPreheat},
-		Iterations:         metaheuristic.List[int]{constants.DefaultIterationsSimulationAnnealing},
-		Restart:            new(constants.DefaultRestart),
+		Alpha:              metaheuristic.List[float64]{defaultAlpha},
+		TemperatureInitial: metaheuristic.List[float64]{defaultTemperatureInitial},
+		TemperatureGoal:    metaheuristic.List[float64]{defaultTemperatureGoal},
+		TemperatureReheat:  metaheuristic.List[float64]{defaultTemperatureReheat},
+		ShakeMin:           metaheuristic.List[float64]{defaultShakeMin},
+		ShakeMax:           metaheuristic.List[float64]{defaultShakeMax},
+		QtdReheat:          metaheuristic.List[uint8]{defaultQtdReheat},
+		Iterations:         metaheuristic.List[int]{defaultIterations},
+		Restart:            new(defaultRestart),
 	}
 }
 
@@ -33,7 +44,9 @@ type Option func(*SimulatedAnnealing)
 func WithConfig(cfg *Config) Option { return func(s *SimulatedAnnealing) { s.configuration = cfg } }
 
 // WithSearch sets the local search; nil keeps the default.
-func WithSearch(local search.Local) Option { return func(s *SimulatedAnnealing) { s.search = local } }
+func WithSearch(local metaheuristic.LocalSearch) Option {
+	return func(s *SimulatedAnnealing) { s.search = local }
+}
 
 // WithSearchType sets the local search to search.New(t, ...).
 func WithSearchType(t search.Type) Option {
@@ -41,10 +54,10 @@ func WithSearchType(t search.Type) Option {
 }
 
 // New creates an SA; without options it uses DefaultConfig and search.NewDefault.
-func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *SimulatedAnnealing {
+func New(env problem.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *SimulatedAnnealing {
 	s := &SimulatedAnnealing{
 		env:          env,
-		logger:       log.SolverLogger(name),
+		logger:       log.MetaheuristicLogger(name),
 		solutionPool: pool,
 		rg:           rg,
 	}

@@ -12,15 +12,15 @@ import (
 	"github.com/RKO-solver/rko-go/logger/internal/spill"
 )
 
-// Log prints progress lines to a writer and keeps every solver's history.
+// Log prints progress lines to a writer and keeps every metaheuristic's history.
 type Log struct {
-	level    logger.Level
-	interval time.Duration
-	w        io.Writer // not locked: the caller's writer must be safe for concurrent use
-	problem  string
-	hist     spill.Config // spill settings shared by every solver
-	pool     []logger.PoolEntry
-	solvers  []*SolverLogger
+	level          logger.Level
+	interval       time.Duration
+	w              io.Writer // not locked: the caller's writer must be safe for concurrent use
+	problem        string
+	hist           spill.Config // spill settings shared by every metaheuristic
+	pool           []logger.PoolEntry
+	metaheuristics []*MetaheuristicLogger
 }
 
 // AddSolutionPool records a new best pool solution, printing it at LevelVerbose.
@@ -46,29 +46,29 @@ func (l *Log) WorkerDone(r logger.WorkerResult) {
 	}
 }
 
-// SolverLogger registers a new solver and returns its logger.
-func (l *Log) SolverLogger(name string) logger.SolverLogger {
-	id := len(l.solvers)
+// MetaheuristicLogger registers a new metaheuristic and returns its logger.
+func (l *Log) MetaheuristicLogger(name string) logger.MetaheuristicLogger {
+	id := len(l.metaheuristics)
 
-	solverLogger := &SolverLogger{
+	metaheuristicLogger := &MetaheuristicLogger{
 		id:       id,
 		name:     name,
 		level:    l.level,
 		interval: l.interval,
 		w:        l.w,
 	}
-	solverLogger.reset(l.hist) // sizes the buffer; the file is created on the first spill
+	metaheuristicLogger.reset(l.hist) // sizes the buffer; the file is created on the first spill
 
-	l.solvers = append(l.solvers, solverLogger)
+	l.metaheuristics = append(l.metaheuristics, metaheuristicLogger)
 
-	return solverLogger
+	return metaheuristicLogger
 }
 
-// Reset empties the pool and every solver's history, files and print state, keeping the registered solvers.
+// Reset empties the pool and every metaheuristic's history, files and print state, keeping the registered metaheuristics.
 func (l *Log) Reset() {
 	l.pool = make([]logger.PoolEntry, 0, 50)
-	for _, solverLogger := range l.solvers {
-		solverLogger.reset(l.hist)
+	for _, metaheuristicLogger := range l.metaheuristics {
+		metaheuristicLogger.reset(l.hist)
 	}
 }
 
@@ -76,21 +76,21 @@ func (l *Log) Reset() {
 // Spilling stays off until the next Reset.
 func (l *Log) Close() error {
 	var err error
-	for _, s := range l.solvers {
+	for _, s := range l.metaheuristics {
 		err = errors.Join(err, s.file.Remove())
 	}
 	return err
 }
 
-// Report returns the history of every registered solver.
-func (l *Log) Report() []logger.SolverReport {
-	report := make([]logger.SolverReport, 0, len(l.solvers))
+// Report returns the history of every registered metaheuristic.
+func (l *Log) Report() []logger.MetaheuristicReport {
+	report := make([]logger.MetaheuristicReport, 0, len(l.metaheuristics))
 
-	for _, solver := range l.solvers {
-		report = append(report, logger.SolverReport{
-			Name:    solver.name,
-			ID:      solver.id,
-			Samples: solver.file.All(solver.history), // spilled records, then the in-memory tail
+	for _, metaheuristic := range l.metaheuristics {
+		report = append(report, logger.MetaheuristicReport{
+			Name:    metaheuristic.name,
+			ID:      metaheuristic.id,
+			Samples: metaheuristic.file.All(metaheuristic.history), // spilled records, then the in-memory tail
 		})
 	}
 

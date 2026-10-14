@@ -3,11 +3,11 @@ package search
 import (
 	"context"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/problem"
 )
 
-func swapSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env definition.Environment) {
+func swapSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env problem.Environment) {
 	for _, n := range env.SwapSearch() {
 		if ctx.Err() != nil {
 			break
@@ -31,7 +31,7 @@ func swapSearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env defi
 }
 
 type swapLocalSearch struct {
-	env definition.Environment
+	env problem.Environment
 }
 
 func (s swapLocalSearch) String() string {
@@ -43,8 +43,8 @@ func (s swapLocalSearch) Search(ctx context.Context, rko *metaheuristic.RandomKe
 }
 
 // NewSwap returns the Swap local search.
-func NewSwap(env definition.Environment) Local {
+func NewSwap(env problem.Environment) metaheuristic.LocalSearch {
 	return swapLocalSearch{env}
 }
 
-var _ Local = (*swapLocalSearch)(nil)
+var _ metaheuristic.LocalSearch = (*swapLocalSearch)(nil)

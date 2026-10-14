@@ -14,18 +14,18 @@ import (
 	"github.com/RKO-solver/rko-go/logger/internal/spill"
 )
 
-// Solver is the policy recorded by one solver.
-type Solver struct {
+// Metaheuristic is the policy recorded by one metaheuristic.
+type Metaheuristic struct {
 	ID    int
 	Name  string
 	Table logger.Table
 }
 
-// Print writes each solver's policy to w under a "(id) name policy" heading.
-func Print(w io.Writer, solvers []Solver) error {
+// Print writes each metaheuristic's policy to w under a "(id) name policy" heading.
+func Print(w io.Writer, metaheuristics []Metaheuristic) error {
 	// bufio.Writer keeps its first error and returns it from Flush, so per-call errors are not checked.
 	bw := bufio.NewWriter(w)
-	for i, s := range solvers {
+	for i, s := range metaheuristics {
 		if i > 0 {
 			bw.WriteByte('\n')
 		}
@@ -44,10 +44,10 @@ func writeRow(w io.Writer, cells []string) {
 	io.WriteString(w, strings.Join(cells, "\t")+"\n")
 }
 
-// Save writes each solver's policy to <prefix>-<solver>-<id>-policy.csv and returns every error joined.
-func Save(prefix string, solvers []Solver) error {
+// Save writes each metaheuristic's policy to <prefix>-<metaheuristic>-<id>-policy.csv and returns every error joined.
+func Save(prefix string, metaheuristics []Metaheuristic) error {
 	var err error
-	for _, s := range solvers {
+	for _, s := range metaheuristics {
 		err = errors.Join(err, csvio.Save(fmt.Sprintf("%s-%s-%d-policy.csv", prefix, spill.NamePart(s.Name), s.ID),
 			func(w io.Writer) error { return csvio.WriteTable(w, s.Table) }))
 	}

@@ -5,14 +5,13 @@ import (
 	"math"
 	"time"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 )
 
 func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristic.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.NewSolverContext(ctx)
+	ctx, ctxAction := metaheuristic.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	rg := m.rg
@@ -22,7 +21,7 @@ func (m *MultiStart) solve(ctx context.Context, solutionPool *solution.Pool) (*m
 	localSolution := metaheuristic.NewRandomKeyValue(m.env.NumKeys())
 
 	bestSolutionCost := math.MaxInt
-	start := definition.StartTime(ctx)
+	start := metaheuristic.StartTime(ctx)
 	for ; ctx.Err() == nil; ctxAction.Step() {
 
 		rk.Reset(localSolution.RK, rg)

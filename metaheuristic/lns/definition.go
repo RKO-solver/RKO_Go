@@ -2,12 +2,11 @@
 package lns
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -19,12 +18,12 @@ type Config struct {
 	BetaMax metaheuristic.List[float64] `yaml:"BetaMax"`
 }
 
-// LNS is a Large Neighbourhood Search solver.
+// LNS is a Large Neighbourhood Search metaheuristic.
 type LNS struct {
-	env           definition.Environment
+	env           problem.Environment
 	configuration *Config
-	logger        logger.SolverLogger
-	search        search.Local
+	logger        logger.MetaheuristicLogger
+	search        metaheuristic.LocalSearch
 	rg            *random.Generator
 	solutionPool  *solution.Pool
 	tuner         tuning.Tuner
@@ -34,5 +33,5 @@ type LNS struct {
 }
 
 func (lns *LNS) Print() {
-	search.PrintSolver(name, lns.search)
+	metaheuristic.Print(name, lns.search)
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/RKO-solver/rko-go/logger/internal/spill"
 )
 
-// Log draws a live terminal dashboard and keeps every solver's history.
+// Log draws a live terminal dashboard and keeps every metaheuristic's history.
 type Log struct {
 	updateChan chan message
 	bufferSize int
@@ -22,7 +22,7 @@ type Log struct {
 	refresh    time.Duration
 	out        io.Writer
 	problem    string
-	hist       spill.Config // spill settings shared by every solver
+	hist       spill.Config // spill settings shared by every metaheuristic
 }
 
 // AddSolutionPool records a new best solution in the pool.
@@ -54,20 +54,20 @@ func (l *Log) Reset() {
 	l.updateChan = make(chan message, l.bufferSize)
 }
 
-// Start runs the aggregator and the display; call stop after the solvers return.
+// Start runs the aggregator and the display; call stop after the metaheuristics return.
 func (l *Log) Start() (stop func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch, store := l.updateChan, l.data
 	var wg sync.WaitGroup
 
-	// The single aggregator goroutine: the only one that writes solver data to store.
+	// The single aggregator goroutine: the only one that writes metaheuristic data to store.
 	wg.Go(func() {
 		for {
 			select {
 			case m := <-ch:
 				store.apply(m)
 			case <-ctx.Done():
-				for len(ch) > 0 { // stop runs after the solvers returned: apply what is left
+				for len(ch) > 0 { // stop runs after the metaheuristics returned: apply what is left
 					store.apply(<-ch)
 				}
 				return
@@ -99,16 +99,16 @@ func (l *Log) Start() (stop func()) {
 	}
 }
 
-// SolverLogger registers a new solver and returns its logger.
-func (l *Log) SolverLogger(name string) logger.SolverLogger {
+// MetaheuristicLogger registers a new metaheuristic and returns its logger.
+func (l *Log) MetaheuristicLogger(name string) logger.MetaheuristicLogger {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()
 
-	id := len(l.data.solvers)
-	l.data.solvers = append(l.data.solvers, &solverHistory{id: id, name: name})
-	l.data.solvers[id].reset(l.hist) // sizes the buffer; the file is created on the first spill
+	id := len(l.data.metaheuristics)
+	l.data.metaheuristics = append(l.data.metaheuristics, &metaheuristicHistory{id: id, name: name})
+	l.data.metaheuristics[id].reset(l.hist) // sizes the buffer; the file is created on the first spill
 
-	return &SolverLogger{
+	return &MetaheuristicLogger{
 		id:    id,
 		name:  name,
 		level: l.level,
@@ -123,7 +123,7 @@ func (l *Log) Close() error {
 	defer l.data.mu.Unlock()
 
 	var err error
-	for _, s := range l.data.solvers {
+	for _, s := range l.data.metaheuristics {
 		err = errors.Join(err, s.file.Remove())
 	}
 	return err

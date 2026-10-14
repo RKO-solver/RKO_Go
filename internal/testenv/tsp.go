@@ -9,10 +9,11 @@ import (
 	"math"
 	"testing"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/logger/printer"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -40,7 +41,7 @@ func NewTSP(n int, seed uint64) *TSP {
 
 func (t *TSP) NumKeys() int { return len(t.dist) }
 
-func (t *TSP) Cost(r definition.RandomKey) int {
+func (t *TSP) Cost(r problem.RandomKey) int {
 	tour := r.SortedIndex()
 	cost := 0
 	for i := range tour {
@@ -49,13 +50,13 @@ func (t *TSP) Cost(r definition.RandomKey) int {
 	return cost
 }
 
-func (t *TSP) Decode(r definition.RandomKey) any { return r.Clone() }
+func (t *TSP) Decode(r problem.RandomKey) any { return r.Clone() }
 
 func (t *TSP) SwapSearch() [][2]int { return [][2]int{{0, len(t.dist)}} }
 
 func (t *TSP) ProblemName() string { return "tsp" }
 
-var _ definition.Environment = (*TSP)(nil)
+var _ problem.Environment = (*TSP)(nil)
 
 // Result is the outcome of one seeded run: the cost and a hash of the returned keys.
 type Result struct {
@@ -63,8 +64,8 @@ type Result struct {
 	Hash uint64
 }
 
-// Factory builds the solver under test.
-type Factory func(env definition.Environment, rg *random.Generator, pool *solution.Pool, l logger.Logger) definition.Solver
+// Factory builds the metaheuristic under test.
+type Factory func(env problem.Environment, rg *random.Generator, pool *solution.Pool, l logger.Logger) metaheuristic.Algorithm
 
 // Run solves env with seed for iterations and checks the result against the cost function and the pool.
 func Run(t *testing.T, ctx context.Context, env *TSP, seed uint64, iterations int, f Factory) Result {
@@ -73,14 +74,14 @@ func Run(t *testing.T, ctx context.Context, env *TSP, seed uint64, iterations in
 	l := printer.New(io.Discard, env.ProblemName(), nil)
 	rg := random.New(seed)
 	pool := solution.NewPool(env, rg, l)
-	solver := f(env, rg.Split(), pool, l)
+	mh := f(env, rg.Split(), pool, l)
 
-	ctx = definition.WithMaxIterations(ctx, iterations)
-	ctx, cancel := definition.WithStartTime(ctx, 0)
+	ctx = metaheuristic.WithMaxIterations(ctx, iterations)
+	ctx, cancel := metaheuristic.WithStartTime(ctx, 0)
 	defer cancel()
-	res := solver.Solve(ctx)
+	res := mh.Solve(ctx)
 
-	keys := res.Solution.(definition.RandomKey)
+	keys := res.Solution.(problem.RandomKey)
 	if c := env.Cost(keys); c != res.Cost {
 		t.Errorf("seed %d: returned cost %d, but its keys cost %d", seed, res.Cost, c)
 	}
@@ -92,7 +93,7 @@ func Run(t *testing.T, ctx context.Context, env *TSP, seed uint64, iterations in
 }
 
 // Hash returns an FNV-1a hash of the bits of r.
-func Hash(r definition.RandomKey) uint64 {
+func Hash(r problem.RandomKey) uint64 {
 	h := fnv.New64a()
 	buf := make([]byte, 0, 8*len(r))
 	for _, v := range r {

@@ -1,13 +1,14 @@
 package config
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
-func getSearch(sea []search.Type, environment definition.Environment, s *solution.Pool, rg *random.Generator) search.Local {
+func getSearch(sea []search.Type, environment problem.Environment, s *solution.Pool, rg *random.Generator) metaheuristic.LocalSearch {
 	if len(sea) == 1 {
 		switch sea[0] {
 		case search.Swap:

@@ -6,15 +6,15 @@ import (
 	"github.com/RKO-solver/rko-go/logger"
 )
 
-// Report returns the history of every registered solver.
-func (l *Log) Report() []logger.SolverReport {
+// Report returns the history of every registered metaheuristic.
+func (l *Log) Report() []logger.MetaheuristicReport {
 	l.data.mu.Lock()
 	defer l.data.mu.Unlock()
 
-	report := make([]logger.SolverReport, 0, len(l.data.solvers))
+	report := make([]logger.MetaheuristicReport, 0, len(l.data.metaheuristics))
 
-	for id, s := range l.data.solvers {
-		report = append(report, logger.SolverReport{
+	for id, s := range l.data.metaheuristics {
+		report = append(report, logger.MetaheuristicReport{
 			Name:    s.name,
 			ID:      id,
 			Samples: s.file.All(s.records), // spilled records, then the in-memory tail

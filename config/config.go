@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 )
 
@@ -42,6 +42,6 @@ type SeedPool struct {
 
 // Metaheuristic is one metaheuristic to run and its local searches.
 type Metaheuristic struct {
-	Type     rko.Metaheuristic
+	Type     metaheuristic.Type
 	Searches []search.Type
 }

@@ -5,11 +5,11 @@ import (
 	"math"
 	"time"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 )
 
 var fareySequence = []float64{
@@ -35,7 +35,7 @@ var fareySequence = []float64{
 }
 
 func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristic.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.NewSolverContext(ctx)
+	ctx, ctxAction := metaheuristic.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	configuration := lns.configuration
@@ -47,7 +47,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 
 	var bestSolution, localSolution *metaheuristic.RandomKeyValue
 
-	start := definition.StartTime(ctx)
+	start := metaheuristic.StartTime(ctx)
 
 	deadline, ok := ctx.Deadline()
 	total := deadline.Sub(start)
@@ -65,7 +65,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	}
 	if tuner != nil {
 		defer func() {
-			if r, ok := tuner.(tuning.Reporter); ok {
+			if r, ok := tuner.(tuning.PolicyReporter); ok {
 				lns.logger.Policy(r.Policy())
 			}
 		}()
@@ -77,7 +77,7 @@ func (lns *LNS) solve(ctx context.Context, solutionPool *solution.Pool) (*metahe
 	solutionPool.Add(bestSolution, start)
 
 	localSolution = &metaheuristic.RandomKeyValue{
-		RK:   make(definition.RandomKey, env.NumKeys()),
+		RK:   make(problem.RandomKey, env.NumKeys()),
 		Cost: 0,
 	}
 

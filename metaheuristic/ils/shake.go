@@ -1,9 +1,9 @@
 package ils
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -15,7 +15,7 @@ type history struct {
 	timesNoImprovement uint
 }
 
-func shake(sol *metaheuristic.RandomKeyValue, history *history, rg *random.Generator, env definition.Environment) {
+func shake(sol *metaheuristic.RandomKeyValue, history *history, rg *random.Generator, env problem.Environment) {
 	if history.timesNoImprovement == 0 {
 		history.min = history.defaultMin
 		history.max = history.defaultMax

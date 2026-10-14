@@ -1,21 +1,25 @@
 package ils
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/constants"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
+)
+
+const (
+	defaultShakeMin = 0.01
+	defaultShakeMax = 0.05
 )
 
 // DefaultConfig returns the default ILS parameters.
 func DefaultConfig() *Config {
 	return &Config{
-		ShakeMin:            metaheuristic.List[float64]{constants.DefaultShakeMin},
-		ShakeMax:            metaheuristic.List[float64]{constants.DefaultShakeMax},
+		ShakeMin:            metaheuristic.List[float64]{defaultShakeMin},
+		ShakeMax:            metaheuristic.List[float64]{defaultShakeMax},
 		MetropolisCriterion: new(false),
 	}
 }
@@ -27,7 +31,7 @@ type Option func(*ILS)
 func WithConfig(cfg *Config) Option { return func(s *ILS) { s.configuration = cfg } }
 
 // WithSearch sets the local search; nil keeps the default.
-func WithSearch(local search.Local) Option { return func(s *ILS) { s.search = local } }
+func WithSearch(local metaheuristic.LocalSearch) Option { return func(s *ILS) { s.search = local } }
 
 // WithSearchType sets the local search to search.New(t, ...).
 func WithSearchType(t search.Type) Option {
@@ -35,10 +39,10 @@ func WithSearchType(t search.Type) Option {
 }
 
 // New creates an ILS; without options it uses DefaultConfig and search.NewDefault.
-func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *ILS {
+func New(env problem.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *ILS {
 	s := &ILS{
 		env:          env,
-		logger:       log.SolverLogger(name),
+		logger:       log.MetaheuristicLogger(name),
 		solutionPool: pool,
 		rg:           rg,
 	}

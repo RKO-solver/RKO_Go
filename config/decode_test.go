@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/config"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
@@ -123,9 +122,9 @@ Parameters:
 		assert.Equal(t, 500, cfg.MaxIterations)
 		assert.Equal(t, config.SeedPool{MaxSize: 50, InitialSize: 20}, cfg.SeedPool)
 		assert.Equal(t, []config.Metaheuristic{
-			{Type: rko.ILS, Searches: []search.Type{search.Swap, search.Mirror}},
-			{Type: rko.BRKGA},
-			{Type: rko.SA, Searches: []search.Type{search.Farey}},
+			{Type: metaheuristic.ILS, Searches: []search.Type{search.Swap, search.Mirror}},
+			{Type: metaheuristic.BRKGA},
+			{Type: metaheuristic.SA, Searches: []search.Type{search.Farey}},
 		}, cfg.Metaheuristics)
 
 		p := cfg.Parameters
@@ -306,7 +305,7 @@ func TestDecodeNullDocumentGivesDefaults(t *testing.T) {
 				TimeLimit:      time.Hour,
 				MaxIterations:  9,
 				SeedPool:       config.SeedPool{MaxSize: 1, InitialSize: 1},
-				Metaheuristics: []config.Metaheuristic{{Type: rko.GA}},
+				Metaheuristics: []config.Metaheuristic{{Type: metaheuristic.GA}},
 				Parameters:     &config.Parameters{},
 			}
 			d := config.NewDecoder(strings.NewReader(src))
@@ -403,37 +402,37 @@ func TestDecodeMetaheuristics(t *testing.T) {
 		{
 			name:     "name without equals gives nil searches",
 			entries:  []string{"VNS"},
-			expected: []config.Metaheuristic{{Type: rko.VNS}},
+			expected: []config.Metaheuristic{{Type: metaheuristic.VNS}},
 		},
 		{
 			name:     "whitespace is trimmed",
 			entries:  []string{"  ils  =  swap ,  MIRROR  , Nelder "},
-			expected: []config.Metaheuristic{{Type: rko.ILS, Searches: []search.Type{search.Swap, search.Mirror, search.NelderMead}}},
+			expected: []config.Metaheuristic{{Type: metaheuristic.ILS, Searches: []search.Type{search.Swap, search.Mirror, search.NelderMead}}},
 		},
 		{
 			name:    "names are case-insensitive",
 			entries: []string{"multistart", "Lns=farey"},
 			expected: []config.Metaheuristic{
-				{Type: rko.MultiStart},
-				{Type: rko.LNS, Searches: []search.Type{search.Farey}},
+				{Type: metaheuristic.MultiStart},
+				{Type: metaheuristic.LNS, Searches: []search.Type{search.Farey}},
 			},
 		},
 		{
 			name:     "unknown and unimplemented names are dropped",
 			entries:  []string{"TABU=Swap", "GA", "", "NOPE", "GRASP"},
-			expected: []config.Metaheuristic{{Type: rko.GA}},
+			expected: []config.Metaheuristic{{Type: metaheuristic.GA}},
 		},
 		{
 			name:     "unknown searches and RVND are filtered out",
 			entries:  []string{"SA=Swap, Unknown, RVND, rvnd, Mirror"},
-			expected: []config.Metaheuristic{{Type: rko.SA, Searches: []search.Type{search.Swap, search.Mirror}}},
+			expected: []config.Metaheuristic{{Type: metaheuristic.SA, Searches: []search.Type{search.Swap, search.Mirror}}},
 		},
 		{
 			name:    "only invalid searches leave nil searches",
 			entries: []string{"BRKGA=RVND, Bogus", "VNS="},
 			expected: []config.Metaheuristic{
-				{Type: rko.BRKGA},
-				{Type: rko.VNS},
+				{Type: metaheuristic.BRKGA},
+				{Type: metaheuristic.VNS},
 			},
 		},
 		{
@@ -560,7 +559,7 @@ func TestDecodeStrictUnknownValue(t *testing.T) {
 
 func TestDecodeLenientDropsUnimplemented(t *testing.T) {
 	cfg := mustDecode(t, "Metaheuristics:\n  - GA\n  - GRASP\n", false)
-	assert.Equal(t, []config.Metaheuristic{{Type: rko.GA}}, cfg.Metaheuristics)
+	assert.Equal(t, []config.Metaheuristic{{Type: metaheuristic.GA}}, cfg.Metaheuristics)
 }
 
 func TestDecodeStrictAcceptsMissingAndDefaults(t *testing.T) {
@@ -573,8 +572,8 @@ func TestDecodeStrictAcceptsMissingAndDefaults(t *testing.T) {
 		{"empty LogLevel", `LogLevel: ""` + "\n", nil},
 		{"null LogLevel", "LogLevel:\n", nil},
 		{"lowercase values", "LogLevel: info\nLogType: dashboard\n", nil},
-		{"empty searches", "Metaheuristics:\n  - \"VNS=\"\n", []config.Metaheuristic{{Type: rko.VNS}}},
-		{"RVND is accepted and skipped", "Metaheuristics:\n  - \"SA=Swap, RVND\"\n", []config.Metaheuristic{{Type: rko.SA, Searches: []search.Type{search.Swap}}}},
+		{"empty searches", "Metaheuristics:\n  - \"VNS=\"\n", []config.Metaheuristic{{Type: metaheuristic.VNS}}},
+		{"RVND is accepted and skipped", "Metaheuristics:\n  - \"SA=Swap, RVND\"\n", []config.Metaheuristic{{Type: metaheuristic.SA, Searches: []search.Type{search.Swap}}}},
 	}
 
 	for _, tt := range tests {

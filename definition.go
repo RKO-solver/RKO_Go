@@ -7,20 +7,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 )
 
 // Solver runs several metaheuristics in parallel over a shared solution pool.
 type Solver struct {
-	l             logger.Logger
-	env           definition.Environment
-	solutionPool  *solution.Pool
-	solvers       []definition.Solver
-	timeLimit     time.Duration
-	maxIterations int
+	l              logger.Logger
+	env            problem.Environment
+	solutionPool   *solution.Pool
+	metaheuristics []metaheuristic.Algorithm
+	types          []metaheuristic.Type
+	timeLimit      time.Duration
+	maxIterations  int
 }
 
 // Solve runs the metaheuristics and returns the pool's best solution, decoded.
@@ -29,7 +30,7 @@ func (s *Solver) Solve(ctx context.Context) any {
 
 	var wg sync.WaitGroup
 	if s.maxIterations > 0 {
-		ctx = definition.WithMaxIterations(ctx, s.maxIterations)
+		ctx = metaheuristic.WithMaxIterations(ctx, s.maxIterations)
 	}
 
 	stop := func() {}
@@ -37,9 +38,9 @@ func (s *Solver) Solve(ctx context.Context) any {
 		stop = r.Start()
 	}
 
-	ctxStartTime, cancel := definition.WithStartTime(ctx, s.timeLimit)
+	ctxStartTime, cancel := metaheuristic.WithStartTime(ctx, s.timeLimit)
 	defer cancel()
-	for i, sv := range s.solvers {
+	for i, sv := range s.metaheuristics {
 		wg.Add(1)
 		go metaheuristic.Worker(ctxStartTime, sv, i, s.l, &wg)
 	}
@@ -58,7 +59,7 @@ func (s *Solver) Pool() *solution.Pool {
 
 // Print prints the configuration of every metaheuristic in the solver.
 func (s *Solver) Print() {
-	for i, sv := range s.solvers {
+	for i, sv := range s.metaheuristics {
 		fmt.Printf("(%d) ", i)
 		sv.Print()
 	}

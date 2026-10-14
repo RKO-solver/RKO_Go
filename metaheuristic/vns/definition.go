@@ -2,12 +2,11 @@
 package vns
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -18,12 +17,12 @@ type Config struct {
 	Rate metaheuristic.List[float64] `yaml:"Rate"`
 }
 
-// VNS is a Variable Neighbourhood Search solver.
+// VNS is a Variable Neighbourhood Search metaheuristic.
 type VNS struct {
-	env           definition.Environment
+	env           problem.Environment
 	configuration *Config
-	logger        logger.SolverLogger
-	search        search.Local
+	logger        logger.MetaheuristicLogger
+	search        metaheuristic.LocalSearch
 	rg            *random.Generator
 	solutionPool  *solution.Pool
 	tuner         tuning.Tuner
@@ -32,5 +31,5 @@ type VNS struct {
 }
 
 func (vns *VNS) Print() {
-	search.PrintSolver(name, vns.search)
+	metaheuristic.Print(name, vns.search)
 }

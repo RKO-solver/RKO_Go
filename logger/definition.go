@@ -1,4 +1,4 @@
-// Package logger defines the Logger and SolverLogger interfaces used by RKO-Go solvers.
+// Package logger defines the Logger and MetaheuristicLogger interfaces used by RKO-Go metaheuristics.
 package logger
 
 import (
@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// SolverLogger records the progress of a single running solver.
-type SolverLogger interface {
+// MetaheuristicLogger records the progress of one running metaheuristic.
+type MetaheuristicLogger interface {
 	// Register records one iteration; it must not allocate.
 	Register(local, best, iteration int, elapsed time.Duration)
 	// Event records an occasional event, shown at LevelVerbose.
@@ -19,8 +19,8 @@ type SolverLogger interface {
 
 // Logger is what a Solver and its metaheuristics need from a logger.
 type Logger interface {
-	// SolverLogger returns the logger of a new solver.
-	SolverLogger(name string) SolverLogger
+	// MetaheuristicLogger returns the logger of a new metaheuristic.
+	MetaheuristicLogger(name string) MetaheuristicLogger
 	// AddSolutionPool records a new best solution in the pool.
 	AddSolutionPool(cost int, elapsed time.Duration)
 	// WorkerStarted records that worker id has started.
@@ -36,7 +36,7 @@ type Runner interface{ Start() (stop func()) }
 
 // Reporter returns the recorded run.
 type Reporter interface {
-	Report() []SolverReport
+	Report() []MetaheuristicReport
 	Pool() []PoolEntry
 }
 
@@ -46,7 +46,7 @@ type CSVSaver interface{ SaveCSV(prefix string) error }
 // PolicySaver prints and saves the recorded policies.
 type PolicySaver interface {
 	PrintPolicies() error
-	SavePoliciesCSV(prefix string) error // one file per solver: <prefix>-<solver>-<id>-policy.csv
+	SavePoliciesCSV(prefix string) error // one file per metaheuristic: <prefix>-<metaheuristic>-<id>-policy.csv
 }
 
 // Recorder is a Logger that keeps the run's results; printer and dashboard implement it.
@@ -58,14 +58,14 @@ type Recorder interface {
 	io.Closer
 }
 
-// Sample is one progress record of a solver.
+// Sample is one progress record of a metaheuristic.
 type Sample struct {
 	Local, Best int
 	Elapsed     time.Duration
 }
 
-// SolverReport is the full history of one solver.
-type SolverReport struct {
+// MetaheuristicReport is the full history of one metaheuristic.
+type MetaheuristicReport struct {
 	Name    string
 	ID      int
 	Samples []Sample

@@ -1,8 +1,8 @@
 package rk
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -19,7 +19,7 @@ const (
 )
 
 // Shake applies random moves to solution and recomputes its cost.
-func Shake(solution *metaheuristic.RandomKeyValue, lo float64, hi float64, rg *random.Generator, env definition.Environment) {
+func Shake(solution *metaheuristic.RandomKeyValue, lo float64, hi float64, rg *random.Generator, env problem.Environment) {
 	n := solution.RK.Len()
 	var intensity int
 

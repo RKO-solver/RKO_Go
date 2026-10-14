@@ -2,10 +2,7 @@
 package search
 
 import (
-	"context"
 	"strings"
-
-	"github.com/RKO-solver/rko-go/metaheuristic"
 )
 
 // Type identifies a local search.
@@ -23,14 +20,6 @@ const (
 	// RVND is a random variable neighbourhood descent over other searches.
 	RVND
 )
-
-// Local is a local search that improves a solution in place.
-type Local interface {
-	// Search improves rko in place, stopping early when ctx is done.
-	Search(ctx context.Context, rko *metaheuristic.RandomKeyValue)
-	// String returns the search name.
-	String() string
-}
 
 // ParseType returns the Type named by name (case-insensitive), or -1 if unknown.
 func ParseType(name string) Type {

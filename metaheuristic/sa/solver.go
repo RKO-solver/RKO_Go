@@ -6,15 +6,15 @@ import (
 	"math"
 	"time"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/rk"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 )
 
 func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.Pool) (*metaheuristic.RandomKeyValue, time.Duration) {
-	ctx, ctxAction := definition.NewSolverContext(ctx)
+	ctx, ctxAction := metaheuristic.NewSolverContext(ctx)
 	defer ctxAction.Stop()
 
 	configuration := sa.configuration
@@ -37,7 +37,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 
 	localSolution = solutionPool.Best()
 
-	start := definition.StartTime(ctx)
+	start := metaheuristic.StartTime(ctx)
 
 	deadline, ok := ctx.Deadline()
 	total := deadline.Sub(start)
@@ -55,7 +55,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 	}
 	if tuner != nil {
 		defer func() {
-			if r, ok := tuner.(tuning.Reporter); ok {
+			if r, ok := tuner.(tuning.PolicyReporter); ok {
 				sa.logger.Policy(r.Policy())
 			}
 		}()
@@ -69,7 +69,7 @@ func (sa *SimulatedAnnealing) solve(ctx context.Context, solutionPool *solution.
 	}
 
 	neighbour = &metaheuristic.RandomKeyValue{
-		RK:   make(definition.RandomKey, env.NumKeys()),
+		RK:   make(problem.RandomKey, env.NumKeys()),
 		Cost: 0,
 	}
 

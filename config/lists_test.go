@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RKO-solver/rko-go"
 	"github.com/RKO-solver/rko-go/config"
 	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/stretchr/testify/assert"
@@ -57,7 +56,7 @@ func TestNewSolverParameterListErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg := silentConfig()
-			cfg.Metaheuristics = []config.Metaheuristic{{Type: rko.GA}}
+			cfg.Metaheuristics = []config.Metaheuristic{{Type: metaheuristic.GA}}
 			cfg.Parameters = config.DefaultParameters()
 			tt.change(cfg.Parameters)
 

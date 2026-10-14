@@ -1,23 +1,23 @@
 package ga
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/constants"
+	"github.com/RKO-solver/rko-go/metaheuristic/internal/genetic"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 // DefaultConfig returns the default GA parameters.
 func DefaultConfig() *Config {
 	return &Config{
-		PopulationSize:             metaheuristic.List[int]{constants.DefaultPopulationSize},
-		CrossoverAlpha:             metaheuristic.List[float64]{constants.DefaultCrossoverAlpha},
-		MutationAlpha:              metaheuristic.List[float64]{constants.DefaultMutationAlpha},
-		MaxGenerationNoImprovement: metaheuristic.List[int]{constants.DefaultMaxGenerationNoImprovement},
+		PopulationSize:             metaheuristic.List[int]{genetic.DefaultPopulationSize},
+		CrossoverAlpha:             metaheuristic.List[float64]{genetic.DefaultCrossoverAlpha},
+		MutationAlpha:              metaheuristic.List[float64]{genetic.DefaultMutationAlpha},
+		MaxGenerationNoImprovement: metaheuristic.List[int]{genetic.DefaultMaxGenerationNoImprovement},
 	}
 }
 
@@ -28,7 +28,7 @@ type Option func(*GA)
 func WithConfig(cfg *Config) Option { return func(s *GA) { s.configuration = cfg } }
 
 // WithSearch sets the local search; nil keeps the default.
-func WithSearch(local search.Local) Option { return func(s *GA) { s.search = local } }
+func WithSearch(local metaheuristic.LocalSearch) Option { return func(s *GA) { s.search = local } }
 
 // WithSearchType sets the local search to search.New(t, ...).
 func WithSearchType(t search.Type) Option {
@@ -36,10 +36,10 @@ func WithSearchType(t search.Type) Option {
 }
 
 // New creates a GA; without options it uses DefaultConfig and search.NewDefault.
-func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *GA {
+func New(env problem.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *GA {
 	s := &GA{
 		env:          env,
-		logger:       log.SolverLogger(name),
+		logger:       log.MetaheuristicLogger(name),
 		solutionPool: pool,
 		rg:           rg,
 	}

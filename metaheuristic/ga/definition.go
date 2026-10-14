@@ -2,12 +2,11 @@
 package ga
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -21,12 +20,12 @@ type Config struct {
 	MaxGenerationNoImprovement metaheuristic.List[int]     `yaml:"MaxGenerationNoImprovement"`
 }
 
-// GA is a Genetic Algorithm solver.
+// GA is a Genetic Algorithm metaheuristic.
 type GA struct {
-	env                        definition.Environment
+	env                        problem.Environment
 	configuration              *Config
-	logger                     logger.SolverLogger
-	search                     search.Local
+	logger                     logger.MetaheuristicLogger
+	search                     metaheuristic.LocalSearch
 	rg                         *random.Generator
 	solutionPool               *solution.Pool
 	tuner                      tuning.Tuner
@@ -38,5 +37,5 @@ type GA struct {
 }
 
 func (ga *GA) Print() {
-	search.PrintSolver(name, ga.search)
+	metaheuristic.Print(name, ga.search)
 }

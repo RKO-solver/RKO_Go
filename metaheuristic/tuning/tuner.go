@@ -24,5 +24,5 @@ type Tuner interface {
 	Learn(reward float64, progress float64)
 }
 
-// Reporter is implemented by Tuners that can describe what they learned.
-type Reporter interface{ Policy() logger.Table }
+// PolicyReporter is implemented by Tuners that can describe what they learned.
+type PolicyReporter interface{ Policy() logger.Table }

@@ -3,8 +3,8 @@ package search
 import (
 	"context"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
@@ -30,7 +30,7 @@ var fareySequence = []float64{
 	1.0,
 }
 
-func fareySearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env definition.Environment, rg *random.Generator) {
+func fareySearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env problem.Environment, rg *random.Generator) {
 
 	fareyLen := len(fareySequence)
 	n := rko.RK.Len()
@@ -56,7 +56,7 @@ func fareySearch(ctx context.Context, rko *metaheuristic.RandomKeyValue, env def
 }
 
 type fareyLocalSearch struct {
-	env definition.Environment
+	env problem.Environment
 	rg  *random.Generator
 }
 
@@ -69,8 +69,8 @@ func (s fareyLocalSearch) Search(ctx context.Context, rko *metaheuristic.RandomK
 }
 
 // NewFarey returns the Farey local search.
-func NewFarey(env definition.Environment, rg *random.Generator) Local {
+func NewFarey(env problem.Environment, rg *random.Generator) metaheuristic.LocalSearch {
 	return &fareyLocalSearch{env, rg}
 }
 
-var _ Local = (*fareyLocalSearch)(nil)
+var _ metaheuristic.LocalSearch = (*fareyLocalSearch)(nil)

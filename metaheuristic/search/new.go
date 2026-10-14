@@ -1,13 +1,14 @@
 package search
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
 
 // New returns the local search of searchType.
-func New(searchType Type, env definition.Environment, pool *solution.Pool, rg *random.Generator) Local {
+func New(searchType Type, env problem.Environment, pool *solution.Pool, rg *random.Generator) metaheuristic.LocalSearch {
 	switch searchType {
 	case Swap:
 		return NewSwap(env)
@@ -29,7 +30,7 @@ func New(searchType Type, env definition.Environment, pool *solution.Pool, rg *r
 }
 
 // NewDefault returns an RVND over Swap, Mirror, Farey and Nelder-Mead.
-func NewDefault(env definition.Environment, pool *solution.Pool, rg *random.Generator) Local {
+func NewDefault(env problem.Environment, pool *solution.Pool, rg *random.Generator) metaheuristic.LocalSearch {
 	neighbourhood := make([]Type, 4)
 	neighbourhood[0] = Swap
 	neighbourhood[1] = Mirror

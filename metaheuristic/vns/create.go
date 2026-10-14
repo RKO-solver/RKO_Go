@@ -1,20 +1,21 @@
 package vns
 
 import (
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
 	"github.com/RKO-solver/rko-go/metaheuristic"
-	"github.com/RKO-solver/rko-go/metaheuristic/constants"
 	"github.com/RKO-solver/rko-go/metaheuristic/search"
 	"github.com/RKO-solver/rko-go/metaheuristic/solution"
 	"github.com/RKO-solver/rko-go/metaheuristic/tuning"
+	"github.com/RKO-solver/rko-go/problem"
 	"github.com/RKO-solver/rko-go/random"
 )
+
+const defaultRate = 0.2
 
 // DefaultConfig returns the default VNS parameters.
 func DefaultConfig() *Config {
 	return &Config{
-		Rate: metaheuristic.List[float64]{constants.DefaultRate},
+		Rate: metaheuristic.List[float64]{defaultRate},
 	}
 }
 
@@ -25,7 +26,7 @@ type Option func(*VNS)
 func WithConfig(cfg *Config) Option { return func(s *VNS) { s.configuration = cfg } }
 
 // WithSearch sets the local search; nil keeps the default.
-func WithSearch(local search.Local) Option { return func(s *VNS) { s.search = local } }
+func WithSearch(local metaheuristic.LocalSearch) Option { return func(s *VNS) { s.search = local } }
 
 // WithSearchType sets the local search to search.New(t, ...).
 func WithSearchType(t search.Type) Option {
@@ -33,10 +34,10 @@ func WithSearchType(t search.Type) Option {
 }
 
 // New creates a VNS; without options it uses DefaultConfig and search.NewDefault.
-func New(env definition.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *VNS {
+func New(env problem.Environment, rg *random.Generator, pool *solution.Pool, log logger.Logger, opts ...Option) *VNS {
 	s := &VNS{
 		env:          env,
-		logger:       log.SolverLogger(name),
+		logger:       log.MetaheuristicLogger(name),
 		solutionPool: pool,
 		rg:           rg,
 	}

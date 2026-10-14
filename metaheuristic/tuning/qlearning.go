@@ -79,10 +79,10 @@ type QLearning struct {
 	generator *random.Generator
 }
 
-// Compile-time checks that *QLearning implements Tuner and Reporter.
+// Compile-time checks that *QLearning implements Tuner and PolicyReporter.
 var (
-	_ Tuner    = (*QLearning)(nil)
-	_ Reporter = (*QLearning)(nil)
+	_ Tuner          = (*QLearning)(nil)
+	_ PolicyReporter = (*QLearning)(nil)
 )
 
 // NewQLearning creates a QLearning over the configurations of space, drawing from generator.
@@ -187,7 +187,7 @@ func (q *QLearning) scan(state int) int {
 	return best
 }
 
-// Policy implements [Reporter], returning one row per state with its best move.
+// Policy implements [PolicyReporter], returning one row per state with its best move.
 func (q *QLearning) Policy() logger.Table {
 	// Each row holds the state, its value of each parameter, its best action as
 	// a move, the state that move reaches and the action's Q-value.

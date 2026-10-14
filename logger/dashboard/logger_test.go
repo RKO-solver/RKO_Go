@@ -44,14 +44,14 @@ func TestOptionsDefaultsAndMinimums(t *testing.T) {
 
 func TestResetStartStopTwiceKeepsLastRun(t *testing.T) {
 	l := New("test", &Options{Level: logger.LevelVerbose})
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 
 	for iter := range 2 {
 		run(l, func() {
-			sl.Register(10+iter, 5, 1, 100*time.Millisecond)
-			sl.Event(slog.Int("stall", iter), 100*time.Millisecond)
+			ml.Register(10+iter, 5, 1, 100*time.Millisecond)
+			ml.Event(slog.Int("stall", iter), 100*time.Millisecond)
 			l.AddSolutionPool(5+iter, 100*time.Millisecond)
-			l.WorkerDone(logger.WorkerResult{ID: 0, Name: "solver", Cost: 5})
+			l.WorkerDone(logger.WorkerResult{ID: 0, Name: "metaheuristic", Cost: 5})
 		})
 
 		report := l.Report()
@@ -59,16 +59,16 @@ func TestResetStartStopTwiceKeepsLastRun(t *testing.T) {
 		require.Equal(t, []logger.Sample{{Local: 10 + iter, Best: 5, Elapsed: 100 * time.Millisecond}}, report[0].Samples)
 		require.Equal(t, []logger.PoolEntry{{Cost: 5 + iter, Elapsed: 100 * time.Millisecond}}, l.Pool())
 		require.Len(t, l.data.workers, 1)
-		require.Len(t, l.data.solvers[0].events, 1)
-		require.Equal(t, int64(iter), l.data.solvers[0].events[0].attr.Value.Int64())
+		require.Len(t, l.data.metaheuristics[0].events, 1)
+		require.Equal(t, int64(iter), l.data.metaheuristics[0].events[0].attr.Value.Int64())
 	}
 }
 
 func TestPrintShellEntersAlternateScreenOnce(t *testing.T) {
 	l := New("test", nil)
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	l.Reset()
-	sl.Register(10, 9, 3, 100*time.Millisecond)
+	ml.Register(10, 9, 3, 100*time.Millisecond)
 	l.data.apply(<-l.updateChan)
 
 	var buf bytes.Buffer
@@ -80,16 +80,16 @@ func TestPrintShellEntersAlternateScreenOnce(t *testing.T) {
 	require.Equal(t, 1, strings.Count(out, enterAltScreenCode))
 	require.Equal(t, 2, strings.Count(out, cursorHomeCode))
 	require.Equal(t, 2, strings.Count(out, clearToEndCode))
-	require.Contains(t, out, "(0) solver: iteration 3"+cleanLineCode+"\n")
+	require.Contains(t, out, "(0) metaheuristic: iteration 3"+cleanLineCode+"\n")
 	require.Contains(t, out, "    Local 10 Best 9"+cleanLineCode+"\n")
 	require.Contains(t, out, "    Time 0.100s"+cleanLineCode+"\n")
 }
 
 func TestStartStopDrawsFinalFrameAndDoneLines(t *testing.T) {
 	l := New("test", &Options{Refresh: time.Hour})
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	out := run(l, func() {
-		sl.Register(7, 7, 2, 200*time.Millisecond)
+		ml.Register(7, 7, 2, 200*time.Millisecond)
 		l.WorkerDone(logger.WorkerResult{ID: 1, Name: "B", Cost: 8, Elapsed: 2 * time.Second})
 		l.WorkerDone(logger.WorkerResult{ID: 0, Name: "A", Cost: 7, Elapsed: time.Second})
 	})
@@ -102,9 +102,9 @@ func TestStartStopDrawsFinalFrameAndDoneLines(t *testing.T) {
 
 func TestStopLeavesAlternateScreenWhenEntered(t *testing.T) {
 	l := New("test", &Options{Refresh: minimumRefresh})
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	out := run(l, func() {
-		sl.Register(7, 7, 1, time.Second)
+		ml.Register(7, 7, 1, time.Second)
 		time.Sleep(2 * minimumRefresh)
 	})
 
@@ -114,10 +114,10 @@ func TestStopLeavesAlternateScreenWhenEntered(t *testing.T) {
 
 func TestSilentWritesNothing(t *testing.T) {
 	l := New("test", &Options{Level: logger.LevelSilent})
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	out := run(l, func() {
-		sl.Register(10, 10, 1, time.Second)
-		l.WorkerStarted(0, "solver")
+		ml.Register(10, 10, 1, time.Second)
+		l.WorkerStarted(0, "metaheuristic")
 		l.WorkerDone(logger.WorkerResult{})
 	})
 
@@ -135,26 +135,26 @@ func TestWorkerStartedLine(t *testing.T) {
 
 func TestInfoShowsNoEventsOrPool(t *testing.T) {
 	l := New("test", nil)
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	out := run(l, func() {
-		sl.Register(7, 7, 1, time.Second)
-		sl.Event(slog.Int("stall", 3), time.Second)
+		ml.Register(7, 7, 1, time.Second)
+		ml.Event(slog.Int("stall", 3), time.Second)
 		l.AddSolutionPool(7, time.Second)
 	})
 
 	require.NotContains(t, out, "stall=")
 	require.NotContains(t, out, "pool cost=")
-	require.Empty(t, l.data.solvers[0].events)
+	require.Empty(t, l.data.metaheuristics[0].events)
 }
 
 func TestVerboseShowsLatestEventPerKeyAndLastPoolLines(t *testing.T) {
 	l := New("test", &Options{Level: logger.LevelVerbose, PoolLines: 2})
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	out := run(l, func() {
-		sl.Register(7, 7, 1, time.Second)
-		sl.Event(slog.Int("a", 1), time.Second)
-		sl.Event(slog.Int("b", 2), 2*time.Second)
-		sl.Event(slog.Int("a", 3), 3*time.Second)
+		ml.Register(7, 7, 1, time.Second)
+		ml.Event(slog.Int("a", 1), time.Second)
+		ml.Event(slog.Int("b", 2), 2*time.Second)
+		ml.Event(slog.Int("a", 3), 3*time.Second)
 		for i := range 3 {
 			l.AddSolutionPool(10+i, time.Duration(i)*time.Second)
 		}
@@ -171,16 +171,16 @@ func TestVerboseShowsLatestEventPerKeyAndLastPoolLines(t *testing.T) {
 func TestStopAppliesEveryQueuedMessage(t *testing.T) {
 	const n = 500
 	l := New("test", &Options{Level: logger.LevelSilent, BufferSize: n})
-	sl := l.SolverLogger("solver")
-	run(l, func() { register(sl, n) })
+	ml := l.MetaheuristicLogger("metaheuristic")
+	run(l, func() { register(ml, n) })
 	require.Len(t, l.Report()[0].Samples, n)
 }
 
 func TestResetStartsFreshRun(t *testing.T) {
 	l := New("test", &Options{Level: logger.LevelSilent})
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	run(l, func() {
-		register(sl, 5)
+		register(ml, 5)
 		l.AddSolutionPool(5, 0)
 	})
 
@@ -192,19 +192,19 @@ func TestResetStartsFreshRun(t *testing.T) {
 
 func TestLongLinesAreTruncated(t *testing.T) {
 	l := New("test", &Options{Refresh: time.Hour})
-	sl := l.SolverLogger(strings.Repeat("x", 200))
-	out := run(l, func() { sl.Register(1, 1, 1, time.Second) })
+	ml := l.MetaheuristicLogger(strings.Repeat("x", 200))
+	out := run(l, func() { ml.Register(1, 1, 1, time.Second) })
 
 	require.Contains(t, out, "..."+cleanLineCode+"\n")
 }
 
-// spillLog returns a logger with one solver that flushes every 4 records into a temp dir, closed at test end.
-func spillLog(t *testing.T, level logger.Level) (*Log, logger.SolverLogger, string) {
+// spillLog returns a logger with one metaheuristic that flushes every 4 records into a temp dir, closed at test end.
+func spillLog(t *testing.T, level logger.Level) (*Log, logger.MetaheuristicLogger, string) {
 	t.Helper()
 	dir := t.TempDir()
 	l := New("test", &Options{Level: level, HistoryBuffer: 4 * 24, HistoryDir: dir})
 	t.Cleanup(func() { require.NoError(t, l.Close()) })
-	return l, l.SolverLogger("solver"), dir
+	return l, l.MetaheuristicLogger("metaheuristic"), dir
 }
 
 // historyFiles returns the history files in dir.
@@ -216,26 +216,26 @@ func historyFiles(t *testing.T, dir string) []string {
 }
 
 // register sends n records (local i, best 100-i, elapsed i/2 seconds) and returns them.
-func register(sl logger.SolverLogger, n int) []logger.Sample {
+func register(ml logger.MetaheuristicLogger, n int) []logger.Sample {
 	want := make([]logger.Sample, 0, n)
 	for i := range n {
 		s := logger.Sample{Local: i, Best: 100 - i, Elapsed: time.Duration(i) * 500 * time.Millisecond}
-		sl.Register(s.Local, s.Best, i, s.Elapsed)
+		ml.Register(s.Local, s.Best, i, s.Elapsed)
 		want = append(want, s)
 	}
 	return want
 }
 
 func TestHistorySpillsWhenBufferIsFull(t *testing.T) {
-	l, sl, dir := spillLog(t, logger.LevelSilent)
+	l, ml, dir := spillLog(t, logger.LevelSilent)
 	var want []logger.Sample
-	run(l, func() { want = register(sl, 10) }) // two flushes of 4, 2 records left in memory
+	run(l, func() { want = register(ml, 10) }) // two flushes of 4, 2 records left in memory
 
 	require.Len(t, historyFiles(t, dir), 1)
-	require.Len(t, l.data.solvers[0].records, 2)
-	require.Equal(t, 4, cap(l.data.solvers[0].records)) // the buffer is reused, never grown
+	require.Len(t, l.data.metaheuristics[0].records, 2)
+	require.Equal(t, 4, cap(l.data.metaheuristics[0].records)) // the buffer is reused, never grown
 	report := l.Report()
-	require.Equal(t, "solver", report[0].Name)
+	require.Equal(t, "metaheuristic", report[0].Name)
 	require.Equal(t, 0, report[0].ID)
 	require.Equal(t, want, report[0].Samples)
 
@@ -244,23 +244,23 @@ func TestHistorySpillsWhenBufferIsFull(t *testing.T) {
 }
 
 func TestFrameShowsLastRecordAfterFlush(t *testing.T) {
-	l, sl, _ := spillLog(t, logger.LevelInfo)
+	l, ml, _ := spillLog(t, logger.LevelInfo)
 	out := run(l, func() {
 		for range 3 {
-			sl.Register(10, 10, 1, 100*time.Millisecond)
+			ml.Register(10, 10, 1, 100*time.Millisecond)
 		}
-		sl.Register(7, 7, 4, 400*time.Millisecond) // fourth record: fills the buffer and flushes it
+		ml.Register(7, 7, 4, 400*time.Millisecond) // fourth record: fills the buffer and flushes it
 	})
-	require.Empty(t, l.data.solvers[0].records)
+	require.Empty(t, l.data.metaheuristics[0].records)
 
-	require.Contains(t, out, "(0) solver: iteration 4")
+	require.Contains(t, out, "(0) metaheuristic: iteration 4")
 	require.Contains(t, out, "Local 7 Best 7")
 	require.Contains(t, out, "Time 0.400s")
 }
 
 func TestCloseDeletesFilesAndIsIdempotent(t *testing.T) {
-	l, sl, dir := spillLog(t, logger.LevelSilent)
-	run(l, func() { register(sl, 5) }) // one flush of 4
+	l, ml, dir := spillLog(t, logger.LevelSilent)
+	run(l, func() { register(ml, 5) }) // one flush of 4
 	require.Len(t, historyFiles(t, dir), 1)
 
 	require.NoError(t, l.Close())
@@ -271,24 +271,24 @@ func TestCloseDeletesFilesAndIsIdempotent(t *testing.T) {
 func TestNegativeHistoryBufferKeepsEverythingInMemory(t *testing.T) {
 	dir := t.TempDir()
 	l := New("test", &Options{Level: logger.LevelSilent, HistoryBuffer: -1, HistoryDir: dir})
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	var want []logger.Sample
-	run(l, func() { want = register(sl, 50) })
+	run(l, func() { want = register(ml, 50) })
 	require.Empty(t, historyFiles(t, dir))
 	require.Equal(t, want, l.Report()[0].Samples)
 }
 
 func TestCSVOutputs(t *testing.T) {
-	l, sl, _ := spillLog(t, logger.LevelSilent)
+	l, ml, _ := spillLog(t, logger.LevelSilent)
 	run(l, func() {
-		register(sl, 3)
+		register(ml, 3)
 		l.AddSolutionPool(9, 1250*time.Millisecond)
 	})
 
 	prefix := filepath.Join(t.TempDir(), "out")
 	require.NoError(t, l.SaveCSV(prefix))
 
-	b, err := os.ReadFile(prefix + "-solver-0.csv")
+	b, err := os.ReadFile(prefix + "-metaheuristic-0.csv")
 	require.NoError(t, err)
 	require.Equal(t, "best,local,time\n100,0,0.00000000\n99,1,0.50000000\n98,2,1.00000000\n", string(b))
 
@@ -301,43 +301,43 @@ func TestSaveCSVDefaultsPrefixToProblem(t *testing.T) {
 	tmp := t.TempDir()
 	t.Chdir(tmp)
 	l := New("inst/a:b", &Options{Level: logger.LevelSilent})
-	sl := l.SolverLogger("solver")
-	run(l, func() { register(sl, 2) })
+	ml := l.MetaheuristicLogger("metaheuristic")
+	run(l, func() { register(ml, 2) })
 
 	require.NoError(t, l.SaveCSV(""))
-	require.FileExists(t, filepath.Join(tmp, "inst_a_b-solver-0.csv"))
+	require.FileExists(t, filepath.Join(tmp, "inst_a_b-metaheuristic-0.csv"))
 	require.FileExists(t, filepath.Join(tmp, "inst_a_b-pool.csv"))
 }
 
 func TestSaveCSVReportsEveryError(t *testing.T) {
 	l := New("test", &Options{Level: logger.LevelSilent})
-	l.SolverLogger("solver")
+	l.MetaheuristicLogger("metaheuristic")
 
 	err := l.SaveCSV(filepath.Join(t.TempDir(), "missing", "out"))
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "-solver-0.csv")
+	require.Contains(t, err.Error(), "-metaheuristic-0.csv")
 	require.Contains(t, err.Error(), "-pool.csv")
 }
 
 func TestHotPathDoesNotAllocate(t *testing.T) {
 	l := New("test", &Options{Level: logger.LevelSilent, HistoryDir: t.TempDir()})
 	t.Cleanup(func() { l.Close() })
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	stop := l.Start()
 	defer stop()
 	a := slog.Int("a", 1)
-	require.Zero(t, testing.AllocsPerRun(1000, func() { sl.Register(2, 1, 1, time.Second) }))
-	require.Zero(t, testing.AllocsPerRun(1000, func() { sl.Event(a, time.Second) }))
+	require.Zero(t, testing.AllocsPerRun(1000, func() { ml.Register(2, 1, 1, time.Second) }))
+	require.Zero(t, testing.AllocsPerRun(1000, func() { ml.Event(a, time.Second) }))
 }
 
 func BenchmarkRegister(b *testing.B) {
 	l := New("test", &Options{Level: logger.LevelSilent, HistoryDir: b.TempDir()})
 	b.Cleanup(func() { l.Close() })
-	sl := l.SolverLogger("solver")
+	ml := l.MetaheuristicLogger("metaheuristic")
 	stop := l.Start()
 	defer stop()
 	b.ReportAllocs()
 	for b.Loop() {
-		sl.Register(2, 1, 1, time.Second)
+		ml.Register(2, 1, 1, time.Second)
 	}
 }

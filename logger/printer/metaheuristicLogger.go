@@ -11,8 +11,8 @@ import (
 	"github.com/RKO-solver/rko-go/logger/internal/spill"
 )
 
-// SolverLogger prints and records the progress of one solver.
-type SolverLogger struct {
+// MetaheuristicLogger prints and records the progress of one metaheuristic.
+type MetaheuristicLogger struct {
 	id       int
 	name     string
 	level    logger.Level
@@ -25,9 +25,9 @@ type SolverLogger struct {
 	policy   *logger.Table // the tuner's learned policy; nil until Policy
 }
 
-func (s *SolverLogger) Register(local, best, iteration int, elapsed time.Duration) {
+func (s *MetaheuristicLogger) Register(local, best, iteration int, elapsed time.Duration) {
 	s.history = append(s.history, logger.Sample{Local: local, Best: best, Elapsed: elapsed})
-	// A full buffer is spilled synchronously, in the solver's goroutine; no lock since only this solver touches it.
+	// A full buffer is spilled synchronously, in the metaheuristic's goroutine; no lock since only this metaheuristic touches it.
 	// After a spill the slice is reused from [:0]; if spilling is off or fails, it keeps growing in memory.
 	if len(s.history) == cap(s.history) && s.file.Write(s.history) {
 		s.history = s.history[:0]
@@ -40,27 +40,27 @@ func (s *SolverLogger) Register(local, best, iteration int, elapsed time.Duratio
 	}
 }
 
-func (s *SolverLogger) Event(a slog.Attr, elapsed time.Duration) {
+func (s *MetaheuristicLogger) Event(a slog.Attr, elapsed time.Duration) {
 	if s.level < logger.LevelVerbose {
 		return
 	}
 	fmt.Fprintf(s.w, "(%d) %s %s time=%.3fs\n", s.id, s.name, a, elapsed.Seconds()) // a.String() is "key=value"
 }
 
-// Policy keeps t on this solver, to be read after the run.
-func (s *SolverLogger) Policy(t logger.Table) {
+// Policy keeps t on this metaheuristic, to be read after the run.
+func (s *MetaheuristicLogger) Policy(t logger.Table) {
 	s.policy = &t
 }
 
-// reset deletes the spill file, applies c for this solver, empties the history and restores the initial print state.
-func (s *SolverLogger) reset(c spill.Config) {
+// reset deletes the spill file, applies c for this metaheuristic, empties the history and restores the initial print state.
+func (s *MetaheuristicLogger) reset(c spill.Config) {
 	s.next = 0
 	s.lastBest = math.MaxInt
 	s.policy = nil
-	c.Solver, c.ID = s.name, s.id
+	c.Metaheuristic, c.ID = s.name, s.id
 	s.file.Reset(c)
 	s.history = make([]logger.Sample, 0, spill.Capacity(c.Bytes)) // the capacity is the flush point
 }
 
-// Compile-time check that *SolverLogger implements logger.SolverLogger.
-var _ logger.SolverLogger = (*SolverLogger)(nil)
+// Compile-time check that *MetaheuristicLogger implements logger.MetaheuristicLogger.
+var _ logger.MetaheuristicLogger = (*MetaheuristicLogger)(nil)

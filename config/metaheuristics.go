@@ -3,19 +3,11 @@ package config
 import (
 	"fmt"
 
-	"github.com/RKO-solver/rko-go"
+	"github.com/RKO-solver/rko-go/metaheuristic"
 )
 
-func implemented(t rko.Metaheuristic) bool {
-	switch t {
-	case rko.MultiStart, rko.SA, rko.GA, rko.VNS, rko.ILS, rko.BRKGA, rko.LNS:
-		return true
-	}
-	return false
-}
-
-func metaheuristicError(i int, t rko.Metaheuristic) error {
-	if implemented(t) {
+func metaheuristicError(i int, t metaheuristic.Type) error {
+	if t.Implemented() {
 		return nil
 	}
 	name := t.String()

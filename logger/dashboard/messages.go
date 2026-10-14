@@ -12,8 +12,8 @@ const (
 	eventMessage
 )
 
-// solverInfo is one Register call sent through the update channel.
-type solverInfo struct {
+// metaheuristicInfo is one Register call sent through the update channel.
+type metaheuristicInfo struct {
 	local, best, iteration int
 	elapsed                time.Duration
 }
@@ -27,6 +27,6 @@ type event struct {
 type message struct {
 	t     messageType
 	id    int
-	info  solverInfo
+	info  metaheuristicInfo
 	event event
 }

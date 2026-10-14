@@ -1,4 +1,4 @@
-// Package spill appends a solver's history records to a temporary binary file.
+// Package spill appends a metaheuristic's history records to a temporary binary file.
 // The loggers fill a fixed-capacity slice and hand it to Write when full; the file
 // is created on the first Write and kept open. All and WriteCSV read the file back,
 // then the in-memory tail. Reset deletes the previous run's file; Remove deletes the current one
@@ -28,13 +28,13 @@ const recordSize = 24
 // maxNamePart caps the bytes kept from each file name part.
 const maxNamePart = 32
 
-// Config sets a solver's spill directory, buffer size and file name parts.
+// Config sets a metaheuristic's spill directory, buffer size and file name parts.
 type Config struct {
-	Dir     string // "" means the system temp directory
-	Bytes   int    // 0 or less keeps the history in memory
-	Problem string
-	Solver  string
-	ID      int
+	Dir           string // "" means the system temp directory
+	Bytes         int    // 0 or less keeps the history in memory
+	Problem       string
+	Metaheuristic string
+	ID            int
 }
 
 // Capacity returns how many records fit in bytes, at least 1 when bytes is positive.
@@ -45,7 +45,7 @@ func Capacity(bytes int) int {
 	return max(bytes/recordSize, 1)
 }
 
-// File holds one solver's spilled records; Reset sets it up before the first Write.
+// File holds one metaheuristic's spilled records; Reset sets it up before the first Write.
 // It has no lock of its own: the caller serializes Write, reads, Reset and Remove.
 type File struct {
 	dir     string   // where the file is created; "" means the system temp directory
@@ -64,11 +64,11 @@ func (h *File) Reset(c Config) {
 	h.off = c.Bytes <= 0
 }
 
-// pattern returns the os.CreateTemp pattern rko-history-<problem>-<solver>-<id>-*.bin, leaving out empty name parts.
+// pattern returns the os.CreateTemp pattern rko-history-<problem>-<metaheuristic>-<id>-*.bin, leaving out empty name parts.
 func pattern(c Config) string {
 	var b strings.Builder
 	b.WriteString("rko-history-")
-	for _, s := range [...]string{c.Problem, c.Solver} {
+	for _, s := range [...]string{c.Problem, c.Metaheuristic} {
 		if s = NamePart(s); s != "" {
 			b.WriteString(s)
 			b.WriteByte('-')
@@ -129,7 +129,7 @@ func (h *File) Write(recs []logger.Sample) bool {
 // fail turns spilling off and prints one warning; an open file is kept so its records can still be read back.
 func (h *File) fail(err error) {
 	h.off = true
-	fmt.Fprintf(os.Stderr, "Warning: solver history stays in memory: %v\n", err)
+	fmt.Fprintf(os.Stderr, "Warning: metaheuristic history stays in memory: %v\n", err)
 }
 
 // forEach calls fn for every record in the file, in write order.
@@ -157,7 +157,7 @@ func (h *File) forEach(fn func(logger.Sample)) error {
 func (h *File) All(memory []logger.Sample) []logger.Sample {
 	all := make([]logger.Sample, 0, h.records+len(memory))
 	if err := h.forEach(func(d logger.Sample) { all = append(all, d) }); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: cannot read solver history file: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Warning: cannot read metaheuristic history file: %v\n", err)
 	}
 	return append(all, memory...)
 }

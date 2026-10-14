@@ -78,27 +78,27 @@ func (d *information) writeFrame(b *strings.Builder) {
 
 	var header, info, bottom string
 
-	solversLog := make([][]string, 0)
+	metaheuristicsLog := make([][]string, 0)
 
-	for id, s := range d.solvers {
-		solversLog = append(solversLog, []string{})
+	for id, s := range d.metaheuristics {
+		metaheuristicsLog = append(metaheuristicsLog, []string{})
 		if s.hasLast { // read last, not records: records may have just been spilled and emptied
-			header = setFixedLength(fmt.Sprintf("(%d) %s: iteration %d", id, s.name, s.last.iteration), solverBlockSize, false)
-			info = setFixedLength(fmt.Sprintf("    Local %d Best %d", s.last.local, s.last.best), solverBlockSize, false)
-			bottom = setFixedLength(fmt.Sprintf("    Time %.3fs", s.last.elapsed.Seconds()), solverBlockSize, false)
+			header = setFixedLength(fmt.Sprintf("(%d) %s: iteration %d", id, s.name, s.last.iteration), metaheuristicBlockSize, false)
+			info = setFixedLength(fmt.Sprintf("    Local %d Best %d", s.last.local, s.last.best), metaheuristicBlockSize, false)
+			bottom = setFixedLength(fmt.Sprintf("    Time %.3fs", s.last.elapsed.Seconds()), metaheuristicBlockSize, false)
 
-			solversLog[id] = append(solversLog[id], header)
-			solversLog[id] = append(solversLog[id], info)
-			solversLog[id] = append(solversLog[id], bottom)
+			metaheuristicsLog[id] = append(metaheuristicsLog[id], header)
+			metaheuristicsLog[id] = append(metaheuristicsLog[id], info)
+			metaheuristicsLog[id] = append(metaheuristicsLog[id], bottom)
 
 			for _, e := range s.events {
-				message := setFixedLength(fmt.Sprintf("    %s time=%.3fs", e.attr, e.elapsed.Seconds()), solverBlockSize, false)
-				solversLog[id] = append(solversLog[id], message)
+				message := setFixedLength(fmt.Sprintf("    %s time=%.3fs", e.attr, e.elapsed.Seconds()), metaheuristicBlockSize, false)
+				metaheuristicsLog[id] = append(metaheuristicsLog[id], message)
 			}
 		}
 	}
 
-	for _, log := range solversLog {
+	for _, log := range metaheuristicsLog {
 		for _, line := range log {
 			lines = append(lines, line)
 		}
