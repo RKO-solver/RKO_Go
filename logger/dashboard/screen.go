@@ -92,8 +92,8 @@ func (d *information) writeFrame(b *strings.Builder) {
 			metaheuristicsLog[id] = append(metaheuristicsLog[id], bottom)
 
 			for _, e := range s.events {
-				message := setFixedLength(fmt.Sprintf("    %s time=%.3fs", e.attr, e.elapsed.Seconds()), metaheuristicBlockSize, false)
-				metaheuristicsLog[id] = append(metaheuristicsLog[id], message)
+				message_ := setFixedLength(fmt.Sprintf("    %s time=%.3fs", e.attr, e.elapsed.Seconds()), metaheuristicBlockSize, false)
+				metaheuristicsLog[id] = append(metaheuristicsLog[id], message_)
 			}
 		}
 	}
