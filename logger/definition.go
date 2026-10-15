@@ -1,52 +1,92 @@
+// Package logger defines the Logger and MetaheuristicLogger interfaces used by RKO-Go metaheuristics.
 package logger
 
-import "strings"
-
-type SolverInformation struct {
-	Name        string
-	Id          int
-	Performance []Data
-}
-
-type SolutionData struct {
-	Cost int
-	Time float64
-}
-type Data struct {
-	LocalCost int
-	BestCost  int
-	Time      float64
-}
-
-type Logger interface {
-	AddSolutionPool(cost int, time float64)
-	WorkerDone(message string)
-	GetLogger(name string) SolverLogger
-	GetLogLevel() Level
-	GetReportData() []SolverInformation
-	GetSolutionData() []SolutionData
-}
-
-type SolverLogger interface {
-	Register(local int, localBest int, time float64, extra string)
-	Verbose(message string, timeStamp float64)
-}
-
-type LogType = uint8
-
-const (
-	CHANNEL LogType = iota
-	PRINT
+import (
+	"io"
+	"log/slog"
+	"time"
 )
 
-func GetLogType(label string) LogType {
-	label = strings.ToUpper(label)
-	switch label {
-	case "CHANNEL":
-		return CHANNEL
-	case "PRINT":
-		return PRINT
-	default:
-		return PRINT
-	}
+// MetaheuristicLogger records the progress of one running metaheuristic.
+type MetaheuristicLogger interface {
+	// Register records one iteration; it must not allocate.
+	Register(local, best, iteration int, elapsed time.Duration)
+	// Event records an occasional event, shown at LevelVerbose.
+	Event(a slog.Attr, elapsed time.Duration)
+	// Policy records the tuner's learned policy at the end of the run.
+	Policy(t Table)
+}
+
+// Logger is what a Solver and its metaheuristics need from a logger.
+type Logger interface {
+	// MetaheuristicLogger returns the logger of a new metaheuristic.
+	MetaheuristicLogger(name string) MetaheuristicLogger
+	// AddSolutionPool records a new best solution in the pool.
+	AddSolutionPool(cost int, elapsed time.Duration)
+	// WorkerStarted records that worker id has started.
+	WorkerStarted(id int, name string)
+	// WorkerDone records the result of a finished worker.
+	WorkerDone(r WorkerResult)
+	// Reset clears the previous run; Solve calls it.
+	Reset()
+}
+
+// Runner is implemented by loggers that need a loop running during Solve.
+type Runner interface{ Start() (stop func()) }
+
+// Reporter returns the recorded run.
+type Reporter interface {
+	Report() []MetaheuristicReport
+	Pool() []PoolEntry
+}
+
+// CSVSaver saves the recorded run as CSV files.
+type CSVSaver interface{ SaveCSV(prefix string) error }
+
+// PolicySaver prints and saves the recorded policies.
+type PolicySaver interface {
+	PrintPolicies() error
+	SavePoliciesCSV(prefix string) error // one file per metaheuristic: <prefix>-<metaheuristic>-<id>-policy.csv
+}
+
+// Recorder is a Logger that keeps the run's results; printer and dashboard implement it.
+type Recorder interface {
+	Logger
+	Reporter
+	CSVSaver
+	PolicySaver
+	io.Closer
+}
+
+// Sample is one progress record of a metaheuristic.
+type Sample struct {
+	Local, Best int
+	Elapsed     time.Duration
+}
+
+// MetaheuristicReport is the full history of one metaheuristic.
+type MetaheuristicReport struct {
+	Name    string
+	ID      int
+	Samples []Sample
+}
+
+// PoolEntry is the cost and elapsed time of one pooled solution.
+type PoolEntry struct {
+	Cost    int
+	Elapsed time.Duration
+}
+
+// WorkerResult is the outcome of one finished worker.
+type WorkerResult struct {
+	ID      int
+	Name    string
+	Cost    int
+	Elapsed time.Duration
+}
+
+// Table is a table of text values.
+type Table struct {
+	Header []string
+	Rows   [][]string
 }

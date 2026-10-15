@@ -1,38 +1,20 @@
+// Package random provides pseudo-random number generation helpers.
 package random
 
-import (
-	"math/rand/v2"
-	"sync"
-	"time"
-)
+import "math/rand/v2"
 
+// Generator is a PCG-based random source, not safe for concurrent use; call Split per goroutine.
 type Generator struct {
 	rand *rand.Rand
 }
 
-var (
-	instance *Generator
-	once     sync.Once
-)
-
-func NewGenerator() *Generator {
-	currentTimeSeed := uint64(time.Now().UnixNano())
-	source := rand.NewPCG(currentTimeSeed, currentTimeSeed+1)
-
-	return &Generator{
-		rand: rand.New(source),
-	}
+// NewRandom returns a randomly seeded Generator.
+func NewRandom() *Generator {
+	return New(rand.Uint64())
 }
 
-func GetGlobalInstance() *Generator {
-	once.Do(func() {
-		instance = NewGenerator()
-	})
-
-	return instance
-}
-
-func NewGeneratorSeed(seed uint64) *Generator {
+// New returns a Generator that yields the same sequence for the same seed.
+func New(seed uint64) *Generator {
 	source := rand.NewPCG(seed, seed+1)
 
 	return &Generator{
@@ -40,34 +22,32 @@ func NewGeneratorSeed(seed uint64) *Generator {
 	}
 }
 
+// Split returns a new Generator seeded with two values drawn from g.
+func (g *Generator) Split() *Generator {
+	return &Generator{rand: rand.New(rand.NewPCG(g.rand.Uint64(), g.rand.Uint64()))}
+}
+
+// Float64 returns a pseudo-random number in [0.0, 1.0).
 func (g *Generator) Float64() float64 {
 	return g.rand.Float64()
 }
 
-func (g *Generator) Float32() float32 {
-	return g.rand.Float32()
-}
-
+// IntN returns a pseudo-random int in [0, n).
 func (g *Generator) IntN(n int) int {
 	return g.rand.IntN(n)
 }
 
-func (g *Generator) RangeInts(maxInt, numElem int) []int {
-	values := make([]int, numElem)
-	for i := 0; i < numElem; i++ {
-		values[i] = g.rand.IntN(maxInt)
-	}
-	return values
-}
-
-func (g *Generator) Permutation(n int) []int {
+// Perm returns a pseudo-random permutation of [0, n).
+func (g *Generator) Perm(n int) []int {
 	return g.rand.Perm(n)
 }
 
-func (g *Generator) RangeFloat64(min, max float64) float64 {
-	return min + g.rand.Float64()*(max-min)
+// RangeFloat64 returns a pseudo-random float64 in [lo, hi).
+func (g *Generator) RangeFloat64(lo, hi float64) float64 {
+	return lo + g.rand.Float64()*(hi-lo)
 }
 
-func (g *Generator) RangeInt(min, max int) int {
-	return min + g.rand.IntN(max-min)
+// RangeInt returns a pseudo-random int in [lo, hi); panics if hi <= lo.
+func (g *Generator) RangeInt(lo, hi int) int {
+	return lo + g.rand.IntN(hi-lo)
 }

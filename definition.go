@@ -1,94 +1,65 @@
+// Package rko runs several random-key metaheuristics in parallel over a shared solution pool.
 package rko
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
 
-	"github.com/RKO-solver/rko-go/definition"
 	"github.com/RKO-solver/rko-go/logger"
-	"github.com/RKO-solver/rko-go/logger/channel"
-	"github.com/RKO-solver/rko-go/metaheuristc"
-	"github.com/RKO-solver/rko-go/metaheuristc/solution"
-	"github.com/RKO-solver/rko-go/random"
+	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
 )
 
-// Solver coordinates the execution of multiple metaheuristic solvers in parallel,
-// sharing a solution pool and environment. It manages logging, random number generation,
-// and provides a unified interface for running and retrieving the best solution.
+// Solver runs several metaheuristics in parallel over a shared solution pool.
 type Solver struct {
-	l            logger.Logger
-	rg           *random.Generator      // Random number generator
-	env          definition.Environment // Problem environment (user implementation)
-	solutionPool *solution.Pool         // Shared pool of solutions among solvers
-	solvers      []definition.Solver    // List of metaheuristic solvers to run
+	l              logger.Logger
+	env            problem.Environment
+	solutionPool   *solution.Pool
+	metaheuristics []metaheuristic.Algorithm
+	types          []metaheuristic.Type
+	timeLimit      time.Duration
+	maxIterations  int
 }
 
-// Solve runs all configured metaheuristic solvers in parallel, waits for their completion,
-// and returns the best solution decoded into the problem's representation.
-//
-// Returns:
-//   - The best solution found, decoded using the Environment's Decode method.
-func (s *Solver) Solve() any {
-	logLevel := s.l.GetLogLevel()
-	var loggerWg sync.WaitGroup
-
-	if l, ok := s.l.(*channel.Log); ok {
-		l.Start(&loggerWg)
-	}
+// Solve runs the metaheuristics and returns the pool's best solution, decoded.
+func (s *Solver) Solve(ctx context.Context) any {
+	s.l.Reset()
 
 	var wg sync.WaitGroup
-	for i, sv := range s.solvers {
-		if logLevel > logger.SILENT {
-			fmt.Printf("Running solver %s (%d)\n", sv.Name(), i)
-		}
+	if s.maxIterations > 0 {
+		ctx = metaheuristic.WithMaxIterations(ctx, s.maxIterations)
+	}
+
+	stop := func() {}
+	if r, ok := s.l.(logger.Runner); ok {
+		stop = r.Start()
+	}
+
+	ctxStartTime, cancel := metaheuristic.WithStartTime(ctx, s.timeLimit)
+	defer cancel()
+	for i, sv := range s.metaheuristics {
 		wg.Add(1)
-		go metaheuristc.Worker(sv, &metaheuristc.Configuration{Id: i}, s.l, &wg)
+		go metaheuristic.Worker(ctxStartTime, sv, i, s.l, &wg)
 	}
 
-	if l, ok := s.l.(*channel.Log); ok {
-		if logLevel > logger.SILENT {
-			ticker := time.NewTicker(l.GetTicker())
-			defer ticker.Stop()
+	wg.Wait()
+	stop()
 
-			workersDone := make(chan bool)
-			go func() {
-				wg.Wait()
-				close(workersDone)
-			}()
-
-			displaying := true
-			for displaying {
-				select {
-				case <-ticker.C:
-					l.Print()
-				case <-workersDone:
-					displaying = false
-				}
-			}
-		} else {
-			wg.Wait()
-		}
-
-		l.Shutdown()
-		loggerWg.Wait()
-		if logLevel > logger.SILENT {
-			l.WorkersPrint()
-		}
-	} else {
-		wg.Wait()
-	}
-
-	rk := s.solutionPool.BestSolution()
+	rk := s.solutionPool.Best()
 	return s.env.Decode(rk.RK)
 }
 
-func (s *Solver) GetSolutionPool() *solution.Pool {
+// Pool returns the pool shared by every running metaheuristic.
+func (s *Solver) Pool() *solution.Pool {
 	return s.solutionPool
 }
 
+// Print prints the configuration of every metaheuristic in the solver.
 func (s *Solver) Print() {
-	for i, sv := range s.solvers {
+	for i, sv := range s.metaheuristics {
 		fmt.Printf("(%d) ", i)
 		sv.Print()
 	}

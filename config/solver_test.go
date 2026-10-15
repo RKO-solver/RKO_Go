@@ -1,0 +1,500 @@
+package config_test
+
+import (
+	"context"
+	"io"
+	"math"
+	"reflect"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/RKO-solver/rko-go"
+	"github.com/RKO-solver/rko-go/config"
+	"github.com/RKO-solver/rko-go/logger"
+	"github.com/RKO-solver/rko-go/logger/printer"
+	"github.com/RKO-solver/rko-go/metaheuristic"
+	"github.com/RKO-solver/rko-go/metaheuristic/search"
+	"github.com/RKO-solver/rko-go/metaheuristic/solution"
+	"github.com/RKO-solver/rko-go/problem"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// testEnv is a cheap Environment with n keys.
+type testEnv struct{ n int }
+
+func (e testEnv) NumKeys() int        { return e.n }
+func (e testEnv) ProblemName() string { return "test" }
+func (e testEnv) Cost(r problem.RandomKey) int {
+	c := 0
+	for i, v := range r {
+		c += int(v*1000) * (i + 1)
+	}
+	return c
+}
+func (e testEnv) Decode(r problem.RandomKey) any { return r.Clone() }
+func (e testEnv) SwapSearch() [][2]int           { return [][2]int{{0, e.n}} }
+
+// solveWithin runs solver.Solve and fails the test if it does not return within d.
+func solveWithin(t *testing.T, solver *rko.Solver, d time.Duration) {
+	t.Helper()
+	done := make(chan struct{})
+	go func() { solver.Solve(context.Background()); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(d):
+		t.Fatal("solver did not stop")
+	}
+}
+
+func silentConfig() *config.Config {
+	return &config.Config{
+		LogLevel:       logger.LevelSilent,
+		LogType:        logger.TypePrint,
+		MaxIterations:  3,
+		Metaheuristics: []config.Metaheuristic{{Type: metaheuristic.MultiStart, Searches: []search.Type{search.Swap}}},
+	}
+}
+
+func cloneConfig(cfg *config.Config) config.Config {
+	c := *cfg
+	c.Metaheuristics = make([]config.Metaheuristic, len(cfg.Metaheuristics))
+	for i, m := range cfg.Metaheuristics {
+		c.Metaheuristics[i] = config.Metaheuristic{Type: m.Type, Searches: append([]search.Type(nil), m.Searches...)}
+	}
+	if cfg.Parameters != nil {
+		p := *cfg.Parameters
+		if p.BRKGA != nil {
+			v := *p.BRKGA
+			p.BRKGA = &v
+		}
+		if p.GA != nil {
+			v := *p.GA
+			p.GA = &v
+		}
+		if p.ILS != nil {
+			v := *p.ILS
+			p.ILS = &v
+		}
+		if p.SA != nil {
+			v := *p.SA
+			p.SA = &v
+		}
+		if p.VNS != nil {
+			v := *p.VNS
+			p.VNS = &v
+		}
+		if p.LNS != nil {
+			v := *p.LNS
+			p.LNS = &v
+		}
+		c.Parameters = &p
+	}
+	return c
+}
+
+// mhConfigs returns the configuration pointer held by each metaheuristic inside s.
+func mhConfigs(t *testing.T, s *rko.Solver) []reflect.Value {
+	t.Helper()
+	metaheuristics := reflect.ValueOf(s).Elem().FieldByName("metaheuristics")
+	require.True(t, metaheuristics.IsValid())
+	out := make([]reflect.Value, metaheuristics.Len())
+	for i := range out {
+		c := metaheuristics.Index(i).Elem().Elem().FieldByName("configuration")
+		require.True(t, c.IsValid())
+		out[i] = c
+	}
+	return out
+}
+
+func newSolver(t *testing.T, cfg *config.Config, opts ...config.Option) (*rko.Solver, logger.Recorder) {
+	t.Helper()
+	solver, log, err := cfg.NewSolver(testEnv{n: 30}, opts...)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, log.Close()) })
+	return solver, log
+}
+
+func allMetaheuristics() []config.Metaheuristic {
+	var out []config.Metaheuristic
+	for _, mh := range []metaheuristic.Type{metaheuristic.MultiStart, metaheuristic.SA, metaheuristic.GA, metaheuristic.VNS, metaheuristic.ILS, metaheuristic.BRKGA, metaheuristic.LNS} {
+		out = append(out, config.Metaheuristic{Type: mh, Searches: []search.Type{search.Swap}})
+	}
+	return out
+}
+
+func TestNewSolverMaxIterationsStopsEveryMetaheuristic(t *testing.T) {
+	const maxIterations = 5
+	params := config.DefaultParameters()
+	params.SA.Iterations = metaheuristic.List[int]{10}
+	cfg := silentConfig()
+	cfg.MaxIterations = maxIterations
+	cfg.Metaheuristics = allMetaheuristics()
+	cfg.Parameters = params
+
+	solver, log := newSolver(t, cfg, config.WithSeed(42))
+	solveWithin(t, solver, 30*time.Second)
+
+	report := log.Report()
+	require.Len(t, report, len(cfg.Metaheuristics))
+	for _, info := range report {
+		assert.Len(t, info.Samples, maxIterations, info.Name)
+	}
+}
+
+func TestNewSolverTimeLimitStopsBeforeMaxIterations(t *testing.T) {
+	cfg := silentConfig()
+	cfg.TimeLimit = 200 * time.Millisecond
+	cfg.MaxIterations = math.MaxInt
+	cfg.Metaheuristics = []config.Metaheuristic{{Type: metaheuristic.MultiStart, Searches: []search.Type{search.Swap}}}
+
+	solver, _ := newSolver(t, cfg, config.WithSeed(42))
+	solveWithin(t, solver, 10*time.Second)
+}
+
+func TestNewSolverSeedPoolInitialSize(t *testing.T) {
+	tests := []struct {
+		name string
+		pool config.SeedPool
+		want int
+	}{
+		{"zero pool uses default", config.SeedPool{}, solution.DefaultSize},
+		{"larger than default", config.SeedPool{MaxSize: -1, InitialSize: 25}, 25},
+		{"smaller than default", config.SeedPool{MaxSize: -1, InitialSize: 3}, 3},
+		{"max raised to initial", config.SeedPool{MaxSize: 4, InitialSize: 15}, 15},
+		{"negative initial uses default", config.SeedPool{MaxSize: 50, InitialSize: -3}, solution.DefaultSize},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := silentConfig()
+			cfg.SeedPool = tt.pool
+			solver, _ := newSolver(t, cfg, config.WithSeed(1))
+			assert.Equal(t, tt.want, solver.Pool().Len())
+		})
+	}
+}
+
+func TestNewSolverSeedPoolMaxSizeCap(t *testing.T) {
+	tests := []struct {
+		name string
+		pool config.SeedPool
+		cap  int
+	}{
+		{"zero pool capped at default", config.SeedPool{}, solution.DefaultSize},
+		{"explicit cap", config.SeedPool{MaxSize: 12, InitialSize: 5}, 12},
+		{"cap equal to initial", config.SeedPool{MaxSize: 6, InitialSize: 6}, 6},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := silentConfig()
+			cfg.MaxIterations = 200
+			cfg.SeedPool = tt.pool
+			cfg.Metaheuristics = []config.Metaheuristic{{Type: metaheuristic.MultiStart, Searches: []search.Type{search.Swap}}}
+			solver, _ := newSolver(t, cfg, config.WithSeed(7))
+			solveWithin(t, solver, 30*time.Second)
+			assert.LessOrEqual(t, solver.Pool().Len(), tt.cap)
+		})
+	}
+}
+
+func TestNewSolverInvalidLogType(t *testing.T) {
+	cfg := silentConfig()
+	cfg.LogType = 7
+	solver, log, err := cfg.NewSolver(testEnv{n: 30})
+	assert.Nil(t, solver)
+	assert.Nil(t, log)
+	require.ErrorIs(t, err, config.ErrUnknownValue)
+	assert.EqualError(t, err, "config: LogType: unknown value 7")
+}
+
+func TestNewSolverInvalidLogLevel(t *testing.T) {
+	cfg := silentConfig()
+	cfg.LogLevel = 9
+	solver, log, err := cfg.NewSolver(testEnv{n: 30})
+	assert.Nil(t, solver)
+	assert.Nil(t, log)
+	require.ErrorIs(t, err, config.ErrUnknownValue)
+	assert.EqualError(t, err, "config: LogLevel: unknown value 9")
+}
+
+func TestNewSolverNilParameterSection(t *testing.T) {
+	sections := map[string]func(p *config.Parameters){
+		"BRKGA": func(p *config.Parameters) { p.BRKGA = nil },
+		"GA":    func(p *config.Parameters) { p.GA = nil },
+		"ILS":   func(p *config.Parameters) { p.ILS = nil },
+		"SA":    func(p *config.Parameters) { p.SA = nil },
+		"VNS":   func(p *config.Parameters) { p.VNS = nil },
+		"LNS":   func(p *config.Parameters) { p.LNS = nil },
+	}
+	for name, clear := range sections {
+		t.Run(name, func(t *testing.T) {
+			cfg := silentConfig()
+			cfg.Parameters = config.DefaultParameters()
+			clear(cfg.Parameters)
+			solver, log, err := cfg.NewSolver(testEnv{n: 30})
+			assert.Nil(t, solver)
+			assert.Nil(t, log)
+			assert.EqualError(t, err, "config: Parameters."+name+" is nil")
+		})
+	}
+
+	t.Run("combined", func(t *testing.T) {
+		cfg := silentConfig()
+		cfg.LogType = 7
+		cfg.Metaheuristics = []config.Metaheuristic{{Type: metaheuristic.GA}, {Type: metaheuristic.IPR}}
+		cfg.Parameters = config.DefaultParameters()
+		cfg.Parameters.GA = nil
+		cfg.Parameters.LNS = nil
+		_, _, err := cfg.NewSolver(testEnv{n: 30})
+		assert.EqualError(t, err, "config: LogType: unknown value 7\n"+
+			"config: Metaheuristics[1]: Implicit Path Relinking is not implemented\n"+
+			"config: Parameters.GA is nil\n"+
+			"config: Parameters.LNS is nil")
+	})
+}
+
+func TestNewSolverUnimplementedMetaheuristic(t *testing.T) {
+	cfg := silentConfig()
+	cfg.Metaheuristics = []config.Metaheuristic{{Type: metaheuristic.GA}, {Type: metaheuristic.GRASP}}
+	solver, log, err := cfg.NewSolver(testEnv{n: 30})
+	assert.Nil(t, solver)
+	assert.Nil(t, log)
+	require.ErrorIs(t, err, config.ErrNotImplemented)
+	assert.EqualError(t, err, "config: Metaheuristics[1]: Greedy Randomized Adaptive Search Procedure is not implemented")
+
+	cfg.Metaheuristics = []config.Metaheuristic{{Type: 99}}
+	solver, log, err = cfg.NewSolver(testEnv{n: 30})
+	assert.Nil(t, solver)
+	assert.Nil(t, log)
+	require.ErrorIs(t, err, config.ErrUnknownValue)
+	assert.EqualError(t, err, "config: Metaheuristics[0]: unknown value 99")
+}
+
+func TestNewSolverNilParametersUsesDefaults(t *testing.T) {
+	cfg := silentConfig()
+	cfg.Metaheuristics = allMetaheuristics()
+	solver, _ := newSolver(t, cfg, config.WithSeed(3))
+	solveWithin(t, solver, 30*time.Second)
+	assert.Nil(t, cfg.Parameters)
+}
+
+func TestNewSolverDoesNotMutateConfig(t *testing.T) {
+	for _, name := range []string{"explicit parameters", "nil parameters"} {
+		t.Run(name, func(t *testing.T) {
+			cfg := silentConfig()
+			cfg.Metaheuristics = []config.Metaheuristic{
+				{Type: metaheuristic.ILS, Searches: []search.Type{search.Swap, search.Mirror}},
+				{Type: metaheuristic.SA, Searches: []search.Type{search.Farey}},
+			}
+			if name == "explicit parameters" {
+				cfg.Parameters = config.DefaultParameters()
+			}
+			before := cloneConfig(cfg)
+			p := cfg.Parameters
+			var ilsPtr, saPtr any
+			if p != nil {
+				ilsPtr, saPtr = p.ILS, p.SA
+			}
+
+			solver, _ := newSolver(t, cfg, config.WithSeed(5))
+			solveWithin(t, solver, 30*time.Second)
+
+			assert.Equal(t, before, *cfg)
+			if p == nil {
+				assert.Nil(t, cfg.Parameters)
+				return
+			}
+			assert.Same(t, p, cfg.Parameters)
+			assert.Same(t, ilsPtr, cfg.Parameters.ILS)
+			assert.Same(t, saPtr, cfg.Parameters.SA)
+		})
+	}
+}
+
+func TestNewSolverCopiesParameters(t *testing.T) {
+	cfg := silentConfig()
+	cfg.Parameters = config.DefaultParameters()
+	cfg.Metaheuristics = []config.Metaheuristic{{Type: metaheuristic.ILS}, {Type: metaheuristic.ILS}, {Type: metaheuristic.SA}}
+	solver, _ := newSolver(t, cfg, config.WithSeed(9))
+
+	confs := mhConfigs(t, solver)
+	require.Len(t, confs, 3)
+
+	ilsPtr := reflect.ValueOf(cfg.Parameters.ILS).Pointer()
+	saPtr := reflect.ValueOf(cfg.Parameters.SA).Pointer()
+	assert.NotEqual(t, ilsPtr, confs[0].Pointer())
+	assert.NotEqual(t, ilsPtr, confs[1].Pointer())
+	assert.NotEqual(t, confs[0].Pointer(), confs[1].Pointer())
+	assert.NotEqual(t, saPtr, confs[2].Pointer())
+
+	want := config.DefaultParameters().ILS.ShakeMax[0]
+	cfg.Parameters.ILS.ShakeMax = metaheuristic.List[float64]{99}
+	assert.Equal(t, want, confs[0].Elem().FieldByName("ShakeMax").Index(0).Float())
+	assert.Equal(t, want, confs[1].Elem().FieldByName("ShakeMax").Index(0).Float())
+}
+
+func TestNewSolverConcurrent(t *testing.T) {
+	for _, name := range []string{"explicit parameters", "nil parameters"} {
+		t.Run(name, func(t *testing.T) {
+			cfg := silentConfig()
+			cfg.MaxIterations = 2
+			cfg.Metaheuristics = allMetaheuristics()
+			if name == "explicit parameters" {
+				cfg.Parameters = config.DefaultParameters()
+			}
+
+			const n = 4
+			solvers := make([]*rko.Solver, 2*n)
+			logs := make([]logger.Recorder, 2*n)
+			errs := make([]error, 2*n)
+			var wg sync.WaitGroup
+			for i := range solvers {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					var opts []config.Option
+					if i < n {
+						opts = append(opts, config.WithSeed(uint64(i)))
+					}
+					solvers[i], logs[i], errs[i] = cfg.NewSolver(testEnv{n: 30}, opts...)
+				}()
+			}
+			wg.Wait()
+			for i := range solvers {
+				require.NoError(t, errs[i])
+				log := logs[i]
+				t.Cleanup(func() { require.NoError(t, log.Close()) })
+			}
+
+			for _, s := range solvers {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					s.Solve(context.Background())
+				}()
+			}
+			if cfg.Parameters != nil {
+				for i := range 50 {
+					cfg.Parameters.ILS.ShakeMax = metaheuristic.List[float64]{float64(i)}
+					cfg.Parameters.SA.Alpha = metaheuristic.List[float64]{float64(i)}
+				}
+			}
+			wg.Wait()
+		})
+	}
+}
+
+func TestWithSeedSamePool(t *testing.T) {
+	opt := config.WithSeed(42)
+	costs := make([]int, 2)
+	for i := range costs {
+		cfg := silentConfig()
+		cfg.Metaheuristics = []config.Metaheuristic{{Type: metaheuristic.ILS, Searches: []search.Type{search.Swap}}}
+		solver, _ := newSolver(t, cfg, opt)
+		solveWithin(t, solver, 30*time.Second)
+		costs[i] = solver.Pool().BestCost()
+	}
+	assert.Equal(t, costs[0], costs[1])
+}
+
+func TestNewSolverNoOptions(t *testing.T) {
+	cfg := silentConfig()
+	cfg.Metaheuristics = allMetaheuristics()
+	solver, log := newSolver(t, cfg)
+	solveWithin(t, solver, 30*time.Second)
+	assert.Len(t, log.Report(), len(cfg.Metaheuristics))
+}
+
+// scratchEnv is an Environment whose Cost writes into a per-instance scratch buffer.
+type scratchEnv struct {
+	n       int
+	buf     []int         // scratch written by every Cost call
+	calls   int           // Cost calls on this instance
+	busy    atomic.Bool   // true while Cost runs on this instance
+	overlap *atomic.Bool  // set when two Cost calls overlap on one instance
+	clones  *atomic.Int32 // Clone calls, shared by the original and its copies
+}
+
+func newScratchEnv(n int) *scratchEnv {
+	return &scratchEnv{n: n, buf: make([]int, n), overlap: new(atomic.Bool), clones: new(atomic.Int32)}
+}
+
+func (e *scratchEnv) NumKeys() int                   { return e.n }
+func (e *scratchEnv) ProblemName() string            { return "scratch" }
+func (e *scratchEnv) SwapSearch() [][2]int           { return [][2]int{{0, e.n}} }
+func (e *scratchEnv) Decode(r problem.RandomKey) any { return r.Clone() }
+
+func (e *scratchEnv) Cost(r problem.RandomKey) int {
+	if e.busy.CompareAndSwap(false, true) {
+		defer e.busy.Store(false)
+	} else {
+		e.overlap.Store(true)
+	}
+	e.calls++
+	for i, v := range r {
+		e.buf[i] = int(v*1000) * (i + 1)
+	}
+	c := 0
+	for _, v := range e.buf {
+		c += v
+	}
+	return c
+}
+
+// Clone returns a copy with its own scratch buffer.
+func (e *scratchEnv) Clone() problem.Environment {
+	e.clones.Add(1)
+	return &scratchEnv{n: e.n, buf: make([]int, e.n), overlap: e.overlap, clones: e.clones}
+}
+
+var _ problem.Cloner = (*scratchEnv)(nil)
+
+func TestSolverClonesEnvironmentPerMetaheuristic(t *testing.T) {
+	mhs := allMetaheuristics()
+	builders := map[string]func(t *testing.T, env *scratchEnv) *rko.Solver{
+		"rko.New": func(t *testing.T, env *scratchEnv) *rko.Solver {
+			log := printer.New(io.Discard, env.ProblemName(), &printer.Options{Level: logger.LevelSilent})
+			t.Cleanup(func() { require.NoError(t, log.Close()) })
+			types := make([]metaheuristic.Type, len(mhs))
+			for i, m := range mhs {
+				types[i] = m.Type
+			}
+			solver, err := rko.New(env, log, rko.WithMetaheuristics(types...), rko.WithMaxIterations(3))
+			require.NoError(t, err)
+			return solver
+		},
+		"config.NewSolver": func(t *testing.T, env *scratchEnv) *rko.Solver {
+			cfg := silentConfig()
+			cfg.Metaheuristics = mhs
+			solver, log, err := cfg.NewSolver(env, config.WithSeed(11))
+			require.NoError(t, err)
+			t.Cleanup(func() { require.NoError(t, log.Close()) })
+			return solver
+		},
+	}
+	for name, build := range builders {
+		t.Run(name, func(t *testing.T) {
+			env := newScratchEnv(30)
+			solver := build(t, env)
+			require.EqualValues(t, len(mhs), env.clones.Load(), "Clone calls")
+			poolCalls := env.calls
+
+			solveWithin(t, solver, 30*time.Second)
+
+			assert.EqualValues(t, len(mhs), env.clones.Load(), "Clone calls")
+			assert.Equal(t, poolCalls, env.calls, "a metaheuristic called Cost on the original Environment")
+			assert.False(t, env.overlap.Load(), "Cost ran concurrently on one Environment")
+		})
+	}
+}
+
+func TestNewSolverNoMetaheuristics(t *testing.T) {
+	cfg := silentConfig()
+	cfg.Metaheuristics = nil
+	solver, log, err := cfg.NewSolver(testEnv{n: 30})
+	require.ErrorIs(t, err, rko.ErrNoMetaheuristics)
+	assert.Nil(t, solver)
+	assert.Nil(t, log)
+}
