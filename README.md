@@ -19,7 +19,7 @@ Based on [A Random-Key optimizer for combinatorial optimization](https://doi.org
 go get github.com/RKO-solver/rko-go
 ```
 
-The root package is named `rko`. Requires Go 1.26 or later.
+The root package is named `rko`. Requires Go 1.27 or later.
 
 ## Quick start
 
